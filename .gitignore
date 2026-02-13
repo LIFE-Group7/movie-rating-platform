@@ -416,3 +416,42 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# JetBrains Rider / IntelliJ
+.idea/
+*.sln.iml
+*.user
+*.customer
+*.docset
+.metadata/
+
+# Production / Build outputs
+/client/dist/
+/client/build/
+/client/.next/
+/client/out/
+
+# Dependency directories
+/client/node_modules/
+/client/.npm/
+
+# Environment variables (Crucial for security)
+/client/.env
+/client/.env.local
+/client/.env.development.local
+/client/.env.test.local
+/client/.env.production.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
