@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import MovieDetails from "./pages/MovieDetails";
+import Search from "./pages/Search";
 import "./App.css";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/" element={<Home />} />
           {/* Dynamic route for movie details page, captures movie ID from URL */}
           <Route path="/movie/:id" element={<MovieDetails />} />
+          <Route path="/search" element={<Search />} />
         </Routes>
       </div>
     </BrowserRouter>
