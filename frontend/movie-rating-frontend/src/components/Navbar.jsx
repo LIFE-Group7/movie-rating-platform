@@ -15,10 +15,11 @@ function Navbar() {
     event.preventDefault();
 
     // Navigate to search page with query parameter
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery(""); // Clear input after search
-    }
+    navigate({
+      pathname: "/search",
+      search: `?q=${encodeURIComponent(searchQuery.trim())}`,
+    });
+    setSearchQuery(""); // Clear input after search
   };
 
   const handleInputChange = (event) => {
