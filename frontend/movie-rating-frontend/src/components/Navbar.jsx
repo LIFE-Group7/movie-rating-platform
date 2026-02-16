@@ -14,12 +14,10 @@ function Navbar() {
   const handleSearch = (event) => {
     event.preventDefault();
 
-    // Navigate to search page with query parameter
-    navigate({
-      pathname: "/search",
-      search: `?q=${encodeURIComponent(searchQuery.trim())}`,
-    });
-    setSearchQuery(""); // Clear input after search
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery("");
+    }
   };
 
   const handleInputChange = (event) => {
@@ -31,11 +29,16 @@ function Navbar() {
       <div className="nav-container">
         <div className="nav-links">
           <Link to="/" className={`nav-link ${isActive("/") ? "active" : ""}`}>
-            🏠 Home
+            Home
+          </Link>
+          <Link
+            to="/login"
+            className={`nav-link ${isActive("/login") ? "active" : ""}`}
+          >
+            Login
           </Link>
         </div>
 
-        {/* Integrated search bar in navbar */}
         <form className="navbar-search" onSubmit={handleSearch}>
           <input
             type="text"

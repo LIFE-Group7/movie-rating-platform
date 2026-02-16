@@ -3,6 +3,8 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import MovieDetails from "./pages/MovieDetails";
 import Search from "./pages/Search";
+import Register from "./pages/Register";
+import Login from "./pages/Login";
 import "./App.css";
 
 function App() {
@@ -20,6 +22,8 @@ function App() {
           {/* Dynamic route for movie details page, captures movie ID from URL */}
           <Route path="/movie/:id" element={<MovieDetails />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </div>
     </BrowserRouter>
