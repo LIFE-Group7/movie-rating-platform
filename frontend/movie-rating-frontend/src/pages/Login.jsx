@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import "./Login.css";
 
 // User authentication page with form validation
 // Prepares credentials for backend API authentication
 function Login() {
   const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
 
   // Form field state - tracks user credentials
   const [formData, setFormData] = useState({
@@ -18,6 +20,16 @@ function Login() {
 
   // Loading state - prevents double submission
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Show/hide password state
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -78,40 +90,33 @@ function Login() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await fetch('/api/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     email: formData.email,
-      //     password: formData.password
-      //   })
-      // });
-      //
-      // if (!response.ok) {
-      //   throw new Error('Invalid credentials');
-      // }
-      //
-      // const data = await response.json();
-      // localStorage.setItem('authToken', data.token);
+      // Call the login function from AuthContext
+      await login(formData.email, formData.password);
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mock successful login
-      console.log("User logged in:", {
-        email: formData.email,
-      });
-
-      // Store mock auth token
-      localStorage.setItem("authToken", "mock-jwt-token");
-
-      // Redirect to home page
+      // Redirect to home page (useEffect will handle this, but we can also do it here)
       navigate("/");
     } catch (error) {
-      setErrors({
-        submit: "Invalid email or password. Please try again.",
-      });
+      // Better error handling for different failure scenarios
+      if (error.message.includes("Too many login attempts")) {
+        setErrors({
+          submit: error.message,
+        });
+      } else if (error.message.includes("Failed to fetch")) {
+        // Network error
+        setErrors({
+          submit: "Network error. Please check your connection and try again.",
+        });
+      } else if (error.message === "timeout") {
+        // Request timeout
+        setErrors({
+          submit: "Request took too long. Please try again.",
+        });
+      } else {
+        // Generic authentication error
+        setErrors({
+          submit: "Invalid email or password. Please try again.",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -139,17 +144,32 @@ function Login() {
               placeholder="your.email@example.com"
               disabled={isSubmitting}
               autoComplete="email"
+              aria-label="Email address"
+              aria-describedby={errors.email ? "email-error" : undefined}
             />
             {errors.email && (
-              <span className="error-message">{errors.email}</span>
+              <span id="email-error" className="error-message">
+                {errors.email}
+              </span>
             )}
           </div>
 
           {/* Password Field */}
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <div className="password-field-wrapper">
+              <label htmlFor="password">Password</label>
+              <button
+                type="button"
+                className="toggle-password-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               id="password"
               name="password"
               value={formData.password}
@@ -158,9 +178,13 @@ function Login() {
               placeholder="Enter your password"
               disabled={isSubmitting}
               autoComplete="current-password"
+              aria-label="Password"
+              aria-describedby={errors.password ? "password-error" : undefined}
             />
             {errors.password && (
-              <span className="error-message">{errors.password}</span>
+              <span id="password-error" className="error-message">
+                {errors.password}
+              </span>
             )}
           </div>
 
@@ -173,7 +197,9 @@ function Login() {
 
           {/* Submit Error */}
           {errors.submit && (
-            <div className="error-message error-submit">{errors.submit}</div>
+            <div className="error-message error-submit" role="alert">
+              {errors.submit}
+            </div>
           )}
 
           {/* Submit Button */}
@@ -181,6 +207,7 @@ function Login() {
             type="submit"
             className="login-button"
             disabled={isSubmitting}
+            aria-busy={isSubmitting}
           >
             {isSubmitting ? "Signing In..." : "Sign In"}
           </button>

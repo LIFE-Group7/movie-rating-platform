@@ -10,7 +10,7 @@
 .register-container {
   background-color: white;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   padding: 40px;
   width: 100%;
   max-width: 450px;
@@ -18,19 +18,23 @@
 
 .register-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 35px;
 }
 
 .register-header h2 {
-  margin: 0 0 10px 0;
+  margin: 0 0 12px 0;
   font-size: 28px;
-  color: #333;
+  color: #1a1a1a;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .register-header p {
   margin: 0;
   color: #666;
   font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
 }
 
 .register-form {
@@ -49,6 +53,7 @@
   font-size: 14px;
   font-weight: 600;
   color: #333;
+  letter-spacing: 0.3px;
 }
 
 .form-group input {
@@ -57,88 +62,79 @@
   border: 2px solid #ddd;
   border-radius: 8px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
+  font-family: inherit;
 }
 
 .form-group input:focus {
   border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  background-color: #f9fbff;
 }
 
 .form-group input:disabled {
   background-color: #f5f5f5;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .input-error {
   border-color: #dc3545 !important;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
 }
 
 .error-message {
   font-size: 13px;
   color: #dc3545;
   margin-top: 4px;
+  font-weight: 500;
 }
 
 .error-submit {
   text-align: center;
-  padding: 10px;
+  padding: 14px 16px;
   background-color: #f8d7da;
   border-radius: 6px;
   margin: 0;
+  border-left: 4px solid #dc3545;
+  font-weight: 500;
 }
 
 .success-message {
   background-color: #d4edda;
   color: #155724;
-  padding: 12px;
+  padding: 14px 16px;
   border-radius: 8px;
   text-align: center;
   margin-bottom: 20px;
   font-size: 14px;
-}
-
-.register-button {
-  padding: 14px;
-  font-size: 16px;
-  font-weight: 600;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-top: 10px;
-}
-
-.register-button:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-.register-button:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
+  font-weight: 500;
+  border-left: 4px solid #28a745;
 }
 
 .register-footer {
   text-align: center;
   margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid #eee;
+  border-top: 2px solid #f0f0f0;
 }
 
 .register-footer p {
   margin: 0;
   color: #666;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .register-footer a {
   color: #007bff;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
+  transition: color 0.2s ease;
 }
 
 .register-footer a:hover {
+  color: #0056b3;
   text-decoration: underline;
 }
 

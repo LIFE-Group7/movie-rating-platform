@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import "./Register.css";
 
 // User registration page with form validation
 // Prepares user data for backend API submission
 function Register() {
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   // Form field state - tracks user input
   const [formData, setFormData] = useState({
@@ -91,34 +93,39 @@ function Register() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await fetch('/api/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     username: formData.username,
-      //     email: formData.email,
-      //     password: formData.password
-      //   })
-      // });
+      // Call the register function from AuthContext
+      await register(formData.username, formData.email, formData.password);
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setSuccessMessage("Registration successful! Redirecting to login...");
 
-      // Mock successful registration
-      console.log("User registered:", {
-        username: formData.username,
-        email: formData.email,
-      });
-
-      setSuccessMessage("Registration successful! Redirecting...");
-
-      // Redirect to home page after 2 seconds
+      // Redirect to login page after 2 seconds
       setTimeout(() => {
-        navigate("/");
+        navigate("/login");
       }, 2000);
     } catch (error) {
-      setErrors({ submit: "Registration failed. Please try again." });
+      // Better error handling for different failure scenarios
+      if (error.message.includes("Failed to fetch")) {
+        // Network error
+        setErrors({
+          submit: "Network error. Please check your connection and try again.",
+        });
+      } else if (error.message === "timeout") {
+        // Request timeout
+        setErrors({
+          submit: "Request took too long. Please try again.",
+        });
+      } else if (error.message.includes("already exists")) {
+        // Email/username already exists
+        setErrors({
+          submit:
+            "Email or username already in use. Please try a different one.",
+        });
+      } else {
+        // Generic registration error
+        setErrors({
+          submit: "Registration failed. Please try again.",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -149,9 +156,13 @@ function Register() {
               className={errors.username ? "input-error" : ""}
               placeholder="Choose a username"
               disabled={isSubmitting}
+              aria-label="Username"
+              aria-describedby={errors.username ? "username-error" : undefined}
             />
             {errors.username && (
-              <span className="error-message">{errors.username}</span>
+              <span id="username-error" className="error-message">
+                {errors.username}
+              </span>
             )}
           </div>
 
@@ -167,9 +178,13 @@ function Register() {
               className={errors.email ? "input-error" : ""}
               placeholder="your.email@example.com"
               disabled={isSubmitting}
+              aria-label="Email address"
+              aria-describedby={errors.email ? "email-error" : undefined}
             />
             {errors.email && (
-              <span className="error-message">{errors.email}</span>
+              <span id="email-error" className="error-message">
+                {errors.email}
+              </span>
             )}
           </div>
 
@@ -185,9 +200,13 @@ function Register() {
               className={errors.password ? "input-error" : ""}
               placeholder="At least 6 characters"
               disabled={isSubmitting}
+              aria-label="Password"
+              aria-describedby={errors.password ? "password-error" : undefined}
             />
             {errors.password && (
-              <span className="error-message">{errors.password}</span>
+              <span id="password-error" className="error-message">
+                {errors.password}
+              </span>
             )}
           </div>
 
@@ -203,15 +222,23 @@ function Register() {
               className={errors.confirmPassword ? "input-error" : ""}
               placeholder="Re-enter your password"
               disabled={isSubmitting}
+              aria-label="Confirm password"
+              aria-describedby={
+                errors.confirmPassword ? "confirmPassword-error" : undefined
+              }
             />
             {errors.confirmPassword && (
-              <span className="error-message">{errors.confirmPassword}</span>
+              <span id="confirmPassword-error" className="error-message">
+                {errors.confirmPassword}
+              </span>
             )}
           </div>
 
           {/* Submit Error */}
           {errors.submit && (
-            <div className="error-message error-submit">{errors.submit}</div>
+            <div className="error-message error-submit" role="alert">
+              {errors.submit}
+            </div>
           )}
 
           {/* Submit Button */}
@@ -219,6 +246,7 @@ function Register() {
             type="submit"
             className="register-button"
             disabled={isSubmitting}
+            aria-busy={isSubmitting}
           >
             {isSubmitting ? "Creating Account..." : "Create Account"}
           </button>
