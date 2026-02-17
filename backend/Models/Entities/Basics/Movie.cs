@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using MovieRating.Backend.Models.Entities.Extra;
 
-namespace MovieRating.Backend.Models.Entities;
+namespace MovieRating.Backend.Models.Entities.Basics;
 
 public class Movie
 {
@@ -26,17 +27,17 @@ public class Movie
     
     public double AverageRating { get; private set; }
     
-    public double ReviewCount { get; private set; }
+    public int ReviewCount { get; private set; }
 
-    public void UpdateReviewStats(double averageRating, double reviewCount)
+    public void UpdateReviewStats(double averageRating, int reviewCount)
     {
         AverageRating = averageRating;
         ReviewCount = reviewCount;
     }
 
-    public ICollection<Review> Reviews = new List<Review>();
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
     
-    public ICollection<MovieGenre> MovieGenres = new List<MovieGenre>();
+    public ICollection<MovieGenre> MovieGenres { get; set; } = new List<MovieGenre>();
     
-    public ICollection<Watchlist> Watchlists = new List<Watchlist>();
+    public ICollection<Watchlist> Watchlist { get; set; } = new List<Watchlist>();
 }

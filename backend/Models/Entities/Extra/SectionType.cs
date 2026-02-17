@@ -1,4 +1,4 @@
-namespace MovieRating.Backend.Models.Entities;
+namespace MovieRating.Backend.Models.Entities.Extra;
 
 public enum SectionType
 {
