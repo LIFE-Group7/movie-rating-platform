@@ -35,5 +35,8 @@ public class Movie
     }
 
     public ICollection<Review> Reviews = new List<Review>();
+    
     public ICollection<MovieGenre> MovieGenres = new List<MovieGenre>();
+    
+    public ICollection<Watchlist> Watchlists = new List<Watchlist>();
 }

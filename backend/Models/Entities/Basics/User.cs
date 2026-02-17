@@ -28,4 +28,6 @@ public class User
     public DateTime? LastLoginAt { get; set; }
 
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    
+    public ICollection<Watchlist> Watchlist { get; set; } = new List<Watchlist>();
 }
