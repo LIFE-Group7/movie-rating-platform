@@ -1,5 +1,5 @@
 <Solution>
-  <Folder Name="/api/">
-    <Project Path="api/MovieRating.Api.csproj" />
+  <Folder Name="/backend/">
+    <Project Path="backend/MovieRating.Backend.csproj" />
   </Folder>
 </Solution>
