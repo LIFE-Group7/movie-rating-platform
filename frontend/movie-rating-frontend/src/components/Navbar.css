@@ -6,43 +6,155 @@
   z-index: 100;
 }
 
+.nav-logo {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 16px 20px;
+  transition: all 0.2s ease;
+}
+
 .nav-container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 20px;
   display: flex;
-  gap: 5px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .nav-link {
   color: #ccc;
   text-decoration: none;
   font-size: 16px;
-  padding: 16px 20px;
+  padding: 12px 18px;
   display: inline-block;
   transition: all 0.2s ease;
   border-bottom: 3px solid transparent;
+  border-radius: 6px 6px 0 0;
+  font-weight: 500;
 }
 
 .nav-link:hover {
   color: white;
-  background-color: #2a2a2a;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: #007bff;
 }
 
 .nav-link.active {
   color: white;
   border-bottom-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Navbar search styling */
+.navbar-search {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 1 400px;
+}
+
+.navbar-search-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 2px solid #333;
+  border-radius: 6px;
   background-color: #2a2a2a;
+  color: white;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.navbar-search-input::placeholder {
+  color: #888;
+}
+
+.navbar-search-input:focus {
+  border-color: #007bff;
+  background-color: #333;
+}
+
+.navbar-search-button {
+  padding: 10px 16px;
+  font-size: 18px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.navbar-search-button:hover {
+  background-color: #0056b3;
 }
 
 /* Responsive design for mobile */
 @media (max-width: 768px) {
   .nav-container {
-    justify-content: center;
+    flex-direction: column;
+    padding: 10px 20px;
+    gap: 10px;
+  }
+
+  .navbar-search {
+    width: 100%;
+    flex: 1;
   }
 
   .nav-link {
     font-size: 14px;
-    padding: 14px 16px;
+    padding: 12px 16px;
   }
+}
+/* User profile and logout button styling */
+.nav-user {
+  color: #4fc3f7;
+  padding: 16px 20px;
+  display: inline-block;
+  font-weight: 500;
+  font-size: 14px;
+  background-color: rgba(79, 195, 247, 0.1);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.nav-user:hover {
+  background-color: rgba(79, 195, 247, 0.2);
+  color: #81d4fa;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ff6b6b;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 20px;
+  margin: 2px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.logout-btn:hover {
+  color: #ff5252;
+  background-color: rgba(255, 107, 107, 0.15);
+}
+
+.logout-btn:active {
+  background-color: rgba(255, 107, 107, 0.25);
+  transform: scale(0.98);
 }
