@@ -1,4 +1,6 @@
-namespace MovieRating.Backend.Models.Entities;
+using MovieRating.Backend.Models.Entities.Basics;
+
+namespace MovieRating.Backend.Models.Entities.Extra;
 
 public class HomeSectionMovie
 {
