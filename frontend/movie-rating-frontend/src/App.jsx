@@ -6,6 +6,7 @@ import MovieDetails from "./pages/MovieDetails";
 import Search from "./pages/Search";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
 import "./App.css";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
             <Route path="/movie/:id" element={<MovieDetails />} />
             <Route path="/search" element={<Search />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/register" element={<Register />} />
           </Routes>
         </AuthProvider>

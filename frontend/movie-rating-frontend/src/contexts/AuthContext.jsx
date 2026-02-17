@@ -150,6 +150,31 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Handle forgot password request
+  const forgotPassword = async (email) => {
+    try {
+      // TODO: Replace with actual API call when backend is ready
+      // const response = await fetch('/api/forgot-password', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ email })
+      // });
+      //
+      // if (!response.ok) {
+      //   throw new Error('Failed to send reset link');
+      // }
+
+      // Simulate API call with slight delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      console.log("Password reset requested for:", email);
+
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
+  };
+
   // Handle logout
   const logout = () => {
     localStorage.removeItem("authToken");
@@ -178,6 +203,7 @@ export function AuthProvider({ children }) {
     isLoading,
     login,
     register,
+    forgotPassword,
     logout,
     loginAttempts,
     isLockedOut,
