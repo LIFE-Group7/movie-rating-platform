@@ -35,9 +35,9 @@ public class Movie
         ReviewCount = reviewCount;
     }
 
-    public ICollection<Review> Reviews = new List<Review>();
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
     
-    public ICollection<MovieGenre> MovieGenres = new List<MovieGenre>();
+    public ICollection<MovieGenre> MovieGenres { get; set; } = new List<MovieGenre>();
     
-    public ICollection<Watchlist> Watchlist = new List<Watchlist>();
+    public ICollection<Watchlist> Watchlist { get; set; } = new List<Watchlist>();
 }
