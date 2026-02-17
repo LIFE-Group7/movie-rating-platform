@@ -9,4 +9,6 @@ public class Genre
     [Required]
     [MaxLength(50)]
     public required string Name { get; set; }
+    
+    public ICollection<MovieGenre> MovieGenres { get; set; } =  new List<MovieGenre>();
 }
