@@ -104,6 +104,13 @@
   background-color: #0056b3;
 }
 
+/* Reviews Section */
+.reviews-section {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e0e0e0;
+}
+
 @media (max-width: 768px) {
   .details-container {
     flex-direction: column;
@@ -112,5 +119,10 @@
   .details-image {
     width: 100%;
     height: auto;
+  }
+
+  .reviews-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
   }
 }

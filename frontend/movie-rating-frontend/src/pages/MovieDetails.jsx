@@ -1,7 +1,14 @@
+<<<<<<< feature/rating-submit-review
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { movies } from "../data/mockMovies";
+import ReviewForm from "../components/ReviewForm";
+=======
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { movies } from "../data/mockMovies";
 import { useWatchlist } from "../contexts/WatchlistContext";
+>>>>>>> develop
 import { useAuth } from "../contexts/AuthContext";
 import "./MovieDetails.css";
 
@@ -10,12 +17,66 @@ import "./MovieDetails.css";
 function MovieDetails() {
   const { id } = useParams(); // Get the :id from the URL
   const navigate = useNavigate(); // For navigation
+<<<<<<< feature/rating-submit-review
+  const { isAuthenticated } = useAuth(); // Check authentication status
+=======
   const { addToWatchlist, isInWatchlist, setRatingForMovie, addRecentlyViewed } =
     useWatchlist();
   const { isAuthenticated } = useAuth();
+>>>>>>> develop
 
-  // Find the movie with matching id (convert id to number since URL params are strings)
-  const movie = movies.find((m) => m.id === parseInt(id));
+  // Movie state (allows rating to be updated dynamically after review submission)
+  const [movieData, setMovieData] = useState(null);
+  const [reviewSubmissionCount, setReviewSubmissionCount] = useState(0);
+  const reviewsRef = useRef(null);
+
+  // Find the movie with matching id on component mount and when id changes
+  useEffect(() => {
+    const foundMovie = movies.find((m) => m.id === parseInt(id));
+    if (foundMovie) {
+      setMovieData(foundMovie);
+    }
+  }, [id]);
+
+  // Get the current movie data (either from state or original data)
+  const movie = movieData;
+
+  /**
+   * Handle successful review submission
+   * Updates the movie's average rating dynamically
+   * In a real app, this would be called after backend confirms submission
+   */
+  const handleReviewSubmitted = (reviewData) => {
+    if (!movie) return;
+
+    // TODO: When backend is connected, this data will come from backend
+    // For now, we simulate updating the rating based on new submission
+
+    // Calculate new average rating
+    // This is a simple simulation - backend will have the actual calculation
+    const allReviews = [
+      { rating: movie.rating }, // Existing average (treating as a single "review")
+      { rating: reviewData.rating }, // New review
+    ];
+
+    const newAverageRating =
+      allReviews.reduce((sum, review) => sum + review.rating, 0) /
+      allReviews.length;
+
+    // Update movie data with new rating
+    setMovieData({
+      ...movie,
+      rating: parseFloat(newAverageRating.toFixed(1)),
+    });
+
+    // Increment submission count to track reviews
+    setReviewSubmissionCount((prev) => prev + 1);
+
+    // TODO: In a real app, fetch updated movie data from backend:
+    // const response = await fetch(`/api/movies/${movie.id}`);
+    // const updatedMovie = await response.json();
+    // setMovieData(updatedMovie);
+  };
 
   useEffect(() => {
     if (!movie) return;
@@ -70,7 +131,14 @@ function MovieDetails() {
         <div className="details-info">
           <h2>{movie.title}</h2>
           <div className="rating-large">⭐ {movie.rating}/10</div>
-          <p className="genre-tag">{movie.genre}</p>
+          <div className="genres-list">
+            {movie.genres &&
+              movie.genres.map((genre) => (
+                <span key={genre} className="genre-badge">
+                  {genre}
+                </span>
+              ))}
+          </div>
 
           <div className="description">
             <h3>Description</h3>
@@ -79,6 +147,18 @@ function MovieDetails() {
 
           <div className="actions">
             <button
+<<<<<<< feature/rating-submit-review
+              className="rate-button"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  navigate("/login");
+                } else {
+                  reviewsRef.current?.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+            >
+              Rate this movie
+=======
               className="watchlist-button"
               onClick={handleWatchlistAdd}
               disabled={movieInWatchlist}
@@ -87,10 +167,18 @@ function MovieDetails() {
             </button>
             <button className="rate-button" onClick={handleLeaveReview}>
               Leave rating / review
+>>>>>>> develop
             </button>
           </div>
         </div>
       </div>
+
+      {/* Review Submission Section */}
+      {movie && (
+        <div className="reviews-section" ref={reviewsRef}>
+          <ReviewForm movie={movie} onSubmitSuccess={handleReviewSubmitted} />
+        </div>
+      )}
     </div>
   );
 }

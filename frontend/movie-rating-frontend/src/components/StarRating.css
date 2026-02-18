@@ -1,0 +1,60 @@
+/* Star Rating Component Styles */
+.star-rating {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.stars-container {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.star {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 2rem;
+  padding: 0;
+  color: #ddd;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.star:hover:not(:disabled) {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 4px rgba(255, 193, 7, 0.4));
+}
+
+.star.filled {
+  color: #ffc107;
+  text-shadow: 0 0 2px rgba(255, 193, 7, 0.6);
+}
+
+.star.readonly {
+  cursor: default;
+}
+
+.star:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.rating-text {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .star {
+    font-size: 1.75rem;
+  }
+
+  .star:hover:not(:disabled) {
+    transform: scale(1.1);
+  }
+}
