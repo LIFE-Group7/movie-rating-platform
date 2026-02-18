@@ -21,7 +21,6 @@ public class MovieDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         
-        // User
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(u => u.Id);
@@ -35,11 +34,9 @@ public class MovieDbContext : DbContext
             entity.Property(u => u.Role)
                   .HasConversion<string>();
 
-            //FIX: Commented out to prevent migration warnings with required relationships
-            //entity.HasQueryFilter(u => !u.IsDeleted);
+            entity.HasQueryFilter(u => !u.IsDeleted);
         });
         
-        // Movie
         modelBuilder.Entity<Movie>(entity =>
         {
             entity.HasKey(m => m.Id);
@@ -51,7 +48,6 @@ public class MovieDbContext : DbContext
                   .HasDefaultValueSql("GETUTCDATE()");
         });
         
-        // Genre
         modelBuilder.Entity<Genre>(entity =>
         {
             entity.HasKey(g => g.Id);
@@ -60,7 +56,6 @@ public class MovieDbContext : DbContext
                   .IsUnique();
         });
         
-        // MovieGenre (many-to-many join)
         modelBuilder.Entity<MovieGenre>(entity =>
         {
             entity.HasKey(mg => new { mg.MovieId, mg.GenreId });
@@ -76,7 +71,6 @@ public class MovieDbContext : DbContext
                   .OnDelete(DeleteBehavior.Restrict);
         });
         
-        // Review (many-to-many join with payload)
         modelBuilder.Entity<Review>(entity =>
         {
             entity.HasKey(r => new { r.UserId, r.MovieId });
@@ -93,9 +87,10 @@ public class MovieDbContext : DbContext
 
             entity.Property(r => r.CreatedAt)
                   .HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasQueryFilter(r => !r.User.IsDeleted);
         });
         
-        // Watchlist (many-to-many join with payload)
         modelBuilder.Entity<Watchlist>(entity =>
         {
             entity.HasKey(w => new { w.UserId, w.MovieId });
@@ -112,9 +107,10 @@ public class MovieDbContext : DbContext
 
             entity.Property(w => w.AddedAt)
                   .HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.HasQueryFilter(w => !w.User.IsDeleted);
         });
         
-        // HomeSection
         modelBuilder.Entity<HomeSection>(entity =>
         {
             entity.HasKey(hs => hs.Id);
@@ -132,7 +128,6 @@ public class MovieDbContext : DbContext
                   .IsRequired(false);
         });
         
-        // HomeSectionMovie (many-to-many join)
         modelBuilder.Entity<HomeSectionMovie>(entity =>
         {
             entity.HasKey(hsm => new { hsm.HomeSectionId, hsm.MovieId });
