@@ -40,6 +40,10 @@ function Navbar() {
           CineMatch
         </Link>
         <div className="nav-links">
+          <Link to="/watchlist" className={`nav-link ${isActive("/watchlist") ? "active" : ""}`}>
+            Watchlist
+          </Link>
+
           {/* Show Login/Register links if not authenticated */}
           {!isAuthenticated ? (
             <>

@@ -1,7 +1,14 @@
+<<<<<<< feature/rating-submit-review
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { movies } from "../data/mockMovies";
 import ReviewForm from "../components/ReviewForm";
+=======
+import { useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { movies } from "../data/mockMovies";
+import { useWatchlist } from "../contexts/WatchlistContext";
+>>>>>>> develop
 import { useAuth } from "../contexts/AuthContext";
 import "./MovieDetails.css";
 
@@ -10,7 +17,13 @@ import "./MovieDetails.css";
 function MovieDetails() {
   const { id } = useParams(); // Get the :id from the URL
   const navigate = useNavigate(); // For navigation
+<<<<<<< feature/rating-submit-review
   const { isAuthenticated } = useAuth(); // Check authentication status
+=======
+  const { addToWatchlist, isInWatchlist, setRatingForMovie, addRecentlyViewed } =
+    useWatchlist();
+  const { isAuthenticated } = useAuth();
+>>>>>>> develop
 
   // Movie state (allows rating to be updated dynamically after review submission)
   const [movieData, setMovieData] = useState(null);
@@ -65,6 +78,14 @@ function MovieDetails() {
     // setMovieData(updatedMovie);
   };
 
+  useEffect(() => {
+    if (!movie) return;
+
+    return () => {
+      addRecentlyViewed(movie);
+    };
+  }, [movie?.id, addRecentlyViewed]);
+
   // If movie not found, show error
   if (!movie) {
     return (
@@ -74,6 +95,29 @@ function MovieDetails() {
       </div>
     );
   }
+
+  const handleWatchlistAdd = () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    addToWatchlist(movie);
+  };
+
+  const handleLeaveReview = () => {
+    const input = window.prompt("Leave a rating from 0 to 10:", "8");
+    if (input === null) return;
+    const success = setRatingForMovie(movie.id, Number(input));
+    if (!success) {
+      window.alert("Please enter a valid rating between 0 and 10.");
+      return;
+    }
+
+    window.alert("Your rating was saved.");
+  };
+
+  const movieInWatchlist = isInWatchlist(movie.id);
 
   return (
     <div className="movie-details">
@@ -103,6 +147,7 @@ function MovieDetails() {
 
           <div className="actions">
             <button
+<<<<<<< feature/rating-submit-review
               className="rate-button"
               onClick={() => {
                 if (!isAuthenticated) {
@@ -113,6 +158,16 @@ function MovieDetails() {
               }}
             >
               Rate this movie
+=======
+              className="watchlist-button"
+              onClick={handleWatchlistAdd}
+              disabled={movieInWatchlist}
+            >
+              {movieInWatchlist ? "✓ In Watchlist" : "+ Add to Watchlist"}
+            </button>
+            <button className="rate-button" onClick={handleLeaveReview}>
+              Leave rating / review
+>>>>>>> develop
             </button>
           </div>
         </div>
