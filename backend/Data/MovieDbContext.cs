@@ -35,7 +35,8 @@ public class MovieDbContext : DbContext
             entity.Property(u => u.Role)
                   .HasConversion<string>();
 
-            entity.HasQueryFilter(u => !u.IsDeleted);
+            //FIX: Commented out to prevent migration warnings with required relationships
+            //entity.HasQueryFilter(u => !u.IsDeleted);
         });
         
         // Movie
