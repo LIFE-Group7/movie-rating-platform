@@ -17,17 +17,20 @@ public class AuthService(MovieDbContext context, IConfiguration configuration, I
     {
         try
         {
-            // 1. Guard Clauses -> Throw ValidationException
             if (await context.Users.AnyAsync(u => u.Email == request.Email))
-                throw new ValidationException($"Email '{request.Email}' is already registered.");
+            {
+                logger.LogWarning("Registration failed: Email '{Email}' already exists.", request.Email);
+                return Result<User>.Failure($"Email '{request.Email}' is already registered.", ErrorType.Conflict);
+            }
 
             if (await context.Users.AnyAsync(u => u.Username == request.Username))
-                throw new ValidationException($"Username '{request.Username}' is already taken.");
+            {
+                logger.LogWarning("Registration failed: Username '{Username}' taken.", request.Username);
+                return Result<User>.Failure($"Username '{request.Username}' is already taken.", ErrorType.Conflict);
+            }
 
-            // 2. Hash Password
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-            // 3. Create User
             var user = new User
             {
                 Username = request.Username,
@@ -41,12 +44,6 @@ public class AuthService(MovieDbContext context, IConfiguration configuration, I
 
             return Result<User>.Success(user);
         }
-        catch (ValidationException ex)
-        {
-            // Return specific validation message (e.g., "Username taken")
-            logger.LogWarning("Registration failed: {Message}", ex.Message);
-            return Result<User>.Failure(ex.Message, ErrorType.Conflict);
-        }
         catch (Exception ex)
         {
             logger.LogError(ex, "System error during registration for {Username}", request.Username);
@@ -58,37 +55,26 @@ public class AuthService(MovieDbContext context, IConfiguration configuration, I
     {
         try
         {
-            // 1. Find User -> Throw UserNotFoundException
             var user = await context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+
             if (user == null)
             {
-                throw new UserNotFoundException(request.Username);
+                // Internal Log: We know the user doesn't exist
+                logger.LogWarning("Login failed: User '{Username}' not found.", request.Username);
+                return Result<string>.Failure("Invalid username or password.", ErrorType.Unauthorized);
             }
 
-            // 2. Verify Password -> Throw InvalidCredentialsException
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
-                throw new InvalidCredentialsException();
+                // Internal Log: We know the password was wrong
+                logger.LogWarning("Login failed: Invalid password for '{Username}'.", request.Username);
+                return Result<string>.Failure("Invalid username or password.", ErrorType.Unauthorized);
             }
 
-            // 3. Success Logic
             user.LastLoginAt = DateTime.UtcNow;
             await context.SaveChangesAsync();
 
-            var token = GenerateJwtToken(user);
-            return Result<string>.Success(token);
-        }
-        catch (UserNotFoundException ex)
-        {
-            // SPECIFIC REQUIREMENT: Return "User 'x' was not found"
-            logger.LogWarning("Login failed: {Message}", ex.Message);
-            return Result<string>.Failure(ex.Message, ErrorType.NotFound);
-        }
-        catch (InvalidCredentialsException ex)
-        {
-            // Return "Invalid username or password"
-            logger.LogWarning("Login failed: Invalid password for {Username}", request.Username);
-            return Result<string>.Failure(ex.Message, ErrorType.Unauthorized);
+            return Result<string>.Success(GenerateJwtToken(user));
         }
         catch (Exception ex)
         {
@@ -101,8 +87,7 @@ public class AuthService(MovieDbContext context, IConfiguration configuration, I
     {
         var keyVal = configuration["JwtSettings:Key"];
 
-        if (string.IsNullOrEmpty(keyVal))
-            throw new AuthException("Server configuration error: JWT Key missing.");
+        if (string.IsNullOrEmpty(keyVal)) throw new AuthException("Server configuration error: JWT Key missing.");
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyVal));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -119,7 +104,7 @@ public class AuthService(MovieDbContext context, IConfiguration configuration, I
             issuer: configuration["JwtSettings:Issuer"],
             audience: configuration["JwtSettings:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddDays(1),
+            expires: DateTime.UtcNow.AddDays(1), 
             signingCredentials: creds
         );
 
