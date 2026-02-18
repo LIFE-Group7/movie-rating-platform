@@ -18,9 +18,6 @@ function SearchBar({
   const handleInputChange = (event) => {
     const newQuery = event.target.value;
     setSearchQuery(newQuery);
-
-    // Real-time search as user types
-    onSearch(newQuery);
   };
 
   const handleSubmit = (event) => {
@@ -48,9 +45,7 @@ function SearchBar({
           onClick={clearSearch}
           className="clear-button"
           aria-label="Clear search"
-        >
-          ✕
-        </button>
+        ></button>
       )}
       <button type="submit" className="search-button">
         🔍 Search

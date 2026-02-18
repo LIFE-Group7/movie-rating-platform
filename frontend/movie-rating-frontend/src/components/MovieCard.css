@@ -42,6 +42,25 @@
   margin: 5px 0;
 }
 
+/* Container for genre badges in movie card */
+.genres-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+/* Individual genre badge in movie card */
+.genre-badge {
+  display: inline-block;
+  background-color: #e8f4f8;
+  color: #0056b3;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .genre {
   font-size: 14px;
   color: #666;

@@ -4,29 +4,31 @@ import MovieCard from "../components/MovieCard";
 import { movies } from "../data/mockMovies";
 import "./Search.css";
 
-// Search results page
-// Displays filtered movies based on URL query parameter
+// Search results page that filters movies by title or genre
 function Search() {
   const [searchParams] = useSearchParams();
   const [filteredMovies, setFilteredMovies] = useState(movies);
   const [currentQuery, setCurrentQuery] = useState("");
+  const [currentGenre, setCurrentGenre] = useState("");
 
-  // Filter movies whenever URL query changes
+  // Filters movies by title or genre when URL query parameters change
   useEffect(() => {
     const queryFromUrl = searchParams.get("q") || "";
+    const genreFromUrl = searchParams.get("genre") || "";
     setCurrentQuery(queryFromUrl);
+    setCurrentGenre(genreFromUrl);
 
-    if (queryFromUrl.trim() === "") {
-      setFilteredMovies(movies);
-    } else {
+    let results = movies;
+
+    // Filter by title if query parameter exists
+    if (queryFromUrl.trim() !== "") {
       const query = queryFromUrl.toLowerCase();
-      const results = movies.filter(
-        (movie) =>
-          movie.title.toLowerCase().includes(query) ||
-          movie.genre.toLowerCase().includes(query),
+      results = results.filter((movie) =>
+        movie.title.toLowerCase().includes(query),
       );
-      setFilteredMovies(results);
     }
+
+    setFilteredMovies(results);
   }, [searchParams]);
 
   return (
@@ -36,19 +38,22 @@ function Search() {
       </div>
 
       <div className="search-results">
-        {currentQuery && (
+        {(currentQuery || currentGenre) && (
           <p className="results-info">
             Found {filteredMovies.length}{" "}
             {filteredMovies.length === 1 ? "movie" : "movies"}
-            {filteredMovies.length > 0 && ` for "${currentQuery}"`}
+            {currentGenre && ` in "${currentGenre}"`}
+            {currentQuery && ` matching "${currentQuery}"`}
           </p>
         )}
 
-        {currentQuery && filteredMovies.length === 0 ? (
+        {(currentQuery || currentGenre) && filteredMovies.length === 0 ? (
           <div className="no-results">
-            <p>No movies found matching "{currentQuery}"</p>
+            <p>No movies found</p>
             <p className="suggestion">
-              Try searching for different keywords in the navbar above
+              {currentGenre
+                ? `Try a different genre or search for a specific movie`
+                : `Try searching for different keywords or use the genre filters on the home page`}
             </p>
           </div>
         ) : (
