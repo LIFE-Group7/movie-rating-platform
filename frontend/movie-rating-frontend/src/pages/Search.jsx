@@ -20,6 +20,16 @@ function Search() {
 
     let results = movies;
 
+    // Filter by genre if genre parameter exists
+    if (genreFromUrl.trim() !== "") {
+      results = results.filter((movie) => {
+        const movieGenres = movie.genres || (movie.genre ? [movie.genre] : []);
+        return movieGenres.some(
+          (g) => g.toLowerCase() === genreFromUrl.toLowerCase(),
+        );
+      });
+    }
+
     // Filter by title if query parameter exists
     if (queryFromUrl.trim() !== "") {
       const query = queryFromUrl.toLowerCase();
