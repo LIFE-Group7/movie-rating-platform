@@ -7,7 +7,7 @@ namespace MovieRating.Backend.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController(IAuthService authService) : BaseApiController
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto request)
@@ -33,21 +33,5 @@ public class AuthController(IAuthService authService) : ControllerBase
         }
 
         return HandleError(result);
-    }
-
-    // Helper method to map Error Types to HTTP Status Codes
-    private IActionResult HandleError<T>(Result<T> result)
-    {
-        var statusCode = result.Type switch
-        {
-            ErrorType.Conflict => StatusCodes.Status409Conflict,
-            ErrorType.Validation => StatusCodes.Status400BadRequest,
-            ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
-            ErrorType.Forbidden => StatusCodes.Status403Forbidden,
-            ErrorType.NotFound => StatusCodes.Status404NotFound,
-            _ => StatusCodes.Status500InternalServerError
-        };
-
-        return Problem(detail: result.Error, statusCode: statusCode);
     }
 }
