@@ -63,6 +63,31 @@
 
 .actions {
   margin-top: 30px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.watchlist-button {
+  background-color: #f0f7ff;
+  color: #007bff;
+  border: 1px solid #007bff;
+  padding: 12px 30px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.watchlist-button:hover:not(:disabled) {
+  background-color: #007bff;
+  color: white;
+}
+
+.watchlist-button:disabled {
+  border-color: #999;
+  color: #666;
+  background-color: #f2f2f2;
+  cursor: not-allowed;
 }
 
 .rate-button {

@@ -1,0 +1,256 @@
+.watchlist-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.watchlist-intro {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.watchlist-intro h1 {
+  margin: 0;
+  color: #222;
+}
+
+.watchlist-note {
+  margin: 10px 0 0 0;
+  color: #444;
+}
+
+.watchlist-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 20px;
+}
+
+.watchlist-sidebar {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: fit-content;
+}
+
+.sidebar-item {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #333;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebar-item.active,
+.sidebar-item:hover {
+  border-color: #007bff;
+  background-color: #f0f7ff;
+  color: #007bff;
+}
+
+.watchlist-content {
+  min-width: 0;
+}
+
+.watchlist-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.watchlist-controls select {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.watchlist-movie-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.watchlist-movie-card {
+  display: grid;
+  grid-template-columns: 130px 1fr auto;
+  gap: 16px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.watchlist-movie-card img {
+  width: 130px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.movie-card-content h3 {
+  margin: 0 0 10px 0;
+}
+
+.movie-title-link {
+  color: #222;
+  text-decoration: none;
+}
+
+.movie-title-link:hover {
+  color: #007bff;
+}
+
+.movie-description {
+  color: #444;
+  margin: 8px 0;
+}
+
+.movie-meta {
+  margin: 6px 0;
+  color: #666;
+}
+
+.movie-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin: 6px 0;
+  color: #444;
+}
+
+.movie-meta-item {
+  flex: 1 1 220px;
+}
+
+.movie-meta-row-faint {
+  font-size: 12px;
+  color: #9a9a9a;
+}
+
+.movie-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.movie-card-actions button,
+.link-button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  font-size: 14px;
+}
+
+.movie-card-actions button.secondary,
+.link-button.secondary {
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.movie-card-actions button:disabled {
+  background-color: #f2f2f2;
+  color: #888;
+  border: 1px solid #ddd;
+  cursor: not-allowed;
+}
+
+.simple-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.simple-list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.empty-state {
+  background-color: white;
+  border: 1px dashed #bbb;
+  border-radius: 10px;
+  padding: 20px;
+  color: #666;
+}
+
+.watchlist-auth-cta {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.watchlist-auth-cta h3 {
+  margin: 0 0 8px 0;
+  color: #222;
+}
+
+.watchlist-auth-cta p {
+  margin: 0;
+  color: #555;
+}
+
+.watchlist-auth-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+}
+
+.auth-action-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-action-btn.secondary {
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+@media (max-width: 900px) {
+  .watchlist-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .watchlist-sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .watchlist-movie-card {
+    grid-template-columns: 1fr;
+  }
+
+  .watchlist-movie-card img {
+    width: 100%;
+    height: auto;
+    max-height: 340px;
+  }
+}
