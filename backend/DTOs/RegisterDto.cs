@@ -13,7 +13,7 @@ public class RegisterDto
     [Required]
     [EmailAddress] 
     [RegularExpression(@"^[^\s@]+@[^\s@]+\.[^\s@]+$", ErrorMessage = "Invalid email format.")]
-    [MaxLength(254)]
+    [MaxLength(100)]
     public required string Email { get; set; }
 
     [Required]
