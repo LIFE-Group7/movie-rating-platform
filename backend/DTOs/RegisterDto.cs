@@ -11,12 +11,13 @@ public class RegisterDto
     public required string Username { get; set; }
 
     [Required]
-    [EmailAddress] // Native validation
+    [EmailAddress] 
     [RegularExpression(@"^[^\s@]+@[^\s@]+\.[^\s@]+$", ErrorMessage = "Invalid email format.")]
-    [DefaultValue("string@email.com")] 
+    [MaxLength(254)]
     public required string Email { get; set; }
 
     [Required]
     [StrongPassword]
+    [MaxLength(100)]
     public required string Password { get; set; }
 }

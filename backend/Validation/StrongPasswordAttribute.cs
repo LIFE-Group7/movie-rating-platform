@@ -15,7 +15,6 @@ public class StrongPasswordAttribute : ValidationAttribute
         if (password.Length < 6) return false;
 
         // Check for at least one special symbol
-        // Regex looks for: ! @ # $ % ^ & * ( ) _ + - = [ ] { } | ; : , . < > ?
         return Regex.IsMatch(password, @"[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]");
     }
 

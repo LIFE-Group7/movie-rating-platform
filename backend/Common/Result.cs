@@ -1,14 +1,6 @@
 ﻿namespace MovieRating.Backend.Common;
 
-public enum ErrorType
-{
-    None,
-    Validation,     // 400
-    Conflict,       // 409
-    NotFound,       // 404
-    Unauthorized,   // 401
-    Failure         // 500
-}
+public enum ErrorType { None, Validation, Conflict, NotFound, Unauthorized, Failure, Forbidden }
 
 // Result wrapper for void methods
 public record Result(bool IsSuccess, string? Error, ErrorType Type = ErrorType.None)
