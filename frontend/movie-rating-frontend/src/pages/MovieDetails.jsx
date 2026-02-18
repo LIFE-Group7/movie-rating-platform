@@ -1,93 +1,90 @@
-<<<<<<< feature/rating-submit-review
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { movies } from "../data/mockMovies";
 import ReviewForm from "../components/ReviewForm";
-=======
-import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { movies } from "../data/mockMovies";
 import { useWatchlist } from "../contexts/WatchlistContext";
->>>>>>> develop
 import { useAuth } from "../contexts/AuthContext";
 import "./MovieDetails.css";
 
-// Displays detailed view of a single movie
-// Route parameter :id determines which movie to display
 function MovieDetails() {
-  const { id } = useParams(); // Get the :id from the URL
-  const navigate = useNavigate(); // For navigation
-<<<<<<< feature/rating-submit-review
-  const { isAuthenticated } = useAuth(); // Check authentication status
-=======
-  const { addToWatchlist, isInWatchlist, setRatingForMovie, addRecentlyViewed } =
-    useWatchlist();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { addToWatchlist, isInWatchlist, addRecentlyViewed } = useWatchlist();
   const { isAuthenticated } = useAuth();
->>>>>>> develop
 
-  // Movie state (allows rating to be updated dynamically after review submission)
   const [movieData, setMovieData] = useState(null);
-  const [reviewSubmissionCount, setReviewSubmissionCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   const reviewsRef = useRef(null);
 
-  // Find the movie with matching id on component mount and when id changes
+  // Fetch movie on mount and when id changes
   useEffect(() => {
     const foundMovie = movies.find((m) => m.id === parseInt(id));
     if (foundMovie) {
       setMovieData(foundMovie);
+      addRecentlyViewed(foundMovie);
+    } else {
+      setMovieData(null);
     }
-  }, [id]);
+    setLoading(false);
+  }, [id, addRecentlyViewed]);
 
-  // Get the current movie data (either from state or original data)
-  const movie = movieData;
+  // Auto-scroll to review section if coming from watchlist
+  useEffect(() => {
+    if (location.state?.scrollToReview) {
+      setTimeout(() => {
+        reviewsRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 300);
+    }
+  }, [location]);
 
   /**
    * Handle successful review submission
-   * Updates the movie's average rating dynamically
-   * In a real app, this would be called after backend confirms submission
+   * Updates movie rating dynamically after review is submitted
    */
   const handleReviewSubmitted = (reviewData) => {
-    if (!movie) return;
-
-    // TODO: When backend is connected, this data will come from backend
-    // For now, we simulate updating the rating based on new submission
+    if (!movieData) return;
 
     // Calculate new average rating
-    // This is a simple simulation - backend will have the actual calculation
     const allReviews = [
-      { rating: movie.rating }, // Existing average (treating as a single "review")
-      { rating: reviewData.rating }, // New review
+      { rating: movieData.rating },
+      { rating: reviewData.rating },
     ];
 
     const newAverageRating =
       allReviews.reduce((sum, review) => sum + review.rating, 0) /
       allReviews.length;
 
-    // Update movie data with new rating
     setMovieData({
-      ...movie,
+      ...movieData,
       rating: parseFloat(newAverageRating.toFixed(1)),
     });
 
-    // Increment submission count to track reviews
-    setReviewSubmissionCount((prev) => prev + 1);
-
-    // TODO: In a real app, fetch updated movie data from backend:
-    // const response = await fetch(`/api/movies/${movie.id}`);
+    // TODO: When backend is connected, fetch updated movie:
+    // const response = await fetch(`/api/movies/${movieData.id}`);
     // const updatedMovie = await response.json();
     // setMovieData(updatedMovie);
   };
 
-  useEffect(() => {
-    if (!movie) return;
+  const handleWatchlistAdd = () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    addToWatchlist(movieData);
+  };
 
-    return () => {
-      addRecentlyViewed(movie);
-    };
-  }, [movie?.id, addRecentlyViewed]);
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="movie-details">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   // If movie not found, show error
-  if (!movie) {
+  if (!movieData) {
     return (
       <div className="movie-details">
         <h2>Movie not found</h2>
@@ -96,28 +93,7 @@ function MovieDetails() {
     );
   }
 
-  const handleWatchlistAdd = () => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-
-    addToWatchlist(movie);
-  };
-
-  const handleLeaveReview = () => {
-    const input = window.prompt("Leave a rating from 0 to 10:", "8");
-    if (input === null) return;
-    const success = setRatingForMovie(movie.id, Number(input));
-    if (!success) {
-      window.alert("Please enter a valid rating between 0 and 10.");
-      return;
-    }
-
-    window.alert("Your rating was saved.");
-  };
-
-  const movieInWatchlist = isInWatchlist(movie.id);
+  const movieInWatchlist = isInWatchlist(movieData.id);
 
   return (
     <div className="movie-details">
@@ -126,14 +102,18 @@ function MovieDetails() {
       </button>
 
       <div className="details-container">
-        <img src={movie.imageUrl} alt={movie.title} className="details-image" />
+        <img
+          src={movieData.imageUrl}
+          alt={movieData.title}
+          className="details-image"
+        />
 
         <div className="details-info">
-          <h2>{movie.title}</h2>
-          <div className="rating-large">⭐ {movie.rating}/10</div>
+          <h2>{movieData.title}</h2>
+          <div className="rating-large">⭐ {movieData.rating}/10</div>
           <div className="genres-list">
-            {movie.genres &&
-              movie.genres.map((genre) => (
+            {movieData.genres &&
+              movieData.genres.map((genre) => (
                 <span key={genre} className="genre-badge">
                   {genre}
                 </span>
@@ -142,12 +122,11 @@ function MovieDetails() {
 
           <div className="description">
             <h3>Description</h3>
-            <p>{movie.description || "No description available yet."}</p>
+            <p>{movieData.description || "No description available yet."}</p>
           </div>
 
           <div className="actions">
             <button
-<<<<<<< feature/rating-submit-review
               className="rate-button"
               onClick={() => {
                 if (!isAuthenticated) {
@@ -158,27 +137,22 @@ function MovieDetails() {
               }}
             >
               Rate this movie
-=======
+            </button>
+            <button
               className="watchlist-button"
               onClick={handleWatchlistAdd}
               disabled={movieInWatchlist}
             >
               {movieInWatchlist ? "✓ In Watchlist" : "+ Add to Watchlist"}
             </button>
-            <button className="rate-button" onClick={handleLeaveReview}>
-              Leave rating / review
->>>>>>> develop
-            </button>
           </div>
         </div>
       </div>
 
       {/* Review Submission Section */}
-      {movie && (
-        <div className="reviews-section" ref={reviewsRef}>
-          <ReviewForm movie={movie} onSubmitSuccess={handleReviewSubmitted} />
-        </div>
-      )}
+      <div className="reviews-section" ref={reviewsRef}>
+        <ReviewForm movie={movieData} onSubmitSuccess={handleReviewSubmitted} />
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
 import "./Watchlist.css";
@@ -21,6 +21,7 @@ const formatDate = (dateString) => {
 
 function Watchlist() {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const {
     watchlist,
     recentlyViewed,
@@ -74,16 +75,8 @@ function Watchlist() {
   }, [userRatings, watchlist]);
 
   const handleLeaveReview = (movie) => {
-    const input = window.prompt(`Leave a rating for ${movie.title} (0-10):`, "8");
-    if (input === null) return;
-
-    const success = setRatingForMovie(movie.id, Number(input));
-    if (!success) {
-      window.alert("Please enter a valid rating between 0 and 10.");
-      return;
-    }
-
-    window.alert("Your rating was saved.");
+    // Navigate to movie details page with scroll to review section
+    navigate(`/movie/${movie.id}`, { state: { scrollToReview: true } });
   };
 
   return (
@@ -91,8 +84,8 @@ function Watchlist() {
       <section className="watchlist-intro">
         <h1>Your watchlist</h1>
         <p className="watchlist-note">
-          This is your watchlist. Add movies from movie cards or from each movie details
-          page, then manage them here.
+          This is your watchlist. Add movies from movie cards or from each movie
+          details page, then manage them here.
         </p>
       </section>
 
@@ -125,8 +118,8 @@ function Watchlist() {
                 <div className="watchlist-auth-cta">
                   <h3>Login or register to use the watchlist</h3>
                   <p>
-                    You need an account to save movies, rate them, and manage your
-                    personal watchlist.
+                    You need an account to save movies, rate them, and manage
+                    your personal watchlist.
                   </p>
                   <div className="watchlist-auth-actions">
                     <Link to="/login" className="auth-action-btn">
@@ -155,23 +148,35 @@ function Watchlist() {
                   </div>
 
                   {sortedWatchlist.length === 0 ? (
-                    <div className="empty-state">No movies in your watchlist yet.</div>
+                    <div className="empty-state">
+                      No movies in your watchlist yet.
+                    </div>
                   ) : (
                     <div className="watchlist-movie-list">
                       {sortedWatchlist.map((movie) => (
-                        <article key={movie.id} className="watchlist-movie-card">
+                        <article
+                          key={movie.id}
+                          className="watchlist-movie-card"
+                        >
                           <img src={movie.imageUrl} alt={movie.title} />
 
                           <div className="movie-card-content">
                             <h3>
-                              <Link to={`/movie/${movie.id}`} className="movie-title-link">
+                              <Link
+                                to={`/movie/${movie.id}`}
+                                className="movie-title-link"
+                              >
                                 {movie.title}
                               </Link>
                             </h3>
-                            <p className="movie-description">{movie.description}</p>
+                            <p className="movie-description">
+                              {movie.description}
+                            </p>
                             <div className="movie-meta-row">
                               <span className="movie-meta-item">
-                                Main stars: {(movie.mainStars || []).join(", ") || "Unknown"}
+                                Main stars:{" "}
+                                {(movie.mainStars || []).join(", ") ||
+                                  "Unknown"}
                               </span>
                               <span className="movie-meta-item">
                                 Creator: {movie.creator || "Unknown"}
@@ -217,7 +222,9 @@ function Watchlist() {
           {activeSection === "ratings" && (
             <>
               {ratingsList.length === 0 ? (
-                <div className="empty-state">You have not rated any watchlist movies yet.</div>
+                <div className="empty-state">
+                  You have not rated any watchlist movies yet.
+                </div>
               ) : (
                 <div className="simple-list">
                   {ratingsList.map((movie) => (
@@ -234,7 +241,9 @@ function Watchlist() {
           {activeSection === "recent" && (
             <>
               {recentlyViewed.length === 0 ? (
-                <div className="empty-state">No recently viewed movies yet.</div>
+                <div className="empty-state">
+                  No recently viewed movies yet.
+                </div>
               ) : (
                 <div className="simple-list">
                   {recentlyViewed.map((movie) => (
