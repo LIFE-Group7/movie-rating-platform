@@ -6,7 +6,6 @@ using System.Security.Claims;
 
 namespace MovieRating.Backend.Controllers;
 
-[Authorize(Roles = "User")]
 public class ReviewsController(IReviewService service) : BaseApiController
 {
     [HttpPost]
