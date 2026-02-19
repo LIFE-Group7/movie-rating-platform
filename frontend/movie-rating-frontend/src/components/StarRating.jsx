@@ -2,11 +2,13 @@ import { useState } from "react";
 import "./StarRating.css";
 
 /**
- * Controlled star rating component
- * Allows user to select a rating from 1-5 stars
- * @param {number} rating - Current selected rating (0-5)
- * @param {function} onRatingChange - Callback when rating changes
- * @param {boolean} readOnly - If true, disables interaction
+ * Controlled half-star rating component.
+ * Each star reads the mouse X position against its bounding rect
+ * to determine left (odd) or right (even) half — producing a 1–10 scale.
+ *
+ * @param {number}   rating         - Current selected rating (0–10)
+ * @param {function} onRatingChange - Callback fired with the new 1–10 value
+ * @param {boolean}  readOnly       - If true, disables all interaction
  */
 function StarRating({
   rating = 0,
@@ -15,49 +17,70 @@ function StarRating({
 }) {
   const [hoverRating, setHoverRating] = useState(0);
 
-  const handleStarClick = (starValue) => {
-    if (!readOnly) {
-      onRatingChange(starValue);
-    }
+  const displayRating = hoverRating || rating;
+
+  /**
+   * Resolve a 1–10 value from the mouse position within a star button.
+   * Left half of star N → odd value (N*2 - 1), right half → even value (N*2).
+   */
+  const resolveHalfValue = (event, starIndex) => {
+    const { left, width } = event.currentTarget.getBoundingClientRect();
+    const mouseX = event.clientX - left;
+    const isLeftHalf = mouseX < width / 2;
+    return isLeftHalf ? starIndex * 2 - 1 : starIndex * 2;
   };
 
-  const handleStarHover = (starValue) => {
-    if (!readOnly) {
-      setHoverRating(starValue);
-    }
+  const handleMouseMove = (event, starIndex) => {
+    if (readOnly) return;
+    setHoverRating(resolveHalfValue(event, starIndex));
+  };
+
+  const handleClick = (event, starIndex) => {
+    if (readOnly) return;
+    onRatingChange(resolveHalfValue(event, starIndex));
   };
 
   const handleMouseLeave = () => {
     setHoverRating(0);
   };
 
-  // Determine which stars should be filled (based on hover or selected rating)
-  const displayRating = hoverRating || rating;
-
   return (
     <div className="star-rating">
       <div className="stars-container" onMouseLeave={handleMouseLeave}>
-        {[1, 2, 3, 4, 5].map((starValue) => (
-          <button
-            key={starValue}
-            type="button"
-            className={`star ${starValue <= displayRating ? "filled" : "empty"} ${
-              readOnly ? "readonly" : ""
-            }`}
-            onClick={() => handleStarClick(starValue)}
-            onMouseEnter={() => handleStarHover(starValue)}
-            aria-label={`Rate ${starValue} star${starValue !== 1 ? "s" : ""}`}
-            disabled={readOnly}
-          >
-            ★
-          </button>
-        ))}
+        {[1, 2, 3, 4, 5].map((starIndex) => {
+          const leftValue = starIndex * 2 - 1;
+          const rightValue = starIndex * 2;
+
+          const isFull = displayRating >= rightValue;
+          const isHalf = !isFull && displayRating >= leftValue;
+
+          return (
+            <button
+              key={starIndex}
+              type="button"
+              className={`star-wrapper ${readOnly ? "readonly" : ""}`}
+              onMouseMove={(e) => handleMouseMove(e, starIndex)}
+              onClick={(e) => handleClick(e, starIndex)}
+              disabled={readOnly}
+              aria-label={`Rate between ${leftValue} and ${rightValue} out of 10`}
+            >
+              {/* Grey base star — always fully visible underneath */}
+              <span className="star-char star-bg">★</span>
+
+              {/* Gold overlay — width 0 / 50% / 100% clips to empty / half / full */}
+              <span
+                className={`star-char star-fill ${
+                  isFull ? "full" : isHalf ? "half" : ""
+                }`}
+              >
+                ★
+              </span>
+            </button>
+          );
+        })}
       </div>
-      {rating > 0 && (
-        <span className="rating-text">
-          {rating}/5 Star{rating !== 1 ? "s" : ""}
-        </span>
-      )}
+
+      {rating > 0 && <span className="rating-text">{rating}/10</span>}
     </div>
   );
 }

@@ -1,4 +1,8 @@
-/* Star Rating Component Styles */
+/* ===================================================
+   StarRating Component
+   Half-star via mouse position — 5 stars → 1–10 scale
+=================================================== */
+
 .star-rating {
   display: flex;
   flex-direction: column;
@@ -8,53 +12,82 @@
 
 .stars-container {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 
-.star {
-  background: none;
-  border: none;
-  cursor: pointer;
+/* Each star is now a single button — the whole wrapper is clickable */
+.star-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
   font-size: 2rem;
+  line-height: 1;
+  background: transparent;
+  border: none;
   padding: 0;
-  color: #ddd;
-  transition: all 0.15s ease;
-  outline: none;
+  cursor: pointer;
+  transition: transform 0.1s ease;
 }
 
-.star:hover:not(:disabled) {
-  transform: scale(1.15);
+.star-wrapper:not(:disabled):hover {
   filter: drop-shadow(0 0 4px rgba(255, 193, 7, 0.4));
 }
 
-.star.filled {
-  color: #ffc107;
-  text-shadow: 0 0 2px rgba(255, 193, 7, 0.6);
-}
-
-.star.readonly {
+.star-wrapper.readonly,
+.star-wrapper:disabled {
   cursor: default;
 }
 
-.star:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+/* Shared base for both ★ character layers */
+.star-char {
+  position: absolute;
+  top: 0;
+  left: 0;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
 }
 
+/* Grey background star — always 100% wide */
+.star-bg {
+  color: #ddd;
+  width: 100%;
+}
+
+/* Gold overlay star — width clips to half or full */
+.star-fill {
+  color: #ffc107;
+  text-shadow: 0 0 2px rgba(255, 193, 7, 0.5);
+  overflow: hidden;
+  width: 0;
+}
+
+.star-fill.half {
+  width: 50%;
+}
+
+.star-fill.full {
+  width: 100%;
+}
+
+/* Rating label */
 .rating-text {
   font-size: 0.875rem;
   color: #666;
   font-weight: 500;
 }
 
-/* Mobile Responsiveness */
+/* Responsive */
 @media (max-width: 768px) {
-  .star {
+  .star-wrapper {
+    width: 1.75rem;
+    height: 1.75rem;
     font-size: 1.75rem;
   }
 
-  .star:hover:not(:disabled) {
+  .star-wrapper:not(:disabled):hover {
     transform: scale(1.1);
   }
 }

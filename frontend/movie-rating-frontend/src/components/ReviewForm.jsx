@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useReviews } from "../contexts/ReviewContext";
 import StarRating from "./StarRating";
 import "./ReviewForm.css";
 
@@ -116,6 +117,16 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
         timestamp: new Date().toISOString(),
       };
 
+      // Persist the review locally so it appears on the My Reviews page
+
+      addReview({
+        movieId: movie.id,
+        movieTitle: movie.title,
+        movieImageUrl: movie.imageUrl,
+        rating,
+        comment: reviewText.trim(),
+      });
+
       // Show success message
       setSuccess(true);
       setError("");
@@ -125,9 +136,6 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
         setRating(0);
         setReviewText("");
         setSuccess(false);
-
-        // Callback to parent component (MovieDetails)
-        // This allows parent to refresh movie data and update average rating
         onSubmitSuccess({
           rating,
           reviewText: reviewText.trim(),
@@ -200,7 +208,7 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
           {success && (
             <div className="success-message">
               <span className="success-icon">✓</span>
-              Thank you! Your review has been submitted.
+              Your review has been submitted successfully!
             </div>
           )}
 

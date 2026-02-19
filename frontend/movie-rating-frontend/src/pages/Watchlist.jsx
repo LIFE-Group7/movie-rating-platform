@@ -85,27 +85,6 @@ function Watchlist() {
       </section>
 
       <div className="watchlist-layout">
-        <aside className="watchlist-sidebar">
-          <button
-            className={`sidebar-item ${activeSection === "ratings" ? "active" : ""}`}
-            onClick={() => setActiveSection("ratings")}
-          >
-            Your Ratings
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === "watchlist" ? "active" : ""}`}
-            onClick={() => setActiveSection("watchlist")}
-          >
-            Your Watchlist
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === "recent" ? "active" : ""}`}
-            onClick={() => setActiveSection("recent")}
-          >
-            Recently Viewed
-          </button>
-        </aside>
-
         <main className="watchlist-content">
           {activeSection === "watchlist" && (
             <>
@@ -150,7 +129,10 @@ function Watchlist() {
                     ) : (
                       <div className="watchlist-movie-list">
                         {sortedWatchlist.map((movie) => (
-                          <article key={movie.id} className="watchlist-movie-card">
+                          <article
+                            key={movie.id}
+                            className="watchlist-movie-card"
+                          >
                             <img src={movie.imageUrl} alt={movie.title} />
 
                             <div className="movie-card-content">
@@ -162,10 +144,14 @@ function Watchlist() {
                                   {movie.title}
                                 </Link>
                               </h3>
-                              <p className="movie-description">{movie.description}</p>
+                              <p className="movie-description">
+                                {movie.description}
+                              </p>
                               <div className="movie-meta-row">
                                 <span className="movie-meta-item">
-                                  Main stars: {(movie.mainStars || []).join(", ") || "Unknown"}
+                                  Main stars:{" "}
+                                  {(movie.mainStars || []).join(", ") ||
+                                    "Unknown"}
                                 </span>
                                 <span className="movie-meta-item">
                                   Creator: {movie.creator || "Unknown"}

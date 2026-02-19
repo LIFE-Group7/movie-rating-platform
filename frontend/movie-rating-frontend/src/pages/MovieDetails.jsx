@@ -10,7 +10,12 @@ function MovieDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToWatchlist, removeFromWatchlist, isInWatchlist, addRecentlyViewed } = useWatchlist();
+  const {
+    addToWatchlist,
+    removeFromWatchlist,
+    isInWatchlist,
+    addRecentlyViewed,
+  } = useWatchlist();
   const { isAuthenticated } = useAuth();
 
   const [movieData, setMovieData] = useState(null);
@@ -148,7 +153,9 @@ function MovieDetails() {
               className={`watchlist-button${movieInWatchlist ? " is-remove" : ""}`}
               onClick={handleWatchlistToggle}
             >
-              {movieInWatchlist ? "− Remove from Watchlist" : "+ Add to Watchlist"}
+              {movieInWatchlist
+                ? "Remove from Watchlist"
+                : "+ Add to Watchlist"}
             </button>
           </div>
         </div>
