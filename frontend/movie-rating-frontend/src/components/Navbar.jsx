@@ -40,7 +40,10 @@ function Navbar() {
           CineMatch
         </Link>
         <div className="nav-links">
-          <Link to="/watchlist" className={`nav-link ${isActive("/watchlist") ? "active" : ""}`}>
+          <Link
+            to="/watchlist"
+            className={`nav-link ${isActive("/watchlist") ? "active" : ""}`}
+          >
             Watchlist
           </Link>
 
@@ -62,6 +65,12 @@ function Navbar() {
             </>
           ) : (
             <>
+              <Link
+                to="/my-reviews"
+                className={`nav-link ${isActive("/my-reviews") ? "active" : ""}`}
+              >
+                My Reviews
+              </Link>
               {/* Show user username and logout button if authenticated */}
               <span className="nav-user">
                 Welcome, {user?.username || "User"}
