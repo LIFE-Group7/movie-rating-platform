@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
 import "./MovieCard.css";
@@ -14,7 +14,20 @@ function MovieCard({ movie }) {
   const movieGenres = movie.genres || (movie.genre ? [movie.genre] : []);
   const movieInWatchlist = isInWatchlist(movie.id);
 
-  const handleToggleWatchlist = () => {
+  const handleCardClick = () => {
+    navigate(`/movie/${movie.id}`);
+  };
+
+  const handleCardKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleCardClick();
+    }
+  };
+
+  const handleToggleWatchlist = (event) => {
+    event.stopPropagation();
+
     if (!isAuthenticated) {
       navigate("/login");
       return;
@@ -29,15 +42,19 @@ function MovieCard({ movie }) {
   };
 
   return (
-    <div className="movie-card">
-      <Link to={`/movie/${movie.id}`} className="movie-card-link">
-        <img src={movie.imageUrl} alt={movie.title} />
-        <div className="movie-info">
-          <h3>{movie.title}</h3>
-          <p className="rating">⭐ {movie.rating}/10</p>
-
-        </div>
-      </Link>
+    <div
+      className="movie-card"
+      role="link"
+      tabIndex={0}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      aria-label={`Open details for ${movie.title}`}
+    >
+      <img src={movie.imageUrl} alt={movie.title} />
+      <div className="movie-info">
+        <h3>{movie.title}</h3>
+        <p className="rating">⭐ {movie.rating}/10</p>
+      </div>
 
       <div className="movie-card-bottom-row">
         {movieGenres.length > 0 && (
@@ -52,7 +69,7 @@ function MovieCard({ movie }) {
 
         <button
           type="button"
-          className="watchlist-add-btn"
+          className={`watchlist-add-btn${movieInWatchlist ? " is-remove" : ""}`}
           onClick={handleToggleWatchlist}
           title={
             movieInWatchlist ? "Remove from watchlist" : "Add to watchlist"
