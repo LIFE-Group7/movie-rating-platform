@@ -7,9 +7,14 @@ import "./Home.css";
 // Includes a genre filter section that redirects to search page
 function Home() {
   const navigate = useNavigate();
+  const mainGenres = ["Action", "Drama", "Crime", "Thriller", "Sci-Fi"];
+  const suggestedMovies = movies.slice(0, 4);
 
   // Get all unique genres from movies collection
   const availableGenres = getAllGenres();
+
+  const getGenreMovies = (genre) =>
+    movies.filter((movie) => (movie.genres || []).includes(genre)).slice(0, 4);
 
   // Redirects to search page with genre query parameter
   const handleGenreClick = (genre) => {
@@ -20,9 +25,35 @@ function Home() {
     <div className="home">
       <h2>Rated & Recommended Movies</h2>
 
+      <div className="home-section-block">
+        <h3>Suggested Movies</h3>
+      </div>
       <div className="movie-grid">
-        {movies.map((movie) => (
+        {suggestedMovies.map((movie) => (
           <MovieCard key={movie.id} movie={movie} />
+        ))}
+      </div>
+
+      <div className="genre-suggestions-section">
+        <h3>Main Genres</h3>
+        {mainGenres.map((genre) => (
+          <section key={genre} className="genre-preview-block">
+            <div className="genre-preview-header">
+              <button
+                type="button"
+                className="genre-title-button"
+                onClick={() => handleGenreClick(genre)}
+                aria-label={`Open ${genre} genre page`}
+              >
+                {genre}
+              </button>
+            </div>
+            <div className="movie-grid">
+              {getGenreMovies(genre).map((movie) => (
+                <MovieCard key={`${genre}-${movie.id}`} movie={movie} />
+              ))}
+            </div>
+          </section>
         ))}
       </div>
 
