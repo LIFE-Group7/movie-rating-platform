@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using MovieRating.Backend.Models.Entities.Extra;
+using MovieRating.Backend.Models.Extra;
 
-namespace MovieRating.Backend.Models.Entities.Basics;
+namespace MovieRating.Backend.Models.Basics;
 
 public class Movie
 {
