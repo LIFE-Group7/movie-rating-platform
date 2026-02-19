@@ -1,6 +1,6 @@
 ﻿using MovieRating.Backend.Common;
 using MovieRating.Backend.DTOs;
-using MovieRating.Backend.Models.Entities.Basics;
+using MovieRating.Backend.Models.Basics;
 
 namespace MovieRating.Backend.Services;
 

@@ -4,10 +4,10 @@ using MovieRating.Backend.Common;
 using MovieRating.Backend.Data;
 using MovieRating.Backend.DTOs;
 using MovieRating.Backend.Exceptions;
-using MovieRating.Backend.Models.Entities.Basics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using MovieRating.Backend.Models.Basics;
 
 namespace MovieRating.Backend.Services;
 

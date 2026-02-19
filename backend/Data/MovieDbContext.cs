@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using MovieRating.Backend.Models.Entities.Basics;
-using MovieRating.Backend.Models.Entities.Extra;
+using MovieRating.Backend.Models.Basics;
+using MovieRating.Backend.Models.Extra;
 
 namespace MovieRating.Backend.Data;
 

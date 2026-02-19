@@ -1,4 +1,4 @@
-namespace MovieRating.Backend.Models.Entities.Basics;
+namespace MovieRating.Backend.Models.Basics;
 
 public class MovieGenre
 {
