@@ -4,7 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models; 
 using MovieRating.Backend.Data;
+using MovieRating.Backend.Repositories;
+using MovieRating.Backend.Repositories.Interfaces;
 using MovieRating.Backend.Services;
+using MovieRating.Backend.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +15,10 @@ builder.Services.AddDbContext<MovieDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+//Movie Services
+builder.Services.AddScoped<IMovieRepository, MovieRepository>();
+builder.Services.AddScoped<IMovieService, MovieService>();
 
 builder.Services.AddControllers();
 
