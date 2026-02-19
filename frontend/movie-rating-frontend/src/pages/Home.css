@@ -10,6 +10,48 @@
   color: #333;
 }
 
+.home-section-block h3,
+.genre-suggestions-section > h3 {
+  margin: 0 0 18px 0;
+  font-size: 22px;
+  color: #333;
+}
+
+.genre-suggestions-section {
+  margin-top: 6px;
+}
+
+.genre-preview-block {
+  margin-bottom: 24px;
+}
+
+.genre-preview-header h4 {
+  margin: 0 0 14px 0;
+  font-size: 18px;
+  color: #444;
+}
+
+.genre-title-button {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0 0 14px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #444;
+  cursor: pointer;
+}
+
+.genre-title-button:hover {
+  color: #007bff;
+}
+
+.genre-title-button:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 .movie-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -81,6 +123,19 @@
     margin-bottom: 20px;
   }
 
+  .home-section-block h3,
+  .genre-suggestions-section > h3 {
+    font-size: 20px;
+  }
+
+  .genre-preview-header h4 {
+    font-size: 17px;
+  }
+
+  .genre-title-button {
+    font-size: 17px;
+  }
+
   .genre-tags {
     gap: 10px;
   }
@@ -111,5 +166,10 @@
   .genre-filter-section {
     padding: 20px 0;
     margin: 40px 0;
+  }
+
+  .home-section-block h3,
+  .genre-suggestions-section > h3 {
+    font-size: 18px;
   }
 }
