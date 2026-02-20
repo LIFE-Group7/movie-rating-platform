@@ -10,7 +10,12 @@ function MovieDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToWatchlist, isInWatchlist, addRecentlyViewed } = useWatchlist();
+  const {
+    addToWatchlist,
+    removeFromWatchlist,
+    isInWatchlist,
+    addRecentlyViewed,
+  } = useWatchlist();
   const { isAuthenticated } = useAuth();
 
   const [movieData, setMovieData] = useState(null);
@@ -66,11 +71,17 @@ function MovieDetails() {
     // setMovieData(updatedMovie);
   };
 
-  const handleWatchlistAdd = () => {
+  const handleWatchlistToggle = () => {
     if (!isAuthenticated) {
       navigate("/login");
       return;
     }
+
+    if (movieInWatchlist) {
+      removeFromWatchlist(movieData.id);
+      return;
+    }
+
     addToWatchlist(movieData);
   };
 
@@ -139,11 +150,12 @@ function MovieDetails() {
               Rate this movie
             </button>
             <button
-              className="watchlist-button"
-              onClick={handleWatchlistAdd}
-              disabled={movieInWatchlist}
+              className={`watchlist-button${movieInWatchlist ? " is-remove" : ""}`}
+              onClick={handleWatchlistToggle}
             >
-              {movieInWatchlist ? "✓ In Watchlist" : "+ Add to Watchlist"}
+              {movieInWatchlist
+                ? "Remove from Watchlist"
+                : "+ Add to Watchlist"}
             </button>
           </div>
         </div>

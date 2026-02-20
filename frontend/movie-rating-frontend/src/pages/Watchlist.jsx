@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
+import MovieCard from "../components/MovieCard";
 import "./Watchlist.css";
 
 const SORT_OPTIONS = [
@@ -22,13 +23,8 @@ const formatDate = (dateString) => {
 function Watchlist() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const {
-    watchlist,
-    recentlyViewed,
-    userRatings,
-    setRatingForMovie,
-    removeFromWatchlist,
-  } = useWatchlist();
+  const { watchlist, recentlyViewed, userRatings, removeFromWatchlist } =
+    useWatchlist();
 
   const [sortBy, setSortBy] = useState("addedAt");
   const [activeSection, setActiveSection] = useState("watchlist");
@@ -75,7 +71,6 @@ function Watchlist() {
   }, [userRatings, watchlist]);
 
   const handleLeaveReview = (movie) => {
-    // Navigate to movie details page with scroll to review section
     navigate(`/movie/${movie.id}`, { state: { scrollToReview: true } });
   };
 
@@ -90,27 +85,6 @@ function Watchlist() {
       </section>
 
       <div className="watchlist-layout">
-        <aside className="watchlist-sidebar">
-          <button
-            className={`sidebar-item ${activeSection === "ratings" ? "active" : ""}`}
-            onClick={() => setActiveSection("ratings")}
-          >
-            Your Ratings
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === "watchlist" ? "active" : ""}`}
-            onClick={() => setActiveSection("watchlist")}
-          >
-            Your Watchlist
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === "recent" ? "active" : ""}`}
-            onClick={() => setActiveSection("recent")}
-          >
-            Recently Viewed
-          </button>
-        </aside>
-
         <main className="watchlist-content">
           {activeSection === "watchlist" && (
             <>
@@ -147,73 +121,93 @@ function Watchlist() {
                     </select>
                   </div>
 
-                  {sortedWatchlist.length === 0 ? (
-                    <div className="empty-state">
-                      No movies in your watchlist yet.
-                    </div>
-                  ) : (
-                    <div className="watchlist-movie-list">
-                      {sortedWatchlist.map((movie) => (
-                        <article
-                          key={movie.id}
-                          className="watchlist-movie-card"
-                        >
-                          <img src={movie.imageUrl} alt={movie.title} />
+                  <div className="watchlist-primary-area">
+                    {sortedWatchlist.length === 0 ? (
+                      <div className="empty-state">
+                        No movies in your watchlist yet.
+                      </div>
+                    ) : (
+                      <div className="watchlist-movie-list">
+                        {sortedWatchlist.map((movie) => (
+                          <article
+                            key={movie.id}
+                            className="watchlist-movie-card"
+                          >
+                            <img src={movie.imageUrl} alt={movie.title} />
 
-                          <div className="movie-card-content">
-                            <h3>
-                              <Link
-                                to={`/movie/${movie.id}`}
-                                className="movie-title-link"
+                            <div className="movie-card-content">
+                              <h3>
+                                <Link
+                                  to={`/movie/${movie.id}`}
+                                  className="movie-title-link"
+                                >
+                                  {movie.title}
+                                </Link>
+                              </h3>
+                              <p className="movie-description">
+                                {movie.description}
+                              </p>
+                              <div className="movie-meta-row">
+                                <span className="movie-meta-item">
+                                  Main stars:{" "}
+                                  {(movie.mainStars || []).join(", ") ||
+                                    "Unknown"}
+                                </span>
+                                <span className="movie-meta-item">
+                                  Creator: {movie.creator || "Unknown"}
+                                </span>
+                              </div>
+                              <div className="movie-meta-row movie-meta-row-faint">
+                                <span className="movie-meta-item">
+                                  Year: {movie.year || "N/A"}
+                                </span>
+                                <span className="movie-meta-item">
+                                  Release date: {formatDate(movie.releaseDate)}
+                                </span>
+                              </div>
+                              <p className="movie-meta">
+                                Added to watchlist: {formatDate(movie.addedAt)}
+                              </p>
+                            </div>
+
+                            <div className="movie-card-actions">
+                              <button
+                                onClick={() => handleLeaveReview(movie)}
+                                disabled={!isAuthenticated}
                               >
-                                {movie.title}
-                              </Link>
-                            </h3>
-                            <p className="movie-description">
-                              {movie.description}
-                            </p>
-                            <div className="movie-meta-row">
-                              <span className="movie-meta-item">
-                                Main stars:{" "}
-                                {(movie.mainStars || []).join(", ") ||
-                                  "Unknown"}
-                              </span>
-                              <span className="movie-meta-item">
-                                Creator: {movie.creator || "Unknown"}
-                              </span>
+                                Leave rating/review
+                              </button>
+                              <button
+                                className="secondary"
+                                onClick={() => removeFromWatchlist(movie.id)}
+                                disabled={!isAuthenticated}
+                              >
+                                Remove
+                              </button>
                             </div>
-                            <div className="movie-meta-row movie-meta-row-faint">
-                              <span className="movie-meta-item">
-                                Year: {movie.year || "N/A"}
-                              </span>
-                              <span className="movie-meta-item">
-                                Release date: {formatDate(movie.releaseDate)}
-                              </span>
-                            </div>
-                            <p className="movie-meta">
-                              Added to watchlist: {formatDate(movie.addedAt)}
-                            </p>
-                          </div>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-                          <div className="movie-card-actions">
-                            <button
-                              onClick={() => handleLeaveReview(movie)}
-                              disabled={!isAuthenticated}
-                            >
-                              Leave rating/review
-                            </button>
-                            <button
-                              className="secondary"
-                              onClick={() => removeFromWatchlist(movie.id)}
-                              disabled={!isAuthenticated}
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </article>
-                      ))}
+                  <section className="recently-viewed-bottom-section">
+                    <div className="recently-viewed-bottom-header">
+                      <h3>Recently viewed</h3>
                     </div>
-                  )}
+
+                    {recentlyViewed.length === 0 ? (
+                      <div className="empty-state">
+                        No recently viewed movies yet.
+                      </div>
+                    ) : (
+                      <div className="movie-grid recently-viewed-card-grid">
+                        {recentlyViewed.map((movie) => (
+                          <MovieCard key={movie.id} movie={movie} />
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 </>
               )}
             </>
@@ -245,12 +239,9 @@ function Watchlist() {
                   No recently viewed movies yet.
                 </div>
               ) : (
-                <div className="simple-list">
+                <div className="movie-grid recently-viewed-card-grid">
                   {recentlyViewed.map((movie) => (
-                    <div key={movie.id} className="simple-list-item">
-                      <Link to={`/movie/${movie.id}`}>{movie.title}</Link>
-                      <span>{formatDate(movie.viewedAt)}</span>
-                    </div>
+                    <MovieCard key={movie.id} movie={movie} />
                   ))}
                 </div>
               )}

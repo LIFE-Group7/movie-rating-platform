@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MovieRating.Backend.Models.Entities.Basics;
+namespace MovieRating.Backend.Models.Basics;
 
 public class Genre
 {
@@ -11,4 +11,5 @@ public class Genre
     public required string Name { get; set; }
     
     public ICollection<MovieGenre> MovieGenres { get; set; } =  new List<MovieGenre>();
+    public ICollection<ShowGenre> ShowGenres { get; set; } = new List<ShowGenre>();
 }

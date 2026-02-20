@@ -90,6 +90,17 @@
   cursor: not-allowed;
 }
 
+.watchlist-button.is-remove {
+  background-color: #fff5f5;
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.watchlist-button.is-remove:hover {
+  background-color: #dc3545;
+  color: #fff;
+}
+
 .rate-button {
   background-color: #007bff;
   color: white;
