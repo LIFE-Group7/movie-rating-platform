@@ -11,4 +11,5 @@ public class Genre
     public required string Name { get; set; }
     
     public ICollection<MovieGenre> MovieGenres { get; set; } =  new List<MovieGenre>();
+    public ICollection<ShowGenre> ShowGenres { get; set; } = new List<ShowGenre>();
 }

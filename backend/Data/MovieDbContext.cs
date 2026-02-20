@@ -16,6 +16,8 @@ public class MovieDbContext : DbContext
     public DbSet<Watchlist> Watchlist => Set<Watchlist>();
     public DbSet<HomeSection> HomeSections => Set<HomeSection>();
     public DbSet<HomeSectionMovie> HomeSectionMovies => Set<HomeSectionMovie>();
+    public DbSet<Show> Shows => Set<Show>();
+    public DbSet<ShowGenre> ShowGenres => Set<ShowGenre>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -142,5 +144,34 @@ public class MovieDbContext : DbContext
                   .HasForeignKey(hsm => hsm.MovieId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<Show>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+
+            entity.Property(s => s.AverageRating)
+                  .HasPrecision(4, 2);
+
+            entity.Property(s => s.AddedAt)
+                  .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.Property(s => s.Status)
+                  .HasConversion<string>();
+       });
+            
+        modelBuilder.Entity<ShowGenre>(entity =>
+       {
+            entity.HasKey(sg => new { sg.ShowId, sg.GenreId });
+
+            entity.HasOne(sg => sg.Show)
+                  .WithMany(s => s.ShowGenres)
+                  .HasForeignKey(sg => sg.ShowId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sg => sg.Genre)
+                  .WithMany(g => g.ShowGenres)
+                  .HasForeignKey(sg => sg.GenreId)
+                  .OnDelete(DeleteBehavior.Restrict);
+       });
     }
 }
