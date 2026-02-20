@@ -16,6 +16,7 @@ const getPosterUrl = (title, year) => {
 export const movies = [
   {
     id: 1,
+    type: "movie",
     title: "The Shawshank Redemption",
     rating: 9.3,
     year: 1994,
@@ -30,6 +31,7 @@ export const movies = [
   },
   {
     id: 2,
+    type: "movie",
     title: "The Godfather",
     rating: 9.2,
     year: 1972,
@@ -44,6 +46,7 @@ export const movies = [
   },
   {
     id: 3,
+    type: "movie",
     title: "The Dark Knight",
     rating: 9.0,
     year: 2008,
@@ -58,6 +61,7 @@ export const movies = [
   },
   {
     id: 4,
+    type: "movie",
     title: "Inception",
     rating: 8.8,
     year: 2010,
@@ -72,6 +76,7 @@ export const movies = [
   },
   {
     id: 5,
+    type: "movie",
     title: "Interstellar",
     rating: 8.7,
     year: 2014,
@@ -86,6 +91,7 @@ export const movies = [
   },
   {
     id: 6,
+    type: "movie",
     title: "The Matrix",
     rating: 8.7,
     year: 1999,
@@ -100,6 +106,7 @@ export const movies = [
   },
   {
     id: 7,
+    type: "movie",
     title: "Se7en",
     rating: 8.6,
     year: 1995,
@@ -114,6 +121,7 @@ export const movies = [
   },
   {
     id: 8,
+    type: "movie",
     title: "Gladiator",
     rating: 8.5,
     year: 2000,
@@ -128,6 +136,7 @@ export const movies = [
   },
   {
     id: 9,
+    type: "movie",
     title: "Pulp Fiction",
     rating: 8.9,
     year: 1994,
@@ -142,6 +151,7 @@ export const movies = [
   },
   {
     id: 10,
+    type: "movie",
     title: "Mad Max: Fury Road",
     rating: 8.1,
     year: 2015,
@@ -156,6 +166,7 @@ export const movies = [
   },
   {
     id: 11,
+    type: "movie",
     title: "The Prestige",
     rating: 8.5,
     year: 2006,
@@ -170,6 +181,7 @@ export const movies = [
   },
   {
     id: 12,
+    type: "movie",
     title: "Minority Report",
     rating: 7.6,
     year: 2002,

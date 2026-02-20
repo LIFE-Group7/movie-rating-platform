@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import MovieCard from "../components/MovieCard";
+import ShowCard from "../components/ShowCard";
 import { movies, getAllGenres } from "../data/mockMovies";
+import { shows } from "../data/mockShows";
 import "./Home.css";
 
 // Main landing page that displays a grid of movie cards
@@ -8,7 +10,8 @@ import "./Home.css";
 function Home() {
   const navigate = useNavigate();
   const mainGenres = ["Action", "Drama", "Crime", "Thriller", "Sci-Fi"];
-  const suggestedMovies = movies.slice(0, 4);
+  const trendingMovies = movies.slice(0, 4);
+  const trendingShows = shows.slice(0, 4);
 
   // Get all unique genres from movies collection
   const availableGenres = getAllGenres();
@@ -23,14 +26,23 @@ function Home() {
 
   return (
     <div className="home">
-      <h2>Rated & Recommended Movies</h2>
+      <h2>Rated & Recommended</h2>
 
       <div className="home-section-block">
-        <h3>Suggested Movies</h3>
+        <h3>Trending Movies</h3>
       </div>
       <div className="movie-grid">
-        {suggestedMovies.map((movie) => (
+        {trendingMovies.map((movie) => (
           <MovieCard key={movie.id} movie={movie} />
+        ))}
+      </div>
+
+      <div className="home-section-block">
+        <h3>Trending Shows</h3>
+      </div>
+      <div className="movie-grid">
+        {trendingShows.map((show) => (
+          <ShowCard key={show.id} show={show} />
         ))}
       </div>
 
