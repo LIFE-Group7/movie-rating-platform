@@ -19,8 +19,10 @@ public class Movie
     [MaxLength(150)]
     public string? Director { get; set; }
     
+    [Range(1, 600)]
     public int DurationMinutes {get; set;}
     
+    [MaxLength(500)]
     public string? CoverImageUrl { get; set; }
     
     public DateTime AddedAt { get; set; }
