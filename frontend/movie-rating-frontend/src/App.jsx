@@ -5,6 +5,7 @@ import { ReviewsProvider } from "./contexts/ReviewContext";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import MovieDetails from "./pages/MovieDetails";
+import ShowDetails from "./pages/ShowDetails";
 import Search from "./pages/Search";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
@@ -27,6 +28,8 @@ function App() {
                 <Route path="/" element={<Home />} />
                 {/* Dynamic route for movie details page, captures movie ID from URL */}
                 <Route path="/movie/:id" element={<MovieDetails />} />
+                {/* Dynamic route for show details page, captures show ID from URL */}
+                <Route path="/show/:id" element={<ShowDetails />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/watchlist" element={<Watchlist />} />
                 <Route path="/login" element={<Login />} />
