@@ -27,37 +27,36 @@ function Watchlist() {
     useWatchlist();
 
   const [sortBy, setSortBy] = useState("addedAt");
+  const [sortDirection, setSortDirection] = useState("asc"); // "asc" or "desc"
   const [activeSection, setActiveSection] = useState("watchlist");
+  const [viewMode, setViewMode] = useState("list"); // "cards" or "list"
 
   const sortedWatchlist = useMemo(() => {
     const list = [...watchlist];
+    const multiplier = sortDirection === "asc" ? 1 : -1;
 
     list.sort((a, b) => {
+      let comparison = 0;
+
       if (sortBy === "name") {
-        return a.title.localeCompare(b.title);
+        comparison = a.title.localeCompare(b.title);
+      } else if (sortBy === "year") {
+        comparison = (b.year || 0) - (a.year || 0);
+      } else if (sortBy === "rating") {
+        comparison = (b.rating || 0) - (a.rating || 0);
+      } else if (sortBy === "yourRating") {
+        comparison = (userRatings[b.id] || 0) - (userRatings[a.id] || 0);
+      } else if (sortBy === "releaseDate") {
+        comparison = new Date(b.releaseDate || 0) - new Date(a.releaseDate || 0);
+      } else {
+        comparison = new Date(b.addedAt || 0) - new Date(a.addedAt || 0);
       }
 
-      if (sortBy === "year") {
-        return (b.year || 0) - (a.year || 0);
-      }
-
-      if (sortBy === "rating") {
-        return (b.rating || 0) - (a.rating || 0);
-      }
-
-      if (sortBy === "yourRating") {
-        return (userRatings[b.id] || 0) - (userRatings[a.id] || 0);
-      }
-
-      if (sortBy === "releaseDate") {
-        return new Date(b.releaseDate || 0) - new Date(a.releaseDate || 0);
-      }
-
-      return new Date(b.addedAt || 0) - new Date(a.addedAt || 0);
+      return comparison * multiplier;
     });
 
     return list;
-  }, [watchlist, sortBy, userRatings]);
+  }, [watchlist, sortBy, sortDirection, userRatings]);
 
   const ratingsList = useMemo(() => {
     return Object.entries(userRatings)
@@ -119,12 +118,83 @@ function Watchlist() {
                         </option>
                       ))}
                     </select>
+
+                    <button
+                      className="sort-direction-btn"
+                      onClick={() =>
+                        setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                      }
+                      title={
+                        sortDirection === "asc"
+                          ? "Sort in ascending order"
+                          : "Sort in descending order"
+                      }
+                      aria-label="Toggle sort direction"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="18"
+                        height="18"
+                        fill="currentColor"
+                      >
+                        {sortDirection === "asc" ? (
+                          <g>
+                            <polyline points="6 9 12 3 18 9" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                            <line x1="12" y1="21" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          </g>
+                        ) : (
+                          <g>
+                            <polyline points="6 15 12 21 18 15" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                            <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          </g>
+                        )}
+                      </svg>
+                    </button>
+
+                    <div className="view-toggle">
+                      <button
+                        className={`view-btn ${viewMode === "cards" ? "active" : ""}`}
+                        onClick={() => setViewMode("cards")}
+                        title="Card view"
+                        aria-label="Switch to card view"
+                      >
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                          <circle cx="5" cy="5" r="1.5"/>
+                          <circle cx="12" cy="5" r="1.5"/>
+                          <circle cx="19" cy="5" r="1.5"/>
+                          <circle cx="5" cy="12" r="1.5"/>
+                          <circle cx="12" cy="12" r="1.5"/>
+                          <circle cx="19" cy="12" r="1.5"/>
+                          <circle cx="5" cy="19" r="1.5"/>
+                          <circle cx="12" cy="19" r="1.5"/>
+                          <circle cx="19" cy="19" r="1.5"/>
+                        </svg>
+                      </button>
+                      <button
+                        className={`view-btn ${viewMode === "list" ? "active" : ""}`}
+                        onClick={() => setViewMode("list")}
+                        title="List view"
+                        aria-label="Switch to list view"
+                      >
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                          <line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          <line x1="4" y1="18" x2="20" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="watchlist-primary-area">
                     {sortedWatchlist.length === 0 ? (
                       <div className="empty-state">
                         No movies in your watchlist yet.
+                      </div>
+                    ) : viewMode === "cards" ? (
+                      <div className="movie-grid">
+                        {sortedWatchlist.map((movie) => (
+                          <MovieCard key={movie.id} movie={movie} />
+                        ))}
                       </div>
                     ) : (
                       <div className="watchlist-movie-list">
