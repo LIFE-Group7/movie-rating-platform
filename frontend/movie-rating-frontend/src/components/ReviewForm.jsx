@@ -14,6 +14,7 @@ import "./ReviewForm.css";
 function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { addReview } = useReviews();
 
   // Form state
   const [rating, setRating] = useState(0);
@@ -125,6 +126,7 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
         movieImageUrl: movie.imageUrl,
         rating,
         comment: reviewText.trim(),
+        type: movie.type || "movie",
       });
 
       // Show success message

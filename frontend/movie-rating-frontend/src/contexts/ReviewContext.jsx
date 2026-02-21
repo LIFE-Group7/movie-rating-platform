@@ -79,7 +79,7 @@ export function ReviewsProvider({ children }) {
     (reviewData) => {
       if (!isAuthenticated || !user?.email) return false;
 
-      const { movieId, movieTitle, movieImageUrl, rating, comment } =
+      const { movieId, movieTitle, movieImageUrl, rating, comment, type } =
         reviewData;
 
       setReviews((previous) => {
@@ -92,6 +92,7 @@ export function ReviewsProvider({ children }) {
           movieImageUrl,
           rating,
           comment: comment || "",
+          type: type || "movie",
           createdAt: new Date().toISOString(),
           updatedAt: null,
         };

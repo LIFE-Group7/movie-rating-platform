@@ -185,7 +185,7 @@ function ReviewCard({ review, onDelete }) {
           />
         )}
         <div className="review-card-meta">
-          <Link to={`/movie/${review.movieId}`} className="review-movie-title">
+          <Link to={review.type === "show" ? `/show/${review.movieId}` : `/movie/${review.movieId}`} className="review-movie-title">
             {review.movieTitle}
           </Link>
           <div className="review-rating-display">⭐ {review.rating}/10</div>

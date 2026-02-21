@@ -70,7 +70,8 @@ function Watchlist() {
   }, [userRatings, watchlist]);
 
   const handleLeaveReview = (movie) => {
-    navigate(`/movie/${movie.id}`, { state: { scrollToReview: true } });
+    const route = movie.type === "show" ? `/show/${movie.id}` : `/movie/${movie.id}`;
+    navigate(route, { state: { scrollToReview: true } });
   };
 
   return (
@@ -208,7 +209,7 @@ function Watchlist() {
                             <div className="movie-card-content">
                               <h3>
                                 <Link
-                                  to={`/movie/${movie.id}`}
+                                  to={movie.type === "show" ? `/show/${movie.id}` : `/movie/${movie.id}`}
                                   className="movie-title-link"
                                 >
                                   {movie.title}
