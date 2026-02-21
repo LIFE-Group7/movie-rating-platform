@@ -2,7 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models; 
+using Microsoft.OpenApi.Models;
 using MovieRating.Backend.Data;
 using MovieRating.Backend.Repositories;
 using MovieRating.Backend.Repositories.Interfaces;
@@ -21,6 +21,10 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 //Movie Services
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<IMovieService, MovieService>();
+
+//Show Services
+builder.Services.AddScoped<IShowRepository, ShowRepository>();
+builder.Services.AddScoped<IShowService, ShowService>();
 
 builder.Services.AddControllers();
 
