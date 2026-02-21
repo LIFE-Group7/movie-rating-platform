@@ -152,38 +152,40 @@ function Watchlist() {
                       </svg>
                     </button>
 
-                    <div className="view-toggle">
-                      <button
-                        className={`view-btn ${viewMode === "cards" ? "active" : ""}`}
-                        onClick={() => setViewMode("cards")}
-                        title="Card view"
-                        aria-label="Switch to card view"
-                      >
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                          <circle cx="5" cy="5" r="1.5"/>
-                          <circle cx="12" cy="5" r="1.5"/>
-                          <circle cx="19" cy="5" r="1.5"/>
-                          <circle cx="5" cy="12" r="1.5"/>
-                          <circle cx="12" cy="12" r="1.5"/>
-                          <circle cx="19" cy="12" r="1.5"/>
-                          <circle cx="5" cy="19" r="1.5"/>
-                          <circle cx="12" cy="19" r="1.5"/>
-                          <circle cx="19" cy="19" r="1.5"/>
-                        </svg>
-                      </button>
-                      <button
-                        className={`view-btn ${viewMode === "list" ? "active" : ""}`}
-                        onClick={() => setViewMode("list")}
-                        title="List view"
-                        aria-label="Switch to list view"
-                      >
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                          <line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          <line x1="4" y1="18" x2="20" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                      </button>
-                    </div>
+                    <span className="separator">|</span>
+                    <span className="controls-label">View:</span>
+                    
+                    <button
+                      className={`view-icon-link ${viewMode === "cards" ? "active" : ""}`}
+                      onClick={() => setViewMode("cards")}
+                      title="Card view"
+                      aria-label="Switch to card view"
+                    >
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <circle cx="5" cy="5" r="1.5"/>
+                        <circle cx="12" cy="5" r="1.5"/>
+                        <circle cx="19" cy="5" r="1.5"/>
+                        <circle cx="5" cy="12" r="1.5"/>
+                        <circle cx="12" cy="12" r="1.5"/>
+                        <circle cx="19" cy="12" r="1.5"/>
+                        <circle cx="5" cy="19" r="1.5"/>
+                        <circle cx="12" cy="19" r="1.5"/>
+                        <circle cx="19" cy="19" r="1.5"/>
+                      </svg>
+                    </button>
+                    
+                    <button
+                      className={`view-icon-link ${viewMode === "list" ? "active" : ""}`}
+                      onClick={() => setViewMode("list")}
+                      title="List view"
+                      aria-label="Switch to list view"
+                    >
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="4" y1="18" x2="20" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </button>
                   </div>
 
                   <div className="watchlist-primary-area">

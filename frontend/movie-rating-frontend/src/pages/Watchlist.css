@@ -59,6 +59,63 @@
   cursor: pointer;
 }
 
+.watchlist-controls .separator {
+  color: #ccc;
+  margin: 0 8px;
+}
+
+.watchlist-controls .controls-label {
+  font-size: 14px;
+  color: #444;
+  font-weight: 500;
+}
+
+/* Sort direction button with hover effect */
+.watchlist-controls .sort-direction-btn {
+  background: none;
+  border: none;
+  padding: 6px;
+  color: #666;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+.watchlist-controls .sort-direction-btn:hover {
+  background-color: #f0f0f0;
+  color: #007bff;
+}
+
+/* View icons as inline text-like clickable elements */
+.watchlist-controls .view-icon-link {
+  background: none;
+  border: none;
+  padding: 6px;
+  margin: 0 2px;
+  color: #666;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+.watchlist-controls .view-icon-link:hover {
+  background-color: #f0f0f0;
+  color: #007bff;
+}
+
+.watchlist-controls .view-icon-link.active {
+  color: #007bff;
+  background-color: #e3f2fd;
+}
+
 /* ── Movie list ── */
 .watchlist-movie-list {
   display: flex;
