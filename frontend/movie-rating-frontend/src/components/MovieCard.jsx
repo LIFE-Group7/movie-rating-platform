@@ -14,8 +14,10 @@ function MovieCard({ movie }) {
   const movieGenres = movie.genres || (movie.genre ? [movie.genre] : []);
   const movieInWatchlist = isInWatchlist(movie.id);
 
+  const detailRoute = movie.type === "show" ? `/show/${movie.id}` : `/movie/${movie.id}`;
+
   const handleCardClick = () => {
-    navigate(`/movie/${movie.id}`);
+    navigate(detailRoute);
   };
 
   const handleCardKeyDown = (event) => {

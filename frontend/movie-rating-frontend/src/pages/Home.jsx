@@ -10,8 +10,12 @@ import "./Home.css";
 function Home() {
   const navigate = useNavigate();
   const mainGenres = ["Action", "Drama", "Crime", "Thriller", "Sci-Fi"];
-  const trendingMovies = movies.slice(0, 4);
-  const trendingShows = shows.slice(0, 4);
+  const trendingMovies = [...movies]
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 3);
+  const trendingShows = [...shows]
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 3);
 
   // Get all unique genres from movies collection
   const availableGenres = getAllGenres();
@@ -42,6 +46,24 @@ function Home() {
       </div>
       <div className="movie-grid">
         {trendingShows.map((show) => (
+          <ShowCard key={show.id} show={show} />
+        ))}
+      </div>
+
+      <div className="home-section-block">
+        <h3>All Movies</h3>
+      </div>
+      <div className="movie-grid">
+        {movies.map((movie) => (
+          <MovieCard key={movie.id} movie={movie} />
+        ))}
+      </div>
+
+      <div className="home-section-block">
+        <h3>All Shows</h3>
+      </div>
+      <div className="movie-grid">
+        {shows.map((show) => (
           <ShowCard key={show.id} show={show} />
         ))}
       </div>
