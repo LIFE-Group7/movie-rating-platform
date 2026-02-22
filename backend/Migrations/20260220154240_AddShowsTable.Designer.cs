@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MovieRating.Backend.Data;
 
@@ -11,9 +12,11 @@ using MovieRating.Backend.Data;
 namespace MovieRating.Backend.Migrations
 {
     [DbContext(typeof(MovieDbContext))]
-    partial class MovieDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260220154240_AddShowsTable")]
+    partial class AddShowsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,7 +43,7 @@ namespace MovieRating.Backend.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Genres", (string)null);
+                    b.ToTable("Genres");
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Basics.Movie", b =>
@@ -88,7 +91,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Movies", (string)null);
+                    b.ToTable("Movies");
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Basics.MovieGenre", b =>
@@ -103,7 +106,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("MovieGenres", (string)null);
+                    b.ToTable("MovieGenres");
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Basics.Review", b =>
@@ -133,7 +136,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Basics.Show", b =>
@@ -190,7 +193,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Shows", (string)null);
+                    b.ToTable("Shows");
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Basics.ShowGenre", b =>
@@ -205,7 +208,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("ShowGenres", (string)null);
+                    b.ToTable("ShowGenres");
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Basics.User", b =>
@@ -252,7 +255,7 @@ namespace MovieRating.Backend.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Extra.HomeSection", b =>
@@ -290,7 +293,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("HomeSections", (string)null);
+                    b.ToTable("HomeSections");
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Extra.HomeSectionMovie", b =>
@@ -308,7 +311,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("HomeSectionMovies", (string)null);
+                    b.ToTable("HomeSectionMovies");
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Extra.Watchlist", b =>
@@ -328,7 +331,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("Watchlist", (string)null);
+                    b.ToTable("Watchlist");
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Basics.MovieGenre", b =>

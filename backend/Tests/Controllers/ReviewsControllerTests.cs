@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using MovieRating.Backend.Controllers;
 using MovieRating.Backend.Services;
-using MovieRating.Backend.DTOs.Reviews;
 using MovieRating.Backend.Common;
+using MovieRating.Backend.DTOs;
 
 namespace MovieRating.Backend.Tests.Controllers;
 

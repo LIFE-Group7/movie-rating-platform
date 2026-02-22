@@ -1,5 +1,5 @@
 ﻿using MovieRating.Backend.Common;
-using MovieRating.Backend.DTOs.Reviews;
+using MovieRating.Backend.DTOs;
 
 namespace MovieRating.Backend.Services;
 

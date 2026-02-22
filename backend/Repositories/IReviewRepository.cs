@@ -1,7 +1,7 @@
 ﻿using MovieRating.Backend.Common;
 using MovieRating.Backend.Models.Basics;
 
-namespace MovieRating.Backend.Repositories.Interfaces;
+namespace MovieRating.Backend.Repositories;
 
 public interface IReviewRepository
 {
