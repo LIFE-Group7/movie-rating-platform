@@ -6,6 +6,8 @@ using System.Security.Claims;
 
 namespace MovieRating.Backend.Controllers;
 
+[Authorize(Roles = "User")]
+
 public class ReviewsController(IReviewService service) : BaseApiController
 {
     [HttpPost]
@@ -25,6 +27,16 @@ public class ReviewsController(IReviewService service) : BaseApiController
         if (userId == null) return Unauthorized();
 
         var result = await service.UpdateReviewAsync(userId.Value, request);
+        return result.IsSuccess ? Ok(result.Data) : HandleError(result);
+    }
+
+    [HttpGet("user")]
+    public async Task<IActionResult> GetMyReviews()
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var result = await service.GetUserReviewsAsync(userId.Value);
         return result.IsSuccess ? Ok(result.Data) : HandleError(result);
     }
 
