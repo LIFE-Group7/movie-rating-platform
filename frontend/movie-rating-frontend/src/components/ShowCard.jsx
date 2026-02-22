@@ -1,106 +1,148 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
-import "./ShowCard.css";
 
-// Presentational component that displays show information in a card format
-// Receives a show object as a prop and renders its details with all genres
+/**
+ * Compact TV-show card — mirrors MovieCard but routes to /show/:id and displays
+ * show-specific metadata (season count, ongoing/ended status badge).
+ */
 function ShowCard({ show }) {
   const navigate = useNavigate();
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
   const { isAuthenticated } = useAuth();
 
-  // Get all genres for the show with backward compatibility
-  const showGenres = show.genres || (show.genre ? [show.genre] : []);
-  const showInWatchlist = isInWatchlist(show.id);
+  // Normalise either `genres` array or legacy `genre` string into one shape.
+  const showGenres = show?.genres || (show?.genre ? [show.genre] : []);
+  const inWatchlist = isInWatchlist(show.id);
+  // Used to colour the status indicator — green dot for ongoing, grey for ended.
+  const isOngoing = show?.status === "Ongoing";
 
-  const handleCardClick = () => {
-    navigate(`/show/${show.id}`);
-  };
+  const ratingText = useMemo(() => {
+    const r = Number(show?.rating);
+    return Number.isFinite(r) ? r.toFixed(1) : "–";
+  }, [show?.rating]);
 
-  const handleCardKeyDown = (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      handleCardClick();
-    }
-  };
+  const openDetails = () => navigate(`/show/${show.id}`);
 
-  const handleToggleWatchlist = (event) => {
-    event.stopPropagation();
-
+  /**
+   * Toggle watchlist membership without navigating to the detail page.
+   * Unauthenticated users are redirected to /login rather than silently failing.
+   */
+  const toggleWatchlist = (e) => {
+    e.stopPropagation();
     if (!isAuthenticated) {
       navigate("/login");
       return;
     }
-
-    if (showInWatchlist) {
-      removeFromWatchlist(show.id);
-      return;
-    }
-
-    addToWatchlist(show);
+    if (inWatchlist) removeFromWatchlist(show.id);
+    else addToWatchlist(show);
   };
 
   return (
     <div
-      className="show-card"
       role="link"
       tabIndex={0}
-      onClick={handleCardClick}
-      onKeyDown={handleCardKeyDown}
+      onClick={openDetails}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openDetails();
+        }
+      }}
       aria-label={`Open details for ${show.title}`}
+      className="group cursor-pointer rounded-2xl overflow-hidden border border-white/10 bg-white/5 hover:bg-white/7 transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 flex flex-col"
     >
-      <div className="show-card-image-wrapper">
-        <img src={show.imageUrl} alt={show.title} />
-        <span className="show-badge">Series</span>
-      </div>
-      <div className="show-info">
-        <h3>{show.title}</h3>
-        <p className="rating">⭐ {show.rating}/10</p>
-        <div className="show-meta">
-          <span className="show-seasons">
-            {show.seasons} {show.seasons === 1 ? "Season" : "Seasons"}
+      {/* Poster */}
+      <div className="relative aspect-[2/3] bg-gradient-to-br from-zinc-800 via-zinc-900 to-black w-full">
+        {show?.imageUrl ? (
+          <img
+            src={show.imageUrl}
+            alt={show.title}
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : null}
+
+        <span className="absolute top-2 right-2 px-2 py-1 rounded-lg text-[11px] font-extrabold bg-black/60 backdrop-blur border border-white/10 text-white/80 uppercase tracking-wider">
+          Series
+        </span>
+
+        <div className="absolute top-2 left-2 flex items-center gap-2">
+          <span className="px-2 py-1 rounded-lg text-xs font-bold bg-black/60 backdrop-blur text-yellow-300 border border-white/10">
+            ★ {ratingText}
           </span>
-          <span
-            className={`show-status ${show.status === "Ongoing" ? "status-ongoing" : "status-ended"}`}
-          >
-            <span className="status-dot" aria-hidden="true"></span>
-            {show.status}
-          </span>
+        </div>
+
+        {/* Hover overlay — the visible watchlist / details buttons live here */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openDetails();
+              }}
+              className="flex-1 px-3 py-2 rounded-xl bg-white text-zinc-950 text-[13px] font-bold hover:bg-white/90 transition-colors"
+            >
+              Details
+            </button>
+            <button
+              type="button"
+              onClick={toggleWatchlist}
+              className="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-white text-[13px] font-semibold hover:bg-white/15 transition-colors"
+            >
+              {inWatchlist ? "Saved" : "Save"}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="show-card-bottom-row">
-        {showGenres.length > 0 && (
-          <div className="genres-list">
-            {showGenres.map((genre) => (
-              <span key={genre} className="genre-badge">
-                {genre}
-              </span>
-            ))}
-          </div>
-        )}
+      {/* Info Area - Fixed Height */}
+      <div className="p-3 flex flex-col justify-between flex-1 min-h-[105px]">
+        <div>
+          <h3
+            className="text-[13px] font-bold text-white leading-tight line-clamp-2"
+            title={show.title}
+          >
+            {show.title}
+          </h3>
 
-        <button
-          type="button"
-          className={`watchlist-add-btn${showInWatchlist ? " is-remove" : ""}`}
-          onClick={handleToggleWatchlist}
-          title={
-            showInWatchlist ? "Remove from watchlist" : "Add to watchlist"
-          }
-          aria-label={
-            showInWatchlist
-              ? `Remove ${show.title} from watchlist`
-              : `Add ${show.title} to watchlist`
-          }
-        >
-          <span className="watchlist-btn-icon" aria-hidden="true">
-            {showInWatchlist ? "−" : "+"}
-          </span>
-          <span className="watchlist-btn-text">
-            {showInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
-          </span>
-        </button>
+          <div className="mt-1 flex items-center gap-2 text-[11px] text-white/55">
+            <span className="font-semibold whitespace-nowrap">
+              {show?.seasons
+                ? `${show.seasons} season${show.seasons > 1 ? "s" : ""}`
+                : "—"}
+            </span>
+            <span>•</span>
+            <span className="inline-flex items-center gap-1.5 font-semibold whitespace-nowrap">
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  isOngoing ? "bg-emerald-400" : "bg-white/30"
+                }`}
+                aria-hidden="true"
+              />
+              {show?.status || "Unknown"}
+            </span>
+          </div>
+        </div>
+
+        {/* Genres container - line-clamp-1 prevents wrapping to new lines */}
+        <div className="mt-2 flex gap-1.5 overflow-hidden w-full">
+          {showGenres.length > 0 ? (
+            showGenres.map((g) => (
+              <span
+                key={g}
+                className="whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 border border-white/10 text-white/65 flex-shrink-0"
+              >
+                {g}
+              </span>
+            ))
+          ) : (
+            <span className="h-[22px]" /> /* Empty spacer to maintain layout height */
+          )}
+        </div>
       </div>
     </div>
   );

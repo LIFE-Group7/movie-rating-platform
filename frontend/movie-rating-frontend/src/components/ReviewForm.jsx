@@ -3,121 +3,56 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useReviews } from "../contexts/ReviewContext";
 import StarRating from "./StarRating";
-import "./ReviewForm.css";
 
 /**
- * Review submission form component
- * Allows authenticated users to submit a rating and written review
- * @param {object} movie - The movie being reviewed
- * @param {function} onSubmitSuccess - Callback when review is successfully submitted
+ * Review submission form for a single movie or show.
+ *
+ * Renders a "please log in" prompt when the user is not authenticated so
+ * the component can be placed on detail pages without an extra auth check.
+ * After a successful submit `onSubmitSuccess` is called with the submitted data
+ * so the parent can optimistically update its displayed rating.
  */
 function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { addReview } = useReviews();
 
-  // Form state
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  // Named constant so the limit appears in one place and UI messages stay in sync.
   const MAX_CHARACTERS = 2000;
   const currentCharCount = reviewText.length;
   const isCharLimitExceeded = currentCharCount > MAX_CHARACTERS;
-
-  // Validation checks
-  const isFormValid = rating > 0 && !isCharLimitExceeded;
-
-  /**
-   * Handle review text change
-   * Updates state and validates character count
-   */
-  const handleReviewChange = (e) => {
-    const text = e.target.value;
-    setReviewText(text);
-    setError(""); // Clear error when user starts typing again
-  };
+  const isFormValid =
+    rating > 0 && reviewText.trim() !== "" && !isCharLimitExceeded;
 
   /**
-   * Handle form submission
-   * Validates form, prepares data, and sends to backend
+   * Validate, simulate API submission, persist to ReviewContext, then notify parent.
+   * The 700 ms delay mimics a real network round-trip so the UI feedback feels
+   * natural — remove once the real backend endpoint is integrated.
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Validation checks
     if (!isAuthenticated) {
-      setError("You must be logged in to submit a review");
-      setTimeout(() => {
-        navigate("/login");
-      }, 1000);
+      setError("You must be logged in to submit a review.");
+      setTimeout(() => navigate("/login"), 900);
       return;
     }
-
-    if (rating === 0) {
-      setError("Please select a star rating");
-      return;
-    }
-
-    if (reviewText.trim() === "") {
-      setError("Please write a review");
-      return;
-    }
-
-    if (isCharLimitExceeded) {
-      setError("Review exceeds maximum character limit");
-      return;
-    }
+    if (rating === 0) return setError("Please select a star rating.");
+    if (reviewText.trim() === "") return setError("Please write a review.");
+    if (isCharLimitExceeded)
+      return setError("Review exceeds maximum character limit.");
 
     setIsSubmitting(true);
-
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // const token = localStorage.getItem("authToken");
-      // const response = await fetch(`/api/reviews`, {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify({
-      //     movieId: movie.id,
-      //     rating: rating,
-      //     reviewText: reviewText.trim(),
-      //   }),
-      // });
-      //
-      // if (response.status === 401) {
-      //   // Token expired or invalid - redirect to login
-      //   localStorage.removeItem("authToken");
-      //   localStorage.removeItem("user");
-      //   navigate("/login");
-      //   throw new Error("Session expired. Please log in again.");
-      // }
-      //
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw new Error(errorData.message || "Failed to submit review");
-      // }
-      //
-      // const data = await response.json();
-
-      // Simulate API success with a delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mock response structure (will match real API when ready)
-      const data = {
-        success: true,
-        movieId: movie.id,
-        rating: rating,
-        reviewText: reviewText.trim(),
-        userId: user?.userId,
-        timestamp: new Date().toISOString(),
-      };
-
-      // Persist the review locally so it appears on the My Reviews page
+      // TODO: replace with real API call when backend is ready
+      await new Promise((resolve) => setTimeout(resolve, 700));
 
       addReview({
         movieId: movie.id,
@@ -125,13 +60,11 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
         movieImageUrl: movie.imageUrl,
         rating,
         comment: reviewText.trim(),
+        type: movie.type || "movie",
       });
 
-      // Show success message
       setSuccess(true);
-      setError("");
-
-      // Reset form after successful submission
+      // Brief success window before resetting the form and notifying the parent.
       setTimeout(() => {
         setRating(0);
         setReviewText("");
@@ -141,87 +74,98 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
           reviewText: reviewText.trim(),
           movieId: movie.id,
         });
-      }, 1500);
+      }, 900);
     } catch (err) {
-      console.error("Review submission error:", err);
-      setError(err.message || "Failed to submit review. Please try again.");
+      setError(err?.message || "Failed to submit review. Please try again.");
       setSuccess(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="review-form-container">
-      <h3 className="form-title">Share Your Review</h3>
-
-      {!isAuthenticated && (
-        <div className="auth-prompt">
-          <p>Please log in to submit a review</p>
-          <button className="login-button" onClick={() => navigate("/login")}>
-            Go to Login
-          </button>
+  // Show a login prompt instead of the form for unauthenticated visitors.
+  if (!isAuthenticated) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-white">
+        <div className="text-sm text-white/80 font-semibold">
+          Please log in to submit a review.
         </div>
-      )}
+        <button
+          onClick={() => navigate("/login")}
+          className="mt-4 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors text-white font-bold text-sm"
+        >
+          Go to Login
+        </button>
+      </div>
+    );
+  }
 
-      {isAuthenticated && (
-        <form onSubmit={handleSubmit} className="review-form">
-          {/* Star Rating Section */}
-          <div className="form-section">
-            <label htmlFor="rating" className="section-label">
-              Your Rating <span className="required">*</span>
-            </label>
-            <StarRating rating={rating} onRatingChange={setRating} />
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-white">
+      <h3 className="text-lg font-extrabold tracking-tight">Write a review</h3>
+      <p className="text-sm text-white/55 mt-1">
+        Rate <span className="text-white/85 font-semibold">{movie?.title}</span>{" "}
+        and share your thoughts.
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        <div>
+          <div className="text-sm font-bold text-white/80 mb-2">
+            Your rating
           </div>
+          <StarRating rating={rating} onRatingChange={setRating} />
+        </div>
 
-          {/* Review Text Section */}
-          <div className="form-section">
-            <label htmlFor="review" className="section-label">
-              Your Review <span className="required">*</span>
-            </label>
-            <textarea
-              id="review"
-              className={`review-textarea ${isCharLimitExceeded ? "error" : ""}`}
-              value={reviewText}
-              onChange={handleReviewChange}
-              placeholder="Share your thoughts about this movie..."
-              rows={5}
-              disabled={isSubmitting || success}
-              maxLength={MAX_CHARACTERS + 100} // Allow slight overflow for UX
-            />
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-bold text-white/80">Your review</div>
             <div
-              className={`char-counter ${isCharLimitExceeded ? "exceeded" : ""}`}
+              className={`text-xs font-semibold ${isCharLimitExceeded ? "text-red-300" : "text-white/45"}`}
             >
               {currentCharCount}/{MAX_CHARACTERS}
             </div>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="error-message">
-              <span className="error-icon">⚠️</span>
-              {error}
+          <textarea
+            value={reviewText}
+            onChange={(e) => {
+              setReviewText(e.target.value);
+              setError("");
+            }}
+            rows={5}
+            placeholder="What did you like? What didn’t work for you?"
+            className="w-full rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 transition"
+          />
+          {isCharLimitExceeded && (
+            <div className="mt-2 text-xs font-semibold text-red-300">
+              Please shorten your review to {MAX_CHARACTERS} characters.
             </div>
           )}
+        </div>
 
-          {/* Success Message */}
-          {success && (
-            <div className="success-message">
-              <span className="success-icon">✓</span>
-              Your review has been submitted successfully!
-            </div>
-          )}
+        {error && (
+          <div className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            Review submitted!
+          </div>
+        )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="submit-button"
-            disabled={!isFormValid || isSubmitting || success}
-          >
-            {isSubmitting ? "Submitting..." : "Submit Review"}
-          </button>
-        </form>
-      )}
+        <button
+          type="submit"
+          disabled={!isFormValid || isSubmitting || success}
+          className={`w-full px-4 py-3 rounded-2xl font-extrabold text-sm transition-all ${
+            !isFormValid || isSubmitting
+              ? "bg-white/10 text-white/35 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-500 text-white"
+          }`}
+        >
+          {isSubmitting ? "Submitting…" : "Submit review"}
+        </button>
+      </form>
     </div>
   );
 }

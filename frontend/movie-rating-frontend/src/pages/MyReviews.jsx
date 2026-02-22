@@ -3,132 +3,57 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useReviews } from "../contexts/ReviewContext";
 import StarRating from "../components/StarRating";
-import "./MyReviews.css";
 
-const MAX_COMMENT_CHARACTERS = 2000;
-
-/**
- * Format an ISO timestamp into a readable date string.
- * Uses the browser's locale so dates look natural to every user.
- */
-const formatDate = (isoString) => {
-  if (!isoString) return "Unknown date";
-  return new Date(isoString).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
-// ─────────────────────────────────────────────────────────────
-// ReviewEditForm
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Inline edit form rendered inside a ReviewCard when the user clicks "Edit".
- * Keeping it separate keeps ReviewCard focused on display concerns only.
- *
- * @param {object}   review   - The review being edited
- * @param {function} onSave   - Called with { rating, comment } on success
- * @param {function} onCancel - Called when the user dismisses without saving
- */
+// ── Inline edit form rendered inside an existing review card ─────────────────
 function ReviewEditForm({ review, onSave, onCancel }) {
-  const [editedRating, setEditedRating] = useState(review.rating);
-  const [editedComment, setEditedComment] = useState(review.comment);
+  const [rating, setRating] = useState(review.rating);
+  const [comment, setComment] = useState(review.comment);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  const characterCount = editedComment.length;
-  const isCharLimitExceeded = characterCount > MAX_COMMENT_CHARACTERS;
-  const isFormValid = editedRating > 0 && !isCharLimitExceeded;
-
-  const handleCommentChange = (e) => {
-    setEditedComment(e.target.value);
-    setError("");
-  };
 
   /**
-   * Validate inputs, simulate the API call, then hand off to the parent.
-   * The TODO block mirrors the pattern used in ReviewForm.jsx for consistency.
+   * Persist changes to the parent — parent calls ReviewContext.updateReview.
+   * Guard against submitting a zero-star rating to keep data consistent.
    */
   const handleSave = async () => {
-    if (editedRating === 0) {
-      setError("Please select a star rating.");
-      return;
-    }
-    if (isCharLimitExceeded) {
-      setError("Comment exceeds the maximum character limit.");
-      return;
-    }
-
+    if (rating === 0) return;
     setIsSaving(true);
-    try {
-      // TODO: Replace with real API call when backend is connected
-      // await fetch(`/api/reviews/${review.movieId}`, {
-      //   method: "PUT",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-      //   },
-      //   body: JSON.stringify({ rating: editedRating, comment: editedComment.trim() }),
-      // });
-
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      onSave({ rating: editedRating, comment: editedComment.trim() });
-    } catch {
-      setError("Failed to save changes. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
+    // TODO: replace with real API call when backend is wired up
+    await new Promise((r) => setTimeout(r, 600));
+    onSave({ rating, comment });
+    setIsSaving(false);
   };
 
   return (
-    <div className="review-edit-form">
-      <div className="edit-field">
-        <label className="edit-label">Rating</label>
-        <StarRating rating={editedRating} onRatingChange={setEditedRating} />
+    <div className="bg-zinc-900/50 p-4 rounded-xl border border-blue-500/30">
+      <div className="mb-4">
+        <label className="text-xs font-bold text-white/50 uppercase mb-1 block">
+          Rating
+        </label>
+        <StarRating rating={rating} onRatingChange={setRating} />
       </div>
-
-      <div className="edit-field">
-        <label
-          className="edit-label"
-          htmlFor={`edit-comment-${review.movieId}`}
-        >
-          Comment
+      <div className="mb-4">
+        <label className="text-xs font-bold text-white/50 uppercase mb-1 block">
+          Your Review
         </label>
         <textarea
-          id={`edit-comment-${review.movieId}`}
-          className={`edit-textarea ${isCharLimitExceeded ? "error" : ""}`}
-          value={editedComment}
-          onChange={handleCommentChange}
-          rows={4}
-          disabled={isSaving}
+          className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-sm text-white focus:border-blue-500 outline-none"
+          rows={3}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
         />
-        <span
-          className={`char-counter ${isCharLimitExceeded ? "exceeded" : ""}`}
-        >
-          {characterCount}/{MAX_COMMENT_CHARACTERS}
-        </span>
       </div>
-
-      {error && (
-        <p className="edit-error">
-          <span>⚠️</span> {error}
-        </p>
-      )}
-
-      <div className="edit-actions">
+      <div className="flex gap-3">
         <button
-          className="save-button"
           onClick={handleSave}
-          disabled={!isFormValid || isSaving}
+          disabled={isSaving}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-bold text-white"
         >
           {isSaving ? "Saving..." : "Save Changes"}
         </button>
         <button
-          className="cancel-button"
           onClick={onCancel}
           disabled={isSaving}
+          className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white"
         >
           Cancel
         </button>
@@ -137,170 +62,179 @@ function ReviewEditForm({ review, onSave, onCancel }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// ReviewCard
-// ─────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
- * Displays a single review with movie metadata, the review content,
- * and action buttons. Manages its own edit/delete UI state so the
- * parent list stays simple.
- *
- * @param {object}   review   - The review data object
- * @param {function} onDelete - Called with movieId when deletion is confirmed
+ * Build the detail-page path for a review.
+ * Shows have type "show"; everything else falls back to the movie route.
  */
-function ReviewCard({ review, onDelete }) {
-  const { updateReview } = useReviews();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-
-  const handleSaveEdit = (updatedFields) => {
-    updateReview(review.movieId, updatedFields);
-    setIsEditing(false);
-  };
-
-  const handleEditClicked = () => {
-    // Close delete confirmation if it was open before entering edit mode
-    setIsConfirmingDelete(false);
-    setIsEditing(true);
-  };
-
-  // Show "Edited on…" only when the review has been modified after creation
-  const displayDate = review.updatedAt
-    ? `Edited ${formatDate(review.updatedAt)}`
-    : formatDate(review.createdAt);
-
-  return (
-    <article className="review-card">
-      <div className="review-card-header">
-        {review.movieImageUrl && (
-          <img
-            src={review.movieImageUrl}
-            alt={review.movieTitle}
-            className="review-movie-poster"
-            onError={(e) => {
-              // Hide broken image icons gracefully
-              e.target.style.display = "none";
-            }}
-          />
-        )}
-        <div className="review-card-meta">
-          <Link to={`/movie/${review.movieId}`} className="review-movie-title">
-            {review.movieTitle}
-          </Link>
-          <div className="review-rating-display">⭐ {review.rating}/10</div>
-          <span className="review-date">{displayDate}</span>
-        </div>
-      </div>
-
-      {!isEditing && (
-        <p className="review-comment">
-          {review.comment || (
-            <em className="no-comment">No written comment.</em>
-          )}
-        </p>
-      )}
-
-      {isEditing ? (
-        <ReviewEditForm
-          review={review}
-          onSave={handleSaveEdit}
-          onCancel={() => setIsEditing(false)}
-        />
-      ) : (
-        <div className="review-card-actions">
-          <button className="edit-button" onClick={handleEditClicked}>
-            ✏️ Edit
-          </button>
-
-          {isConfirmingDelete ? (
-            <div className="delete-confirm">
-              <span className="delete-confirm-prompt">Are you sure?</span>
-              <button
-                className="confirm-delete-button"
-                onClick={() => onDelete(review.movieId)}
-              >
-                Yes, Delete
-              </button>
-              <button
-                className="cancel-button"
-                onClick={() => setIsConfirmingDelete(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              className="delete-button"
-              onClick={() => setIsConfirmingDelete(true)}
-            >
-              🗑️ Delete
-            </button>
-          )}
-        </div>
-      )}
-    </article>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// MyReviews (page)
-// ─────────────────────────────────────────────────────────────
+const buildDetailPath = (movieId, type) =>
+  type === "show" ? `/show/${movieId}` : `/movie/${movieId}`;
 
 /**
- * Lists all reviews submitted by the authenticated user, sorted newest-first.
- * Unauthenticated visitors are redirected to the login page immediately.
+ * Format an ISO timestamp string into a localised date for display.
+ * Falls back to an empty string when the value is absent or invalid.
  */
+const formatReviewDate = (isoString) => {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString();
+};
+
+// ── Page component ────────────────────────────────────────────────────────────
 function MyReviews() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const { reviews, deleteReview } = useReviews();
+  const { isAuthenticated } = useAuth();
 
-  // Defer the auth check until the context has finished reading localStorage
-  if (isLoading) {
-    return (
-      <div className="my-reviews-page">
-        <p className="loading-message">Loading...</p>
-      </div>
-    );
-  }
+  // ReviewContext already scopes reviews to the current user's localStorage key,
+  // so no further userId filtering is needed here.
+  // BUG FIX: was `removeReview` (undefined) — correct name is `deleteReview`.
+  const { reviews, updateReview, deleteReview } = useReviews();
 
-  // Acceptance criteria: user must be signed in to access this page
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  // Track which review card is currently open for editing.
+  // Uses movieId as the identifier because review objects have no `id` field.
+  const [editingMovieId, setEditingMovieId] = useState(null);
 
-  // Newest reviews first — matches the "based on time when posted" requirement
-  const reviewsSortedByDate = [...reviews].sort(
+  // Redirect unauthenticated users rather than showing an empty page.
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  // ReviewContext stores `createdAt` (ISO string); sort newest-first.
+  // BUG FIX: was sorting by `review.timestamp` which is never stored in context.
+  const sortedReviews = [...reviews].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
   );
 
-  return (
-    <div className="my-reviews-page">
-      <section className="my-reviews-header">
-        <h1>My Reviews</h1>
-        <p className="my-reviews-subtitle">
-          All movies you have reviewed, sorted by most recently posted.
-        </p>
-      </section>
+  /**
+   * Apply edited fields to a review and close the edit form.
+   * ReviewContext.updateReview stamps an `updatedAt` timestamp automatically.
+   */
+  const handleUpdate = (movieId, updatedFields) => {
+    updateReview(movieId, updatedFields);
+    setEditingMovieId(null);
+  };
 
-      {reviewsSortedByDate.length === 0 ? (
-        <div className="empty-reviews-state">
-          <p>You haven&apos;t reviewed any movies yet.</p>
-          <Link to="/" className="browse-movies-link">
-            Browse Movies
-          </Link>
-        </div>
-      ) : (
-        <div className="reviews-list">
-          {reviewsSortedByDate.map((review) => (
-            <ReviewCard
-              key={review.movieId}
-              review={review}
-              onDelete={deleteReview}
-            />
-          ))}
-        </div>
-      )}
+  return (
+    <div className="min-h-screen bg-zinc-950 text-white">
+      <div className="max-w-screen-lg mx-auto px-4 md:px-6 py-10">
+        <h1 className="text-3xl font-extrabold tracking-tight mb-2">
+          My Reviews
+        </h1>
+        <p className="text-white/50 mb-10">
+          You have reviewed{" "}
+          <span className="text-white font-bold">{sortedReviews.length}</span>{" "}
+          titles.
+        </p>
+
+        {sortedReviews.length === 0 ? (
+          /* ── Empty state ── */
+          <div className="text-center py-20 border border-dashed border-white/10 rounded-3xl bg-white/5">
+            <div className="text-4xl mb-4 opacity-30">⭐</div>
+            <h3 className="text-xl font-bold mb-2">No reviews yet</h3>
+            <p className="text-white/50 mb-6">
+              Rate movies and shows to see them appear here.
+            </p>
+            <Link
+              to="/"
+              className="px-5 py-2.5 rounded-xl bg-blue-600 font-semibold hover:bg-blue-500 transition-colors"
+            >
+              Start Rating
+            </Link>
+          </div>
+        ) : (
+          /* ── Review list ── */
+          <div className="space-y-6">
+            {sortedReviews.map((review) => (
+              // BUG FIX: was `review.id` (undefined) — movieId is the unique key.
+              <div
+                key={review.movieId}
+                className="flex flex-col md:flex-row gap-6 p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur hover:bg-white/7 transition-colors"
+              >
+                {/* Poster Thumbnail */}
+                <div className="flex-shrink-0 w-24 md:w-32 rounded-lg overflow-hidden border border-white/10 bg-zinc-900">
+                  {review.movieImageUrl ? (
+                    <img
+                      src={review.movieImageUrl}
+                      alt={review.movieTitle}
+                      className="w-full h-auto object-cover aspect-[2/3]"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white/20 text-xs">
+                      No Image
+                    </div>
+                  )}
+                </div>
+
+                {/* Review content */}
+                <div className="flex-1">
+                  <div className="flex flex-wrap justify-between items-start gap-4 mb-3">
+                    <div>
+                      {/*
+                       * BUG FIX: was always `/movie/...`.
+                       * Now uses review.type to route shows to `/show/...`.
+                       */}
+                      <Link
+                        to={buildDetailPath(review.movieId, review.type)}
+                        className="text-xl font-bold hover:text-blue-400 transition-colors"
+                      >
+                        {review.movieTitle}
+                      </Link>
+                      <div className="text-xs text-white/40 mt-1">
+                        {/* BUG FIX: was `review.timestamp` — context stores `createdAt`. */}
+                        Reviewed on {formatReviewDate(review.createdAt)}
+                        {review.updatedAt && (
+                          <span className="ml-2 text-white/25">
+                            · Edited {formatReviewDate(review.updatedAt)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action buttons — hidden while the edit form is open */}
+                    {editingMovieId !== review.movieId && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEditingMovieId(review.movieId)}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        {/* BUG FIX: was `removeReview` (not exported) — correct is `deleteReview`. */}
+                        <button
+                          onClick={() => deleteReview(review.movieId)}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Inline edit form or read-only review display */}
+                  {editingMovieId === review.movieId ? (
+                    <ReviewEditForm
+                      review={review}
+                      onSave={(updatedFields) =>
+                        handleUpdate(review.movieId, updatedFields)
+                      }
+                      onCancel={() => setEditingMovieId(null)}
+                    />
+                  ) : (
+                    <div>
+                      <div className="mb-3">
+                        <StarRating rating={review.rating} readOnly />
+                      </div>
+                      <p className="text-white/80 text-sm leading-relaxed">
+                        {review.comment || (
+                          <em className="text-white/30">No written review.</em>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

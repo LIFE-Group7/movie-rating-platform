@@ -8,7 +8,10 @@ import {
 } from "react";
 import { useAuth } from "./AuthContext";
 
-// localStorage key prefix — scoped per user email to prevent data leaking between accounts
+// ── Storage helpers ───────────────────────────────────────────────────────────
+
+// localStorage key base — the full key is always scoped per user email to
+// prevent data leaking between accounts on the same browser.
 const USER_REVIEWS_KEY = "userReviews";
 
 const ReviewsContext = createContext();
@@ -40,6 +43,9 @@ export const useReviews = () => {
   return context;
 };
 
+// ── Provider ──────────────────────────────────────────────────────────────────
+// Manages the current user's review list. All reads and writes go through
+// localStorage (keyed by email) until a real API is wired up.
 export function ReviewsProvider({ children }) {
   const { isAuthenticated, user } = useAuth();
   const [reviews, setReviews] = useState([]);
@@ -79,7 +85,7 @@ export function ReviewsProvider({ children }) {
     (reviewData) => {
       if (!isAuthenticated || !user?.email) return false;
 
-      const { movieId, movieTitle, movieImageUrl, rating, comment } =
+      const { movieId, movieTitle, movieImageUrl, rating, comment, type } =
         reviewData;
 
       setReviews((previous) => {
@@ -92,6 +98,7 @@ export function ReviewsProvider({ children }) {
           movieImageUrl,
           rating,
           comment: comment || "",
+          type: type || "movie",
           createdAt: new Date().toISOString(),
           updatedAt: null,
         };

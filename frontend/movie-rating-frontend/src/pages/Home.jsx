@@ -1,89 +1,401 @@
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import MovieCard from "../components/MovieCard";
 import ShowCard from "../components/ShowCard";
-import { movies, getAllGenres } from "../data/mockMovies";
+import { movies } from "../data/mockMovies";
 import { shows } from "../data/mockShows";
-import "./Home.css";
 
-// Main landing page that displays a grid of movie cards
-// Includes a genre filter section that redirects to search page
+// ── Hero spotlight mock data ────────────────────────────────────────────────
+const heroSpotlight = [
+  {
+    id: 1,
+    title: "Dune: Part Two",
+    rating: 8.8,
+    genres: ["Sci-Fi", "Adventure", "Drama"],
+    description:
+      "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
+    bg: "from-amber-950 via-stone-950 to-zinc-950",
+    accent: "#d97706",
+  },
+  {
+    id: 2,
+    title: "Oppenheimer",
+    rating: 8.9,
+    genres: ["Drama", "History", "Thriller"],
+    description:
+      "The story of J. Robert Oppenheimer and his pivotal role in the development of the first nuclear weapon during WWII.",
+    bg: "from-orange-950 via-neutral-950 to-zinc-950",
+    accent: "#ea580c",
+  },
+];
+
+// ── Inline SVG icons — avoids external icon library dependency ───────────────
+function StarIcon() {
+  return (
+    <svg className="w-4 h-4 fill-yellow-400 flex-shrink-0" viewBox="0 0 20 20">
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+    </svg>
+  );
+}
+
+function ChevronLeftIcon() {
+  return (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15 19l-7-7 7-7"
+      />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 5l7 7-7 7"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Horizontally scrollable carousel with arrow buttons and fade-edge overlays.
+ * `renderItem` is a render-prop so callers can inject any card type (MovieCard,
+ * ShowCard, etc.) without coupling the carousel logic to a specific data shape.
+ */
+function CarouselSection({ title, items, renderItem, onViewAll }) {
+  const scrollRef = useRef(null);
+
+  // Scroll by a fixed pixel amount in the requested direction.
+  // 320 px ≈ the width of two card columns and feels natural on most viewports.
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: direction * 320, behavior: "smooth" });
+    }
+  };
+
+  if (!items || items.length === 0) return null;
+
+  return (
+    <section className="mb-12">
+      {/* Section header */}
+      <div className="flex items-center justify-between mb-4 px-6">
+        <h2 className="text-lg font-bold text-white tracking-wide">{title}</h2>
+        {onViewAll && (
+          <button
+            onClick={onViewAll}
+            className="text-sm text-blue-400 hover:text-blue-300 transition-colors font-medium"
+          >
+            View All →
+          </button>
+        )}
+      </div>
+
+      {/* Scrollable row with arrows */}
+      <div className="relative group">
+        {/* Left arrow */}
+        <button
+          onClick={() => scroll(-1)}
+          aria-label="Scroll left"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-zinc-900/80 backdrop-blur-sm text-white rounded-full p-2.5 opacity-0 group-hover:opacity-100 transition-all hover:bg-zinc-700 shadow-xl border border-white/10"
+        >
+          <ChevronLeftIcon />
+        </button>
+
+        {/* Cards row */}
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto px-6 pb-3 snap-x snap-mandatory"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {items.map((item) => renderItem(item))}
+        </div>
+
+        {/* Right arrow */}
+        <button
+          onClick={() => scroll(1)}
+          aria-label="Scroll right"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-zinc-900/80 backdrop-blur-sm text-white rounded-full p-2.5 opacity-0 group-hover:opacity-100 transition-all hover:bg-zinc-700 shadow-xl border border-white/10"
+        >
+          <ChevronRightIcon />
+        </button>
+
+        {/* Fade edges */}
+        <div className="absolute left-0 top-0 bottom-3 w-10 bg-gradient-to-r from-zinc-950 to-transparent pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-3 w-10 bg-gradient-to-l from-zinc-950 to-transparent pointer-events-none" />
+      </div>
+    </section>
+  );
+}
+
+// ── Main Home component ───────────────────────────────────────────────────────
 function Home() {
   const navigate = useNavigate();
-  const mainGenres = ["Action", "Drama", "Crime", "Thriller", "Sci-Fi"];
-  const trendingMovies = movies.slice(0, 4);
-  const trendingShows = shows.slice(0, 4);
+  const [heroIndex, setHeroIndex] = useState(0);
+  // Used to trigger a fade-out/fade-in transition when the spotlight changes.
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  // Tracks the active genre pill — selecting one navigates to the search page.
+  const [activeGenre, setActiveGenre] = useState(null);
 
-  // Get all unique genres from movies collection
-  const availableGenres = getAllGenres();
+  // The full genre list shown in the sticky filter strip.
+  const mainGenres = [
+    "Action",
+    "Drama",
+    "Crime",
+    "Thriller",
+    "Sci-Fi",
+    "Comedy",
+    "Horror",
+    "Romance",
+  ];
 
-  const getGenreMovies = (genre) =>
-    movies.filter((movie) => (movie.genres || []).includes(genre)).slice(0, 4);
+  // Derive carousel data from the mock datasets — replace with API calls later.
+  const trendingMovies = movies.slice(0, 12);
+  const topRatedMovies = [...movies]
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, 12);
+  const popularShows = shows.slice(0, 12);
 
-  // Redirects to search page with genre query parameter
+  const currentHero = heroSpotlight[heroIndex];
+
+  // ── Hero auto-rotation ─────────────────────────────────────────────────────
+  // Advances the spotlight every 5.5 s with a 350 ms crossfade.
+  // The interval is cleared on unmount to prevent state updates on an
+  // unmounted component.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setHeroIndex((prev) => (prev + 1) % heroSpotlight.length);
+        setIsTransitioning(false);
+      }, 350);
+    }, 5500);
+    return () => clearInterval(interval);
+  }, []);
+
+  /**
+   * Jump to a specific spotlight entry.
+   * No-ops when the requested index is already active to avoid a flickering
+   * transition with no visible change.
+   */
+  const changeHero = (newIndex) => {
+    if (newIndex === heroIndex) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setHeroIndex(newIndex);
+      setIsTransitioning(false);
+    }, 350);
+  };
+
+  // Navigate to the search page pre-filtered by the chosen genre.
   const handleGenreClick = (genre) => {
     navigate(`/search?genre=${encodeURIComponent(genre)}`);
   };
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="home">
-      <h2>Rated & Recommended</h2>
+    <div className="min-h-screen bg-zinc-950 text-white">
+      {/* ── 1. Hero Carousel ─────────────────────────────────────────────── */}
+      <section
+        className={`relative w-full h-[78vh] min-h-[520px] overflow-hidden bg-gradient-to-br ${currentHero.bg}`}
+      >
+        {/* Background image for the spotlight — rendered beneath the gradient overlays */}
+        {currentHero.image && (
+          <img
+            src={currentHero.image}
+            alt={currentHero.title}
+            className="absolute inset-0 w-full h-full object-cover opacity-60"
+          />
+        )}
+        {/* Cinematic gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/85 via-zinc-950/20 to-transparent" />
 
-      <div className="home-section-block">
-        <h3>Trending Movies</h3>
-      </div>
-      <div className="movie-grid">
-        {trendingMovies.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} />
-        ))}
-      </div>
-
-      <div className="home-section-block">
-        <h3>Trending Shows</h3>
-      </div>
-      <div className="movie-grid">
-        {trendingShows.map((show) => (
-          <ShowCard key={show.id} show={show} />
-        ))}
-      </div>
-
-      <div className="genre-suggestions-section">
-        <h3>Main Genres</h3>
-        {mainGenres.map((genre) => (
-          <section key={genre} className="genre-preview-block">
-            <div className="genre-preview-header">
-              <button
-                type="button"
-                className="genre-title-button"
-                onClick={() => handleGenreClick(genre)}
-                aria-label={`Open ${genre} genre page`}
+        {/* Hero content */}
+        <div
+          className={`absolute bottom-0 left-0 p-10 md:p-16 max-w-2xl transition-all duration-350 ease-in-out ${
+            isTransitioning
+              ? "opacity-0 translate-y-5"
+              : "opacity-100 translate-y-0"
+          }`}
+        >
+          {/* Genre pills */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {currentHero.genres.map((g) => (
+              <span
+                key={g}
+                className="px-3 py-1 rounded-full text-xs font-semibold bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 tracking-wide"
               >
-                {genre}
-              </button>
-            </div>
-            <div className="movie-grid">
-              {getGenreMovies(genre).map((movie) => (
-                <MovieCard key={`${genre}-${movie.id}`} movie={movie} />
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+                {g}
+              </span>
+            ))}
+          </div>
 
-      {/* Genre filter section displayed below movie grid */}
-      <div className="genre-filter-section">
-        <h3>Filter by Genre</h3>
-        <div className="genre-tags">
-          {availableGenres.map((genre) => (
+          {/* Title */}
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-3 text-white leading-tight drop-shadow-2xl tracking-tight">
+            {currentHero.title}
+          </h1>
+
+          {/* Rating */}
+          <div className="flex items-center gap-1.5 mb-4">
+            <StarIcon />
+            <span className="text-yellow-400 font-bold text-lg">
+              {currentHero.rating}
+            </span>
+            <span className="text-white/40 text-sm">/10 · IMDb</span>
+          </div>
+
+          {/* Description */}
+          <p className="text-white/65 text-base md:text-lg mb-7 leading-relaxed line-clamp-2 max-w-xl">
+            {currentHero.description}
+          </p>
+
+          {/* CTA */}
+          <button
+            onClick={() =>
+              navigate(`/search?q=${encodeURIComponent(currentHero.title)}`)
+            }
+            className="px-7 py-3 rounded-xl font-bold text-white text-base transition-all duration-200 hover:scale-105 active:scale-95 shadow-2xl"
+            style={{ backgroundColor: currentHero.accent }}
+          >
+            Watch Details
+          </button>
+        </div>
+
+        {/* Dot indicators */}
+        <div className="absolute bottom-8 right-10 flex items-center gap-2">
+          {heroSpotlight.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => changeHero(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              className={`rounded-full transition-all duration-300 ${
+                i === heroIndex
+                  ? "w-7 h-2 bg-white"
+                  : "w-2 h-2 bg-white/30 hover:bg-white/60"
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Side arrows */}
+        <button
+          onClick={() =>
+            changeHero(
+              (heroIndex - 1 + heroSpotlight.length) % heroSpotlight.length,
+            )
+          }
+          aria-label="Previous spotlight"
+          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 backdrop-blur-sm text-white rounded-full p-3 hover:bg-black/55 transition-all border border-white/10"
+        >
+          <ChevronLeftIcon />
+        </button>
+        <button
+          onClick={() => changeHero((heroIndex + 1) % heroSpotlight.length)}
+          aria-label="Next spotlight"
+          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 backdrop-blur-sm text-white rounded-full p-3 hover:bg-black/55 transition-all border border-white/10"
+        >
+          <ChevronRightIcon />
+        </button>
+      </section>
+
+      {/* ── 2. Sticky Genre Filter Pills ─────────────────────────────────── */}
+      <div className="sticky top-0 z-20 bg-zinc-950/90 backdrop-blur-md border-b border-white/5">
+        <div
+          className="flex gap-2 overflow-x-auto px-6 py-3 max-w-screen-2xl mx-auto"
+          style={{ scrollbarWidth: "none" }}
+        >
+          <button
+            onClick={() => setActiveGenre(null)}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border flex-shrink-0 ${
+              !activeGenre
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-transparent text-white/55 border-white/15 hover:border-white/35 hover:text-white/80"
+            }`}
+          >
+            All
+          </button>
+          {mainGenres.map((genre) => (
             <button
               key={genre}
-              className="genre-tag"
-              onClick={() => handleGenreClick(genre)}
-              aria-label={`Filter by ${genre}`}
+              onClick={() => {
+                setActiveGenre(genre);
+                handleGenreClick(genre);
+              }}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border flex-shrink-0 ${
+                activeGenre === genre
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-transparent text-white/55 border-white/15 hover:border-white/35 hover:text-white/80"
+              }`}
             >
               {genre}
             </button>
           ))}
         </div>
+      </div>
+
+      {/* ── 3. Content Rows ───────────────────────────────────────────────── */}
+      <div className="max-w-screen-2xl mx-auto py-10">
+        {/* Trending Now */}
+        <CarouselSection
+          title="Trending Now"
+          items={trendingMovies}
+          onViewAll={() => navigate("/search")}
+          renderItem={(movie) => (
+            <div
+              key={movie.id}
+              className="flex-shrink-0 snap-start w-44 md:w-48"
+            >
+              <MovieCard movie={movie} />
+            </div>
+          )}
+        />
+
+        {/* Top Rated Movies */}
+        <CarouselSection
+          title="Top Rated Movies"
+          items={topRatedMovies}
+          onViewAll={() => navigate("/search?sort=rating")}
+          renderItem={(movie) => (
+            <div
+              key={movie.id}
+              className="flex-shrink-0 snap-start w-44 md:w-48"
+            >
+              <MovieCard movie={movie} />
+            </div>
+          )}
+        />
+
+        {/* Popular TV Shows */}
+        <CarouselSection
+          title="Popular TV Shows"
+          items={popularShows}
+          onViewAll={() => navigate("/search?type=show")}
+          renderItem={(show) => (
+            <div
+              key={show.id}
+              className="flex-shrink-0 snap-start w-44 md:w-48"
+            >
+              <ShowCard show={show} />
+            </div>
+          )}
+        />
       </div>
     </div>
   );
