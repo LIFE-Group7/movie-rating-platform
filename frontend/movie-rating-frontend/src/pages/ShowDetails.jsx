@@ -4,8 +4,13 @@ import { shows } from "../data/mockShows";
 import ReviewForm from "../components/ReviewForm";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
-import "./ShowDetails.css";
 
+/**
+ * TV-show detail page — mirrors MovieDetails but uses the shows dataset and
+ * displays show-specific fields (seasons, ongoing/ended status).
+ * Passes `showData` as the `movie` prop to ReviewForm since ReviewForm is
+ * content-type agnostic; the `type` field on the object disambiguates.
+ */
 function ShowDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -20,9 +25,9 @@ function ShowDetails() {
 
   const [showData, setShowData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userReviewCount, setUserReviewCount] = useState(0);
   const reviewsRef = useRef(null);
 
-  // Fetch show on mount and when id changes
   useEffect(() => {
     const foundShow = shows.find((s) => s.id === parseInt(id));
     if (foundShow) {
@@ -34,155 +39,173 @@ function ShowDetails() {
     setLoading(false);
   }, [id, addRecentlyViewed]);
 
-  // Auto-scroll to review section if coming from watchlist
   useEffect(() => {
-    if (location.state?.scrollToReview) {
+    if (location.state?.scrollToReview && !loading && showData) {
       setTimeout(() => {
-        reviewsRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 300);
+        reviewsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 500);
     }
-  }, [location]);
+  }, [location, loading, showData]);
 
-  /**
-   * Handle successful review submission
-   * Updates show rating dynamically after review is submitted
-   */
   const handleReviewSubmitted = (reviewData) => {
     if (!showData) return;
-
-    // Calculate new average rating
-    const allReviews = [
-      { rating: showData.rating },
-      { rating: reviewData.rating },
-    ];
-
-    const newAverageRating =
-      allReviews.reduce((sum, review) => sum + review.rating, 0) /
-      allReviews.length;
-
-    setShowData({
-      ...showData,
-      rating: parseFloat(newAverageRating.toFixed(1)),
-    });
+    const currentRating = showData.rating || 0;
+    const count = userReviewCount + 1;
+    // Treat the mock base rating as 1 existing data point and blend in every new
+    // user review using a running-average formula to keep the displayed rating fair.
+    // TODO: remove once ratings are fetched live from the backend.
+    const newRating = (currentRating * count + reviewData.rating) / (count + 1);
+    setUserReviewCount(count);
+    setShowData({ ...showData, rating: parseFloat(newRating.toFixed(1)) });
   };
 
-  const handleWatchlistToggle = () => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-
-    if (showInWatchlist) {
-      removeFromWatchlist(showData.id);
-      return;
-    }
-
-    addToWatchlist(showData);
-  };
-
-  // Show loading state
   if (loading) {
     return (
-      <div className="show-details">
-        <p>Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
+        <div className="animate-pulse text-lg font-semibold text-white/50">
+          Loading show...
+        </div>
       </div>
     );
   }
 
-  // If show not found, show error
   if (!showData) {
     return (
-      <div className="show-details">
-        <h2>Show not found</h2>
-        <button onClick={() => navigate("/")}>Back to Home</button>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 text-white px-4">
+        <h2 className="text-2xl font-bold mb-2">Show not found</h2>
+        <button
+          onClick={() => navigate("/")}
+          className="px-5 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-500 transition-colors"
+        >
+          Back to Home
+        </button>
       </div>
     );
   }
 
-  const showInWatchlist = isInWatchlist(showData.id);
+  const inWatchlist = isInWatchlist(showData.id);
+  const genres = showData.genres || (showData.genre ? [showData.genre] : []);
+  const isOngoing = showData.status === "Ongoing";
 
   return (
-    <div className="show-details">
-      <button className="back-button" onClick={() => navigate("/")}>
-        ← Back to Home
-      </button>
-
-      <div className="details-container">
+    <div className="min-h-screen bg-zinc-950 text-white pb-20">
+      {/* Hero Backdrop */}
+      <div className="relative w-full h-[50vh] md:h-[65vh] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent z-10" />
         <img
           src={showData.imageUrl}
           alt={showData.title}
-          className="details-image"
+          className="w-full h-full object-cover opacity-60"
         />
+      </div>
 
-        <div className="details-info">
-          <h2>{showData.title}</h2>
-          <div className="rating-large">⭐ {showData.rating}/10</div>
-          <div className="genres-list">
-            {showData.genres &&
-              showData.genres.map((genre) => (
-                <span key={genre} className="genre-badge">
-                  {genre}
-                </span>
-              ))}
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-20 -mt-32 md:-mt-48">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-12">
+          {/* Poster Card */}
+          <div className="flex-shrink-0 mx-auto md:mx-0 w-48 md:w-72 rounded-2xl overflow-hidden shadow-2xl border-4 border-zinc-950 relative">
+            <img
+              src={showData.imageUrl}
+              alt={showData.title}
+              className="w-full h-auto object-cover"
+            />
+            <div className="absolute top-3 right-3 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg uppercase tracking-wide">
+              Series
+            </div>
           </div>
 
-          <div className="show-details-meta">
-            <div className="show-meta-item">
-              <span className="meta-label">Seasons</span>
-              <span className="meta-value">{showData.seasons}</span>
-            </div>
-            <div className="show-meta-item">
-              <span className="meta-label">Episodes</span>
-              <span className="meta-value">{showData.episodes}</span>
-            </div>
-            <div className="show-meta-item">
-              <span className="meta-label">Status</span>
+          {/* Details */}
+          <div className="flex-1 pt-2 md:pt-10 text-center md:text-left">
+            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-2 drop-shadow-lg">
+              {showData.title}
+            </h1>
+
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-6 text-sm font-medium text-white/80">
+              <span className="bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded border border-yellow-500/30">
+                ★ {showData.rating?.toFixed(1) || "N/A"}
+              </span>
+              <span>•</span>
+              <span>{showData.seasons} Seasons</span>
+              <span>•</span>
               <span
-                className={`meta-value show-status-badge ${showData.status === "Ongoing" ? "status-ongoing" : "status-ended"}`}
+                className={`flex items-center gap-1.5 ${isOngoing ? "text-emerald-400" : "text-white/60"}`}
               >
-                <span className="status-dot" aria-hidden="true"></span>
+                <span
+                  className={`w-2 h-2 rounded-full ${isOngoing ? "bg-emerald-400" : "bg-white/40"}`}
+                />
                 {showData.status}
               </span>
             </div>
-            <div className="show-meta-item">
-              <span className="meta-label">Year</span>
-              <span className="meta-value">{showData.year}</span>
+
+            <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-8">
+              {genres.map((g) => (
+                <span
+                  key={g}
+                  className="px-3 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/10 text-white/80"
+                >
+                  {g}
+                </span>
+              ))}
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-3 mb-10 max-w-md mx-auto md:mx-0">
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) navigate("/login");
+                  else if (inWatchlist) removeFromWatchlist(showData.id);
+                  else addToWatchlist(showData);
+                }}
+                className={`flex-1 px-6 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                  inWatchlist
+                    ? "bg-red-500/20 text-red-200 border border-red-500/30 hover:bg-red-500/30"
+                    : "bg-blue-600 text-white hover:bg-blue-500 hover:scale-[1.02]"
+                }`}
+              >
+                {inWatchlist ? (
+                  <>
+                    <span className="text-lg"></span> Remove from Watchlist
+                  </>
+                ) : (
+                  <>
+                    <span className="text-lg">+</span> Add to Watchlist
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">Synopsis</h3>
+                <p className="text-white/70 leading-relaxed max-w-3xl mx-auto md:mx-0">
+                  {showData.description || "No synopsis available."}
+                </p>
+              </div>
+
+              {showData.creator && (
+                <div>
+                  <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider mb-1">
+                    Creator
+                  </h3>
+                  <p className="text-white font-medium">{showData.creator}</p>
+                </div>
+              )}
             </div>
           </div>
-
-          <div className="description">
-            <h3>Description</h3>
-            <p>{showData.description || "No description available yet."}</p>
-          </div>
-
-          <div className="actions">
-            <button
-              className="rate-button"
-              onClick={() => {
-                if (!isAuthenticated) {
-                  navigate("/login");
-                } else {
-                  reviewsRef.current?.scrollIntoView({ behavior: "smooth" });
-                }
-              }}
-            >
-              Rate this show
-            </button>
-            <button
-              className={`watchlist-button${showInWatchlist ? " is-remove" : ""}`}
-              onClick={handleWatchlistToggle}
-            >
-              {showInWatchlist
-                ? "Remove from Watchlist"
-                : "+ Add to Watchlist"}
-            </button>
-          </div>
         </div>
-      </div>
 
-      {/* Review Submission Section */}
-      <div className="reviews-section" ref={reviewsRef}>
-        <ReviewForm movie={showData} onSubmitSuccess={handleReviewSubmitted} />
+        {/* Reviews Section */}
+        <div ref={reviewsRef} className="mt-20 max-w-3xl">
+          <h2 className="text-2xl font-bold mb-6 border-l-4 border-blue-500 pl-4">
+            Reviews & Ratings
+          </h2>
+          <ReviewForm
+            movie={showData}
+            onSubmitSuccess={handleReviewSubmitted}
+          />
+        </div>
       </div>
     </div>
   );

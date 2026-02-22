@@ -1,223 +1,190 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import "./Login.css";
 
-// User authentication page with form validation
-// Prepares credentials for backend API authentication
+/**
+ * Login page.
+ * Redirects to home immediately if the user is already authenticated
+ * (e.g. navigating to /login while logged in via a bookmarked URL).
+ */
 function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
 
-  // Form field state - tracks user credentials
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
-  // Error state - stores validation and auth error messages
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
-
-  // Loading state - prevents double submission
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Show/hide password state
   const [showPassword, setShowPassword] = useState(false);
 
-  // Redirect if already authenticated
+  // Skip the login page when the user is already signed in.
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
-    }
+    if (isAuthenticated) navigate("/");
   }, [isAuthenticated, navigate]);
 
+  /**
+   * Clear the field-level error as soon as the user starts correcting it —
+   * avoids stale error messages lingering while the user types a fix.
+   */
   const handleInputChange = (event) => {
     const { name, value } = event.target;
+    setFormData((p) => ({ ...p, [name]: value }));
 
-    // Update form data for the changed field
-    setFormData((previousData) => ({
-      ...previousData,
-      [name]: value,
-    }));
-
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors((previousErrors) => ({
-        ...previousErrors,
-        [name]: "",
-      }));
-    }
-
-    // Clear submit error when user makes changes
-    if (errors.submit) {
-      setErrors((previousErrors) => ({
-        ...previousErrors,
-        submit: "",
-      }));
+    if (errors[name] || errors.submit) {
+      setErrors((p) => ({ ...p, [name]: "", submit: "" }));
     }
   };
 
+  // Returns a map of field name → error message; empty object means valid.
   const validateForm = () => {
-    const newErrors = {};
-
-    // Email validation - required, must match email pattern
+    const next = {};
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!emailPattern.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
 
-    // Password validation - required
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    }
+    if (!formData.email.trim()) next.email = "Email is required";
+    else if (!emailPattern.test(formData.email))
+      next.email = "Enter a valid email";
 
-    return newErrors;
+    if (!formData.password) next.password = "Password is required";
+    return next;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    // Validate form before submission
     const validationErrors = validateForm();
-
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      // Call the login function from AuthContext
       await login(formData.email, formData.password);
-
-      // Redirect to home page (useEffect will handle this, but we can also do it here)
       navigate("/");
     } catch (error) {
-      // Better error handling for different failure scenarios
-      if (error.message.includes("Too many login attempts")) {
-        setErrors({
-          submit: error.message,
-        });
-      } else if (error.message.includes("Failed to fetch")) {
-        // Network error
-        setErrors({
-          submit: "Network error. Please check your connection and try again.",
-        });
-      } else if (error.message === "timeout") {
-        // Request timeout
-        setErrors({
-          submit: "Request took too long. Please try again.",
-        });
-      } else {
-        // Generic authentication error
-        setErrors({
-          submit: "Invalid email or password. Please try again.",
-        });
-      }
+      // Map specific error messages to user-friendly copy.
+      const msg = String(error?.message || "");
+      if (msg.includes("Too many login attempts")) setErrors({ submit: msg });
+      else if (msg.includes("Failed to fetch"))
+        setErrors({ submit: "Network error. Check connection and try again." });
+      else if (msg === "timeout")
+        setErrors({ submit: "Request took too long. Please try again." });
+      else
+        setErrors({ submit: "Invalid email or password. Please try again." });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Returns the full Tailwind class string for a text input based on error state.
+  const inputClass = (hasError) =>
+    `w-full rounded-2xl px-4 py-3 text-sm outline-none transition border bg-zinc-950/40 text-white placeholder:text-white/30 ${
+      hasError
+        ? "border-red-400/40 focus:border-red-400/70 focus:ring-2 focus:ring-red-500/15"
+        : "border-white/10 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/15"
+    }`;
+
   return (
-    <div className="login-page">
-      <div className="login-container">
-        <div className="login-header">
-          <h2>Welcome Back</h2>
-          <p>Sign in to continue rating movies</p>
+    <div className="min-h-screen bg-zinc-950 text-white">
+      <div className="max-w-screen-sm mx-auto px-4 py-10">
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur p-6 md:p-8 shadow-2xl">
+          <div className="text-2xl font-extrabold tracking-tight">
+            Welcome back
+          </div>
+          <div className="text-sm text-white/55 mt-1">
+            Sign in to continue rating movies.
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            {errors.submit && (
+              <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {errors.submit}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-bold text-white/75 mb-2">
+                Email
+              </label>
+              <input
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className={inputClass(Boolean(errors.email))}
+                placeholder="you@example.com"
+                type="email"
+                autoComplete="email"
+                disabled={isSubmitting}
+              />
+              {errors.email && (
+                <div className="mt-2 text-xs font-semibold text-red-300">
+                  {errors.email}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-white/75 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className={inputClass(Boolean(errors.password))}
+                  placeholder="••••••••"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  disabled={isSubmitting}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl text-xs font-bold text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+              {errors.password && (
+                <div className="mt-2 text-xs font-semibold text-red-300">
+                  {errors.password}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full rounded-2xl px-4 py-3 font-extrabold text-sm transition-colors ${
+                isSubmitting
+                  ? "bg-white/10 text-white/35 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-500 text-white"
+              }`}
+            >
+              {isSubmitting ? "Signing in…" : "Sign in"}
+            </button>
+
+            <div className="flex items-center justify-between text-sm pt-2">
+              <Link
+                to="/forgot-password"
+                className="text-white/60 hover:text-white transition-colors font-semibold"
+              >
+                Forgot password?
+              </Link>
+              <div className="text-white/50">
+                Don’t have an account?{" "}
+                <Link
+                  to="/register"
+                  className="text-blue-400 hover:text-blue-300 font-bold"
+                >
+                  Create one
+                </Link>
+              </div>
+            </div>
+          </form>
         </div>
 
-        <form className="login-form" onSubmit={handleSubmit}>
-          {/* Email Field */}
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              className={errors.email ? "input-error" : ""}
-              placeholder="your.email@example.com"
-              disabled={isSubmitting}
-              autoComplete="email"
-              aria-label="Email address"
-              aria-describedby={errors.email ? "email-error" : undefined}
-            />
-            {errors.email && (
-              <span id="email-error" className="error-message">
-                {errors.email}
-              </span>
-            )}
-          </div>
-
-          {/* Password Field */}
-          <div className="form-group">
-            <div className="password-field-wrapper">
-              <label htmlFor="password">Password</label>
-              <button
-                type="button"
-                className="toggle-password-btn"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                title={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-            <input
-              type={showPassword ? "text" : "password"}
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              className={errors.password ? "input-error" : ""}
-              placeholder="Enter your password"
-              disabled={isSubmitting}
-              autoComplete="current-password"
-              aria-label="Password"
-              aria-describedby={errors.password ? "password-error" : undefined}
-            />
-            {errors.password && (
-              <span id="password-error" className="error-message">
-                {errors.password}
-              </span>
-            )}
-          </div>
-
-          {/* Forgot Password Link */}
-          <div className="form-options">
-            <Link to="/forgot-password" className="forgot-password">
-              Forgot password?
-            </Link>
-          </div>
-
-          {/* Submit Error */}
-          {errors.submit && (
-            <div className="error-message error-submit" role="alert">
-              {errors.submit}
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="login-button"
-            disabled={isSubmitting}
-            aria-busy={isSubmitting}
-          >
-            {isSubmitting ? "Signing In..." : "Sign In"}
-          </button>
-        </form>
-
-        {/* Link to Register */}
-        <div className="login-footer">
-          <p>
-            Don't have an account? <Link to="/register">Create one</Link>
-          </p>
+        <div className="text-center text-xs text-white/35 mt-6">
+          CineMatch · Dark UI refresh
         </div>
       </div>
     </div>

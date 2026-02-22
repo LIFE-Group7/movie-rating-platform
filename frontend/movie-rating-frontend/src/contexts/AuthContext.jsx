@@ -1,9 +1,13 @@
 import { createContext, useState, useContext, useEffect } from "react";
 
-// Create the auth context
+// ── Context ───────────────────────────────────────────────────────────────────
 const AuthContext = createContext();
 
-// Custom hook to use auth context
+/**
+ * Custom hook that enforces usage within an AuthProvider.
+ * Throws a descriptive error rather than silently returning undefined,
+ * making misconfigured component trees immediately obvious in development.
+ */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -12,14 +16,19 @@ export const useAuth = () => {
   return context;
 };
 
-// Rate limiting constant - max 5 failed login attempts
+// ── Rate-limiting constants ───────────────────────────────────────────────────
+// After MAX_LOGIN_ATTEMPTS failed logins the user is locked out for LOCKOUT_TIME.
+// These match typical industry defaults; adjust when real backend is integrated.
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes in milliseconds
 
-// Provider component that wraps the entire app
+// ── Provider ──────────────────────────────────────────────────────────────────
+// Wraps the entire app so any component can access auth state without prop drilling.
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // `isLoading` stays true until the persisted session check resolves — prevents
+  // a flash of unauthenticated UI on page refresh.
   const [isLoading, setIsLoading] = useState(true);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockoutTime, setLockoutTime] = useState(null);
@@ -175,7 +184,8 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Handle logout
+  // Clear all auth state and persisted tokens on logout.
+  // loginAttempts and lockoutTime are also reset so the next login starts fresh.
   const logout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
@@ -185,12 +195,12 @@ export function AuthProvider({ children }) {
     setLockoutTime(null);
   };
 
-  // Check if account is locked due to too many failed attempts
+  // Returns true when the account is temporarily locked due to too many failures.
   const isLockedOut = () => {
     return lockoutTime && Date.now() < lockoutTime;
   };
 
-  // Get remaining lockout time in seconds
+  // Returns the number of seconds remaining in the current lockout period (0 if none).
   const getLockoutTimeRemaining = () => {
     if (!lockoutTime) return 0;
     const remaining = lockoutTime - Date.now();

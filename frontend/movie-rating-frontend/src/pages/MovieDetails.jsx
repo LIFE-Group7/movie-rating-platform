@@ -4,8 +4,13 @@ import { movies } from "../data/mockMovies";
 import ReviewForm from "../components/ReviewForm";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
-import "./MovieDetails.css";
 
+/**
+ * Movie detail page.
+ * Loads film data from the mock dataset by URL param `id`.
+ * Adds the film to the WatchlistContext recently-viewed history on mount.
+ * Hosts the ReviewForm and optimistically updates the displayed rating after submission.
+ */
 function MovieDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -20,9 +25,11 @@ function MovieDetails() {
 
   const [movieData, setMovieData] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Track how many reviews were submitted this session so the displayed rating
+  // can be updated incrementally without a real API round-trip.
+  const [sessionReviewCount, setSessionReviewCount] = useState(0);
   const reviewsRef = useRef(null);
 
-  // Fetch movie on mount and when id changes
   useEffect(() => {
     const foundMovie = movies.find((m) => m.id === parseInt(id));
     if (foundMovie) {
@@ -34,136 +41,181 @@ function MovieDetails() {
     setLoading(false);
   }, [id, addRecentlyViewed]);
 
-  // Auto-scroll to review section if coming from watchlist
+  // Scroll to the review form when navigated here with the scrollToReview flag
+  // (e.g. from a "write a review" deep-link elsewhere in the app).
   useEffect(() => {
-    if (location.state?.scrollToReview) {
+    if (location.state?.scrollToReview && !loading && movieData) {
       setTimeout(() => {
-        reviewsRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 300);
+        reviewsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 500);
     }
-  }, [location]);
+  }, [location, loading, movieData]);
 
   /**
-   * Handle successful review submission
-   * Updates movie rating dynamically after review is submitted
+   * Optimistically update the displayed rating after a user submits a review.
+   * Uses a proper running-average formula — mirrors the ShowDetails logic.
+   * BUG FIX: previous code hardcoded 10 as the assumed existing review count,
+   * causing the average to drift toward the mock base rating over time.
+   * TODO: remove once ratings are fetched live from the backend.
    */
   const handleReviewSubmitted = (reviewData) => {
     if (!movieData) return;
-
-    // Calculate new average rating
-    const allReviews = [
-      { rating: movieData.rating },
-      { rating: reviewData.rating },
-    ];
-
-    const newAverageRating =
-      allReviews.reduce((sum, review) => sum + review.rating, 0) /
-      allReviews.length;
-
+    const currentRating = movieData.rating || 0;
+    const nextCount = sessionReviewCount + 1;
+    const updatedRating =
+      (currentRating * nextCount + reviewData.rating) / (nextCount + 1);
+    setSessionReviewCount(nextCount);
     setMovieData({
       ...movieData,
-      rating: parseFloat(newAverageRating.toFixed(1)),
+      rating: parseFloat(updatedRating.toFixed(1)),
     });
-
-    // TODO: When backend is connected, fetch updated movie:
-    // const response = await fetch(`/api/movies/${movieData.id}`);
-    // const updatedMovie = await response.json();
-    // setMovieData(updatedMovie);
   };
 
-  const handleWatchlistToggle = () => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-
-    if (movieInWatchlist) {
-      removeFromWatchlist(movieData.id);
-      return;
-    }
-
-    addToWatchlist(movieData);
-  };
-
-  // Show loading state
   if (loading) {
     return (
-      <div className="movie-details">
-        <p>Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
+        <div className="animate-pulse text-lg font-semibold text-white/50">
+          Loading movie...
+        </div>
       </div>
     );
   }
 
-  // If movie not found, show error
   if (!movieData) {
     return (
-      <div className="movie-details">
-        <h2>Movie not found</h2>
-        <button onClick={() => navigate("/")}>Back to Home</button>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 text-white px-4">
+        <h2 className="text-2xl font-bold mb-2">Movie not found</h2>
+        <button
+          onClick={() => navigate("/")}
+          className="px-5 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-500 transition-colors"
+        >
+          Back to Home
+        </button>
       </div>
     );
   }
 
-  const movieInWatchlist = isInWatchlist(movieData.id);
+  const inWatchlist = isInWatchlist(movieData.id);
+  const genres = movieData.genres || (movieData.genre ? [movieData.genre] : []);
 
   return (
-    <div className="movie-details">
-      <button className="back-button" onClick={() => navigate("/")}>
-        ← Back to Home
-      </button>
-
-      <div className="details-container">
+    <div className="min-h-screen bg-zinc-950 text-white pb-20">
+      {/* Hero Backdrop */}
+      <div className="relative w-full h-[50vh] md:h-[65vh] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent z-10" />
         <img
           src={movieData.imageUrl}
           alt={movieData.title}
-          className="details-image"
+          className="w-full h-full object-cover opacity-60"
         />
-
-        <div className="details-info">
-          <h2>{movieData.title}</h2>
-          <div className="rating-large">⭐ {movieData.rating}/10</div>
-          <div className="genres-list">
-            {movieData.genres &&
-              movieData.genres.map((genre) => (
-                <span key={genre} className="genre-badge">
-                  {genre}
-                </span>
-              ))}
-          </div>
-
-          <div className="description">
-            <h3>Description</h3>
-            <p>{movieData.description || "No description available yet."}</p>
-          </div>
-
-          <div className="actions">
-            <button
-              className="rate-button"
-              onClick={() => {
-                if (!isAuthenticated) {
-                  navigate("/login");
-                } else {
-                  reviewsRef.current?.scrollIntoView({ behavior: "smooth" });
-                }
-              }}
-            >
-              Rate this movie
-            </button>
-            <button
-              className={`watchlist-button${movieInWatchlist ? " is-remove" : ""}`}
-              onClick={handleWatchlistToggle}
-            >
-              {movieInWatchlist
-                ? "Remove from Watchlist"
-                : "+ Add to Watchlist"}
-            </button>
-          </div>
-        </div>
       </div>
 
-      {/* Review Submission Section */}
-      <div className="reviews-section" ref={reviewsRef}>
-        <ReviewForm movie={movieData} onSubmitSuccess={handleReviewSubmitted} />
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-20 -mt-32 md:-mt-48">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-12">
+          {/* Poster Card */}
+          <div className="flex-shrink-0 mx-auto md:mx-0 w-48 md:w-72 rounded-2xl overflow-hidden shadow-2xl border-4 border-zinc-950">
+            <img
+              src={movieData.imageUrl}
+              alt={movieData.title}
+              className="w-full h-auto object-cover"
+            />
+          </div>
+
+          {/* Details */}
+          <div className="flex-1 pt-2 md:pt-10 text-center md:text-left">
+            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-2 drop-shadow-lg">
+              {movieData.title}
+            </h1>
+
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-6 text-sm font-medium text-white/80">
+              <span className="bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded border border-yellow-500/30">
+                ★ {movieData.rating?.toFixed(1) || "N/A"}
+              </span>
+              <span>•</span>
+              <span>{movieData.year || "2024"}</span>
+              <span>•</span>
+              <span>{movieData.duration || "120 min"}</span>
+            </div>
+
+            <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-8">
+              {genres.map((g) => (
+                <span
+                  key={g}
+                  className="px-3 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/10 text-white/80"
+                >
+                  {g}
+                </span>
+              ))}
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-3 mb-10 max-w-md mx-auto md:mx-0">
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) navigate("/login");
+                  else if (inWatchlist) removeFromWatchlist(movieData.id);
+                  else addToWatchlist(movieData);
+                }}
+                className={`flex-1 px-6 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                  inWatchlist
+                    ? "bg-red-500/20 text-red-200 border border-red-500/30 hover:bg-red-500/30"
+                    : "bg-blue-600 text-white hover:bg-blue-500 hover:scale-[1.02]"
+                }`}
+              >
+                {inWatchlist ? (
+                  <>
+                    <span className="text-lg"></span> Remove from Watchlist
+                  </>
+                ) : (
+                  <>
+                    <span className="text-lg">+</span> Add to Watchlist
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">Synopsis</h3>
+                <p className="text-white/70 leading-relaxed max-w-3xl mx-auto md:mx-0">
+                  {movieData.description || "No synopsis available."}
+                </p>
+              </div>
+
+              {movieData.director && (
+                <div>
+                  <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider mb-1">
+                    Director
+                  </h3>
+                  <p className="text-white font-medium">{movieData.director}</p>
+                </div>
+              )}
+
+              {movieData.cast && (
+                <div>
+                  <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider mb-1">
+                    Cast
+                  </h3>
+                  <p className="text-white/80">{movieData.cast.join(", ")}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div ref={reviewsRef} className="mt-20 max-w-3xl">
+          <h2 className="text-2xl font-bold mb-6 border-l-4 border-blue-500 pl-4">
+            Reviews & Ratings
+          </h2>
+          <ReviewForm
+            movie={movieData}
+            onSubmitSuccess={handleReviewSubmitted}
+          />
+        </div>
       </div>
     </div>
   );

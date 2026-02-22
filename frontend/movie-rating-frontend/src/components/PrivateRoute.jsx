@@ -1,23 +1,36 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
-// PrivateRoute component - protects routes that require authentication
-// If user is not authenticated, redirects to login page
+/**
+ * Guard component — redirects unauthenticated users to /login.
+ *
+ * Waits for the auth session check (isLoading) to finish before deciding so
+ * users who refresh on a protected page don't get incorrectly bounced.
+ *
+ * NOTE: This component is defined but currently not wired into App.jsx — each
+ * protected page (Watchlist, MyReviews) implements its own inline redirect.
+ * TODO: Wrap protected <Route> elements in App.jsx with <PrivateRoute> and
+ *       remove the duplicated auth redirects from individual page components.
+ */
 function PrivateRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show loading state while checking authentication
+  // Render a loading indicator while the persisted session is being restored.
+  // Without this guard, isAuthenticated would briefly be false on every refresh,
+  // causing a redirect to /login even for logged-in users.
   if (isLoading) {
-    return <div className="loading-container">Loading...</div>;
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center bg-zinc-950 text-white">
+        <div className="px-6 py-4 rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
+          <div className="text-sm font-semibold text-white/80">Loading…</div>
+        </div>
+      </div>
+    );
   }
 
-  // If user is authenticated, render the component
-  if (isAuthenticated) {
-    return children;
-  }
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  // If user is not authenticated, redirect to login
-  return <Navigate to="/login" replace />;
+  return children;
 }
 
 export default PrivateRoute;

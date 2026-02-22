@@ -1,14 +1,12 @@
-import { useState } from "react";
-import "./StarRating.css";
+import { useMemo, useState } from "react";
 
 /**
- * Controlled half-star rating component.
- * Each star reads the mouse X position against its bounding rect
- * to determine left (odd) or right (even) half — producing a 1–10 scale.
+ * Interactive (or read-only) 5-star rating widget.
  *
- * @param {number}   rating         - Current selected rating (0–10)
- * @param {function} onRatingChange - Callback fired with the new 1–10 value
- * @param {boolean}  readOnly       - If true, disables all interaction
+ * Internally uses a 0–10 scale so half-stars map to integer steps.
+ * - `rating`         — current value on a 0–10 scale.
+ * - `onRatingChange` — called with the new 0–10 value on click.
+ * - `readOnly`       — disables hover and click interactions.
  */
 function StarRating({
   rating = 0,
@@ -16,12 +14,12 @@ function StarRating({
   readOnly = false,
 }) {
   const [hoverRating, setHoverRating] = useState(0);
-
+  // Show hover preview while the user is pointing; fall back to the committed value.
   const displayRating = hoverRating || rating;
 
   /**
-   * Resolve a 1–10 value from the mouse position within a star button.
-   * Left half of star N → odd value (N*2 - 1), right half → even value (N*2).
+   * Resolve whether the cursor is over the left (half-star) or right (full-star)
+   * half of the hovered star, returning the corresponding 0–10 step value.
    */
   const resolveHalfValue = (event, starIndex) => {
     const { left, width } = event.currentTarget.getBoundingClientRect();
@@ -30,48 +28,56 @@ function StarRating({
     return isLeftHalf ? starIndex * 2 - 1 : starIndex * 2;
   };
 
-  const handleMouseMove = (event, starIndex) => {
-    if (readOnly) return;
-    setHoverRating(resolveHalfValue(event, starIndex));
-  };
-
-  const handleClick = (event, starIndex) => {
-    if (readOnly) return;
-    onRatingChange(resolveHalfValue(event, starIndex));
-  };
-
-  const handleMouseLeave = () => {
-    setHoverRating(0);
-  };
+  /**
+   * Return the fill percentage (0, 50, or 100) for a given star position.
+   * Converts the 0–10 display value to a 0–5 scale before comparing so fractions
+   * below 0.5 stars render as empty and ≥ 0.5 render as half-filled.
+   */
+  const getFill = useMemo(() => {
+    return (starIndex) => {
+      const valueOutOf5 = displayRating / 2; // convert 0–10 → 0–5
+      const diff = valueOutOf5 - (starIndex - 1);
+      if (diff >= 1) return 100; // full star
+      if (diff >= 0.5) return 50; // half star
+      return 0; // empty star
+    };
+  }, [displayRating]);
 
   return (
-    <div className="star-rating">
-      <div className="stars-container" onMouseLeave={handleMouseLeave}>
+    <div className="flex flex-col gap-2 items-start">
+      <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((starIndex) => {
-          const leftValue = starIndex * 2 - 1;
-          const rightValue = starIndex * 2;
-
-          const isFull = displayRating >= rightValue;
-          const isHalf = !isFull && displayRating >= leftValue;
-
+          const fillPct = getFill(starIndex);
           return (
             <button
               key={starIndex}
               type="button"
-              className={`star-wrapper ${readOnly ? "readonly" : ""}`}
-              onMouseMove={(e) => handleMouseMove(e, starIndex)}
-              onClick={(e) => handleClick(e, starIndex)}
               disabled={readOnly}
-              aria-label={`Rate between ${leftValue} and ${rightValue} out of 10`}
+              onMouseMove={(e) => {
+                if (readOnly) return;
+                setHoverRating(resolveHalfValue(e, starIndex));
+              }}
+              onMouseLeave={() => setHoverRating(0)}
+              onClick={(e) => {
+                if (readOnly) return;
+                onRatingChange(resolveHalfValue(e, starIndex));
+              }}
+              className={`relative w-8 h-8 text-2xl leading-none ${
+                readOnly
+                  ? "cursor-default opacity-95"
+                  : "cursor-pointer hover:scale-110 transition-transform"
+              }`}
+              aria-label={`Rate ${starIndex} stars`}
             >
-              {/* Grey base star — always fully visible underneath */}
-              <span className="star-char star-bg">★</span>
+              {/* Unfilled background star */}
+              <span className="absolute inset-0 text-white/25 select-none">
+                ★
+              </span>
 
-              {/* Gold overlay — width 0 / 50% / 100% clips to empty / half / full */}
+              {/* Filled star clipped to fillPct width — creates the half-fill effect */}
               <span
-                className={`star-char star-fill ${
-                  isFull ? "full" : isHalf ? "half" : ""
-                }`}
+                className="absolute inset-0 text-yellow-400 select-none overflow-hidden"
+                style={{ width: `${fillPct}%` }}
               >
                 ★
               </span>
@@ -80,7 +86,9 @@ function StarRating({
         })}
       </div>
 
-      {rating > 0 && <span className="rating-text">{rating}/10</span>}
+      <div className="text-xs font-semibold text-white/60">
+        {displayRating ? `${displayRating}/10` : "No rating"}
+      </div>
     </div>
   );
 }

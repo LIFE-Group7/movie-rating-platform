@@ -14,21 +14,30 @@ import Watchlist from "./pages/Watchlist";
 import MyReviews from "./pages/MyReviews";
 import "./App.css";
 
+/**
+ * Root application component.
+ *
+ * Context nesting order matters:
+ *   AuthProvider  → must be outermost because WatchlistProvider and
+ *                   ReviewsProvider both consume useAuth internally.
+ *   WatchlistProvider → wraps ReviewsProvider so sibling pages can use both.
+ *   ReviewsProvider → innermost consumer of auth state.
+ *
+ * NOTE: PrivateRoute exists in components/ but is not currently wired here.
+ * TODO: Wrap /watchlist and /my-reviews with <PrivateRoute> to centralise auth
+ *       guards instead of repeating inline redirect logic in each page component.
+ */
 function App() {
   return (
     <BrowserRouter>
-      <div className="App">
-        {/* Navbar is rendered on all pages for consistent navigation */}
+      <div className="min-h-screen bg-[#f5f5f5]">
         <AuthProvider>
           <WatchlistProvider>
             <ReviewsProvider>
               <Navbar />
-
               <Routes>
                 <Route path="/" element={<Home />} />
-                {/* Dynamic route for movie details page, captures movie ID from URL */}
                 <Route path="/movie/:id" element={<MovieDetails />} />
-                {/* Dynamic route for show details page, captures show ID from URL */}
                 <Route path="/show/:id" element={<ShowDetails />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/watchlist" element={<Watchlist />} />
