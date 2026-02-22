@@ -5,8 +5,10 @@ import ShowCard from "../components/ShowCard";
 import { movies } from "../data/mockMovies";
 import { shows } from "../data/mockShows";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
 // ── Hero spotlight mock data ────────────────────────────────────────────────
-const heroSpotlight = [
+const fallbackHeroSpotlight = [
   {
     id: 1,
     title: "Dune: Part Two",
@@ -28,6 +30,76 @@ const heroSpotlight = [
     accent: "#ea580c",
   },
 ];
+
+const heroPalettes = [
+  { bg: "from-amber-950 via-stone-950 to-zinc-950", accent: "#d97706" },
+  { bg: "from-orange-950 via-neutral-950 to-zinc-950", accent: "#ea580c" },
+  { bg: "from-emerald-950 via-slate-950 to-zinc-950", accent: "#10b981" },
+];
+
+const placeholderPoster = (title) =>
+  `https://placehold.co/400x600?text=${encodeURIComponent(title || "Title").replace(/%20/g, "+")}`;
+
+const coerceGenres = (input) => {
+  if (Array.isArray(input)) return input;
+  if (typeof input === "string" && input.trim()) return [input];
+  return [];
+};
+
+const pickImage = (item, title) => {
+  if (item.imageUrl) return item.imageUrl;
+  if (item.posterUrl) return item.posterUrl;
+  if (item.poster_path)
+    return `https://image.tmdb.org/t/p/w500${item.poster_path}`;
+  if (item.backdrop_path)
+    return `https://image.tmdb.org/t/p/w780${item.backdrop_path}`;
+  return placeholderPoster(title);
+};
+
+const coerceCardItem = (item, idx) => {
+  const title = item.title ?? item.name ?? `Untitled ${idx + 1}`;
+  return {
+    id: item.id ?? item.movieId ?? item.showId ?? `${title}-${idx}`,
+    type: item.type ?? (item.seasons ? "show" : "movie"),
+    title,
+    rating:
+      typeof item.rating === "number"
+        ? item.rating
+        : Number(item.averageRating ?? item.vote_average ?? 0),
+    genres: coerceGenres(item.genres ?? item.genre),
+    imageUrl: pickImage(item, title),
+    description: item.description ?? item.overview ?? "",
+  };
+};
+
+const coerceHeroEntry = (item, idx) => {
+  const base = coerceCardItem(item, idx);
+  const palette = heroPalettes[idx % heroPalettes.length];
+  return {
+    ...base,
+    bg: item.bg ?? palette.bg,
+    accent: item.accent ?? palette.accent,
+    image: item.image ?? item.backdropUrl ?? base.imageUrl,
+  };
+};
+
+const extractList = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (payload?.data && Array.isArray(payload.data)) return payload.data;
+  if (payload?.items && Array.isArray(payload.items)) return payload.items;
+  if (payload?.results && Array.isArray(payload.results))
+    return payload.results;
+  return [];
+};
+
+const buildApiUrl = (path) => {
+  if (!API_BASE_URL) return null;
+  try {
+    return new URL(path, API_BASE_URL).toString();
+  } catch {
+    return null;
+  }
+};
 
 // ── Inline SVG icons — avoids external icon library dependency ───────────────
 function StarIcon() {
@@ -147,11 +219,23 @@ function CarouselSection({ title, items, renderItem, onViewAll }) {
 // ── Main Home component ───────────────────────────────────────────────────────
 function Home() {
   const navigate = useNavigate();
+  const [heroEntries, setHeroEntries] = useState(fallbackHeroSpotlight);
   const [heroIndex, setHeroIndex] = useState(0);
   // Used to trigger a fade-out/fade-in transition when the spotlight changes.
   const [isTransitioning, setIsTransitioning] = useState(false);
   // Tracks the active genre pill — selecting one navigates to the search page.
   const [activeGenre, setActiveGenre] = useState(null);
+  const [trendingMovies, setTrendingMovies] = useState(() =>
+    movies.slice(0, 12),
+  );
+  const [topRatedMovies, setTopRatedMovies] = useState(() =>
+    [...movies].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 12),
+  );
+  const [popularShows, setPopularShows] = useState(() => shows.slice(0, 12));
+
+  const heroSlides = heroEntries.length ? heroEntries : fallbackHeroSpotlight;
+  const totalHeroes = heroSlides.length || fallbackHeroSpotlight.length;
+  const currentHero = heroSlides[heroIndex % totalHeroes];
 
   // The full genre list shown in the sticky filter strip.
   const mainGenres = [
@@ -165,29 +249,84 @@ function Home() {
     "Romance",
   ];
 
-  // Derive carousel data from the mock datasets — replace with API calls later.
-  const trendingMovies = movies.slice(0, 12);
-  const topRatedMovies = [...movies]
-    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-    .slice(0, 12);
-  const popularShows = shows.slice(0, 12);
+  // Hydrate carousels and hero spotlight from API when configured; fall back to mocks.
+  useEffect(() => {
+    if (!API_BASE_URL) return undefined;
 
-  const currentHero = heroSpotlight[heroIndex];
+    const controller = new AbortController();
+
+    const fetchJson = async (path) => {
+      const url = buildApiUrl(path);
+      if (!url) throw new Error("Missing API base URL");
+      const res = await fetch(url, { signal: controller.signal });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      return res.json();
+    };
+
+    const requests = [
+      {
+        path: "/api/home/spotlight",
+        apply: (payload) => {
+          const items = extractList(payload).map(coerceHeroEntry);
+          if (items.length) {
+            setHeroEntries(items);
+            setHeroIndex(0);
+          }
+        },
+      },
+      {
+        path: "/api/movies/trending",
+        apply: (payload) => {
+          const items = extractList(payload).map(coerceCardItem).slice(0, 12);
+          if (items.length) setTrendingMovies(items);
+        },
+      },
+      {
+        path: "/api/movies/top-rated",
+        apply: (payload) => {
+          const items = extractList(payload).map(coerceCardItem).slice(0, 12);
+          if (items.length) setTopRatedMovies(items);
+        },
+      },
+      {
+        path: "/api/shows/popular",
+        apply: (payload) => {
+          const items = extractList(payload).map(coerceCardItem).slice(0, 12);
+          if (items.length) setPopularShows(items);
+        },
+      },
+    ];
+
+    const load = async () => {
+      await Promise.allSettled(
+        requests.map(async ({ path, apply }) => {
+          const json = await fetchJson(path);
+          apply(json);
+        }),
+      );
+    };
+
+    load().catch(() => {});
+
+    return () => controller.abort();
+  }, []);
 
   // ── Hero auto-rotation ─────────────────────────────────────────────────────
   // Advances the spotlight every 5.5 s with a 350 ms crossfade.
   // The interval is cleared on unmount to prevent state updates on an
   // unmounted component.
   useEffect(() => {
+    if (!totalHeroes) return undefined;
+
     const interval = setInterval(() => {
       setIsTransitioning(true);
       setTimeout(() => {
-        setHeroIndex((prev) => (prev + 1) % heroSpotlight.length);
+        setHeroIndex((prev) => (prev + 1) % totalHeroes);
         setIsTransitioning(false);
       }, 350);
     }, 5500);
     return () => clearInterval(interval);
-  }, []);
+  }, [totalHeroes]);
 
   /**
    * Jump to a specific spotlight entry.
@@ -195,10 +334,10 @@ function Home() {
    * transition with no visible change.
    */
   const changeHero = (newIndex) => {
-    if (newIndex === heroIndex) return;
+    if (!totalHeroes || newIndex === heroIndex) return;
     setIsTransitioning(true);
     setTimeout(() => {
-      setHeroIndex(newIndex);
+      setHeroIndex(newIndex % totalHeroes);
       setIsTransitioning(false);
     }, 350);
   };
@@ -280,7 +419,7 @@ function Home() {
 
         {/* Dot indicators */}
         <div className="absolute bottom-8 right-10 flex items-center gap-2">
-          {heroSpotlight.map((_, i) => (
+          {heroSlides.map((_, i) => (
             <button
               key={i}
               onClick={() => changeHero(i)}
@@ -297,9 +436,7 @@ function Home() {
         {/* Side arrows */}
         <button
           onClick={() =>
-            changeHero(
-              (heroIndex - 1 + heroSpotlight.length) % heroSpotlight.length,
-            )
+            changeHero((heroIndex - 1 + totalHeroes) % totalHeroes)
           }
           aria-label="Previous spotlight"
           className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 backdrop-blur-sm text-white rounded-full p-3 hover:bg-black/55 transition-all border border-white/10"
@@ -307,7 +444,7 @@ function Home() {
           <ChevronLeftIcon />
         </button>
         <button
-          onClick={() => changeHero((heroIndex + 1) % heroSpotlight.length)}
+          onClick={() => changeHero((heroIndex + 1) % totalHeroes)}
           aria-label="Next spotlight"
           className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 backdrop-blur-sm text-white rounded-full p-3 hover:bg-black/55 transition-all border border-white/10"
         >
