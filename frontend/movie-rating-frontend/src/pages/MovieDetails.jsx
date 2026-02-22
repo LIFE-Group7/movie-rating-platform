@@ -156,6 +156,15 @@ function MovieDetails() {
               <button
                 onClick={() => {
                   if (!isAuthenticated) navigate("/login");
+                  else reviewsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="flex-1 px-6 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white hover:bg-indigo-500 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+              >
+                Rate this movie
+              </button>
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) navigate("/login");
                   else if (inWatchlist) removeFromWatchlist(movieData.id);
                   else addToWatchlist(movieData);
                 }}
