@@ -54,4 +54,15 @@ public class MovieRepository : IMovieRepository
     {
         return await _context.Movies.AnyAsync(m => m.Id == id);
     }
+    public async Task<IEnumerable<Movie>> GetTopRatedAsync(int count)
+    {
+        return await _context.Movies
+            .Include(m => m.MovieGenres)
+            .ThenInclude(mg => mg.Genre)
+            .Where(m => m.ReviewCount > 0)
+            .OrderByDescending(m => m.AverageRating)
+            .ThenByDescending(m => m.ReviewCount)
+            .Take(count)
+            .ToListAsync();
+    }
 }

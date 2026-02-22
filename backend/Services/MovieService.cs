@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.DTOs.Movie;
 using MovieRating.Backend.Models.Basics;
@@ -9,10 +10,12 @@ namespace MovieRating.Backend.Services;
 public class MovieService : IMovieService
 {
     private readonly IMovieRepository _movieRepository;
+    private readonly ILogger<MovieService> _logger;
 
-    public MovieService(IMovieRepository movieRepository)
+    public MovieService(IMovieRepository movieRepository, ILogger<MovieService> logger)
     {
         _movieRepository = movieRepository;
+        _logger = logger;
     }
     
     public async Task<Result<IEnumerable<MovieDto>>> GetAllAsync()
@@ -96,6 +99,21 @@ public class MovieService : IMovieService
 
         await _movieRepository.DeleteAsync(movie);
         return Result.Success();
+    }
+
+    public async Task<Result<IEnumerable<MovieDto>>> GetTopRatedMoviesAsync(int count)
+    {
+        try
+        {
+            var movies = await _movieRepository.GetTopRatedAsync(count);
+
+            return Result<IEnumerable<MovieDto>>.Success(movies.Select(MapToDto));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve the top {Count} rated movies.", count);
+            return Result<IEnumerable<MovieDto>>.Failure("An unexpected error occurred while fetching top rated movies.", ErrorType.Failure);
+        }
     }
 
     private static MovieDto MapToDto(Movie movie)

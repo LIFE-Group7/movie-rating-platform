@@ -54,4 +54,14 @@ public class MovieController : BaseApiController
         if(!result.IsSuccess)  return HandleError(result);
         return NoContent();
     }
+
+    [HttpGet("top-rated")]
+    public async Task<IActionResult> GetTopRated()
+    {
+        var result = await _movieService.GetTopRatedMoviesAsync(6);
+
+        if (!result.IsSuccess) return HandleError(result);
+
+        return Ok(result.Data);
+    }
 }

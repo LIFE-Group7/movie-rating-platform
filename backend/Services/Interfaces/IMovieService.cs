@@ -10,4 +10,5 @@ public interface IMovieService
     Task<Result<MovieDto>> CreateAsync(CreateMovieDto movieDto);
     Task<Result<MovieDto>> UpdateAsync(int id, UpdateMovieDto movieDto);
     Task<Result> DeleteAsync(int id);
+    Task<Result<IEnumerable<MovieDto>>> GetTopRatedMoviesAsync(int count);
 }
