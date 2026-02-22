@@ -61,4 +61,8 @@ public class ReviewRepository(MovieDbContext context) : IReviewRepository
             await context.SaveChangesAsync();
         }
     }
+    public async Task<IEnumerable<Review>> GetReviewsByUserIdAsync(int userId)
+    {
+        return await context.Reviews.Include(r => r.Movie).Where(r => r.UserId == userId).OrderByDescending(r => r.CreatedAt).ToListAsync();
+    }
 }

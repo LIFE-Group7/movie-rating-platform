@@ -67,4 +67,30 @@ public class ReviewService(IReviewRepository repository, ILogger<ReviewService> 
         CreatedAt = r.CreatedAt,
         UpdatedAt = r.UpdatedAt
     };
+
+    public async Task<Result<IEnumerable<UserReviewResponseDto>>> GetUserReviewsAsync(int userId)
+    {
+        try
+        {
+            var reviews = await repository.GetReviewsByUserIdAsync(userId);
+
+            var dtos = reviews.Select(r => new UserReviewResponseDto
+            {
+                MovieId = r.MovieId,
+                MovieTitle = r.Movie.Title,
+                MovieCoverImageUrl = r.Movie.CoverImageUrl,
+                Rating = r.Rating,
+                Comment = r.Comment,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt
+            }).ToList();
+
+            return Result<IEnumerable<UserReviewResponseDto>>.Success(dtos);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to retrieve reviews for User {UserId}", userId);
+            return Result<IEnumerable<UserReviewResponseDto>>.Failure("An unexpected error occurred.", ErrorType.Failure);
+        }
+    }
 }
