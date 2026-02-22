@@ -1,5 +1,6 @@
 ﻿using MovieRating.Backend.Common;
 using MovieRating.Backend.DTOs;
+using MovieRating.Backend.DTOs.Reviews;
 using MovieRating.Backend.Models.Basics;
 using MovieRating.Backend.Repositories;
 

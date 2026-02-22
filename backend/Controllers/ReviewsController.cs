@@ -2,6 +2,7 @@
 using MovieRating.Backend.Services;
 using System.Security.Claims;
 using MovieRating.Backend.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MovieRating.Backend.Controllers;
 
@@ -30,7 +31,7 @@ public class ReviewsController(IReviewService service) : BaseApiController
     }
 
     [HttpGet("user")]
-    public async Task<IActionResult> GetMyReviews()
+    public async Task<IActionResult> GetUserReviews()
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
