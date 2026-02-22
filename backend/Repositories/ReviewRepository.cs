@@ -2,7 +2,6 @@
 using MovieRating.Backend.Common;
 using MovieRating.Backend.Data;
 using MovieRating.Backend.Models.Basics;
-using MovieRating.Backend.Repositories.Interfaces;
 
 namespace MovieRating.Backend.Repositories;
 

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MovieRating.Backend.Common;
 using MovieRating.Backend.DTOs;
 using MovieRating.Backend.Services;
 
