@@ -50,7 +50,9 @@ public class MovieService : IMovieService
         };
         
         var created = await _movieRepository.CreateAsync(movie);
-        return Result<MovieDto>.Success(MapToDto(created));
+        var completeMovie = await _movieRepository.GetByIdAsync(created.Id);
+
+        return Result<MovieDto>.Success(MapToDto(completeMovie!));
     }
 
     public async Task<Result<MovieDto>> UpdateAsync(int id, UpdateMovieDto movieDto)
@@ -68,15 +70,22 @@ public class MovieService : IMovieService
 
         if (movieDto.GenreIds is not null)
         {
-            movie.MovieGenres = movieDto.GenreIds.Select(genreId => new MovieGenre
+            movie.MovieGenres.Clear();
+            foreach (var genreId in movieDto.GenreIds)
             {
-                MovieId = movie.Id,
-                GenreId = genreId
-            }).ToList();
+                movie.MovieGenres.Add(new MovieGenre
+                {
+                    MovieId = movie.Id,
+                    GenreId = genreId
+                });
+            }
         }
         
         var updated = await _movieRepository.UpdateAsync(movie);
-        return Result<MovieDto>.Success(MapToDto(updated));
+
+        var completeMovie = await _movieRepository.GetByIdAsync(updated.Id);
+
+        return Result<MovieDto>.Success(MapToDto(completeMovie!));
     }
 
     public async Task<Result> DeleteAsync(int id)
