@@ -75,6 +75,7 @@ function Navbar() {
     logout();
     setProfileOpen(false);
     navigate("/");
+    setShowProfileMenu(false);
   };
 
   const linkBase =
