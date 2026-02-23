@@ -64,4 +64,14 @@ public class ShowRepository : IShowRepository
     {
         return await _context.Shows.AnyAsync(s => s.Id == id);
     }
+    public async Task<IEnumerable<Show>> SearchAsync(string searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm)) return new List<Show>();
+
+        return await _context.Shows
+            .Include(s => s.ShowGenres)
+            .ThenInclude(sg => sg.Genre)
+            .Where(s => s.Title.Contains(searchTerm))
+            .ToListAsync();
+    }
 }

@@ -26,6 +26,8 @@ builder.Services.AddScoped<IMovieService, MovieService>();
 builder.Services.AddScoped<IShowRepository, ShowRepository>();
 builder.Services.AddScoped<IShowService, ShowService>();
 
+builder.Services.AddScoped<ISearchService, SearchService>();
+
 builder.Services.AddControllers();
 
 // 3. Configure JWT Authentication
