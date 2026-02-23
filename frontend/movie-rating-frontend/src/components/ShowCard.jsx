@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -15,6 +15,7 @@ function ShowCard({ show }) {
   // Normalise either `genres` array or legacy `genre` string into one shape.
   const showGenres = show?.genres || (show?.genre ? [show.genre] : []);
   const inWatchlist = isInWatchlist(show.id);
+  const [isHovering, setIsHovering] = useState(false);
   // Used to colour the status indicator — green dot for ongoing, grey for ended.
   const isOngoing = show?.status === "Ongoing";
 
@@ -50,8 +51,10 @@ function ShowCard({ show }) {
           openDetails();
         }
       }}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
       aria-label={`Open details for ${show.title}`}
-      className="group cursor-pointer rounded-2xl overflow-hidden border border-white/10 bg-white/5 hover:bg-white/7 transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 flex flex-col"
+      className="cursor-pointer rounded-2xl overflow-hidden border border-white/10 bg-white/5 hover:bg-white/7 transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 flex flex-col"
     >
       {/* Poster */}
       <div className="relative aspect-[2/3] bg-gradient-to-br from-zinc-800 via-zinc-900 to-black w-full">
@@ -81,7 +84,7 @@ function ShowCard({ show }) {
         </div>
 
         {/* Hover overlay — the visible watchlist / details buttons live here */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className={`absolute inset-0 transition-opacity ${isHovering ? "opacity-100" : "opacity-0"}`}>
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
             <button
@@ -99,7 +102,7 @@ function ShowCard({ show }) {
               onClick={toggleWatchlist}
               className="px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-white text-[13px] font-semibold hover:bg-white/15 transition-colors"
             >
-              {inWatchlist ? "Saved" : "Save"}
+              {inWatchlist ? (isHovering ? "Unsave" : "Saved") : "Save"}
             </button>
           </div>
         </div>
