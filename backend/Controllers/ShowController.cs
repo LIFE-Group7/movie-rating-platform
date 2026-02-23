@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieRating.Backend.DTOs.Show;
 using MovieRating.Backend.Services.Interfaces;
@@ -31,6 +32,8 @@ public class ShowController : BaseApiController
         return Ok(result.Data);
     }
 
+    
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateShowDto showDto)
     {
@@ -39,6 +42,8 @@ public class ShowController : BaseApiController
         return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data);
     }
 
+    
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateShowDto showDto)
     {
@@ -47,6 +52,8 @@ public class ShowController : BaseApiController
         return Ok(result.Data);
     }
 
+    
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
