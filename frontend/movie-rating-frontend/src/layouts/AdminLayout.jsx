@@ -6,11 +6,13 @@ import Navbar from "../components/Navbar";
  * Includes Navbar for navigation but deliberately excludes Footer —
  * admin views are tools, not public-facing pages.
  */
-function AdminLayout({ children }) {
+function AdminLayout() {
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col">
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <Outlet />
+      </main>
     </div>
   );
 }
