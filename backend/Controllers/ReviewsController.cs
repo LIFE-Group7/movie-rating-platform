@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MovieRating.Backend.Services;
-using System.Security.Claims;
 using MovieRating.Backend.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace MovieRating.Backend.Controllers;
 

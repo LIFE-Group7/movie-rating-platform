@@ -36,4 +36,5 @@ public abstract class BaseApiController : ControllerBase
 
         return Problem(detail: result.Error, statusCode: statusCode, title: result.Type.ToString());
     }
+
 }
