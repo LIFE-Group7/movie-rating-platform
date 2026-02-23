@@ -4,6 +4,7 @@ import MovieCard from "../components/MovieCard";
 import ShowCard from "../components/ShowCard";
 import { movies } from "../data/mockMovies";
 import { shows } from "../data/mockShows";
+import { useAdmin } from "../contexts/AdminContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -59,6 +60,7 @@ const pickImage = (item, title) => {
 const coerceCardItem = (item, idx) => {
   const title = item.title ?? item.name ?? `Untitled ${idx + 1}`;
   return {
+    ...item, // ← add this
     id: item.id ?? item.movieId ?? item.showId ?? `${title}-${idx}`,
     type: item.type ?? (item.seasons ? "show" : "movie"),
     title,
@@ -216,9 +218,39 @@ function CarouselSection({ title, items, renderItem, onViewAll }) {
   );
 }
 
+const ALL_CONTENT = [
+  ...movies.map((item, idx) => coerceCardItem(item, idx)),
+  ...shows.map((item, idx) => coerceCardItem(item, idx)),
+];
+
+/**
+ * Resolves a section's filterBy string into a list of content items.
+ * Supports: "rating", "year", "genre:<Name>"
+ */
+const resolveItems = (filterBy) => {
+  if (filterBy.startsWith("genre:")) {
+    const genre = filterBy.split(":")[1].toLowerCase();
+    return ALL_CONTENT.filter((item) =>
+      item.genres.some((g) => g.toLowerCase() === genre),
+    ).slice(0, 12);
+  }
+
+  switch (filterBy) {
+    case "rating":
+      return [...ALL_CONTENT].sort((a, b) => b.rating - a.rating).slice(0, 12);
+    case "year":
+      return [...ALL_CONTENT]
+        .sort((a, b) => (b.year || 0) - (a.year || 0))
+        .slice(0, 12);
+    default:
+      return ALL_CONTENT.slice(0, 12);
+  }
+};
+
 // ── Main Home component ───────────────────────────────────────────────────────
 function Home() {
   const navigate = useNavigate();
+  const { categories, sections } = useAdmin();
   const [heroEntries, setHeroEntries] = useState(fallbackHeroSpotlight);
   const [heroIndex, setHeroIndex] = useState(0);
   // Used to trigger a fade-out/fade-in transition when the spotlight changes.
@@ -236,18 +268,6 @@ function Home() {
   const heroSlides = heroEntries.length ? heroEntries : fallbackHeroSpotlight;
   const totalHeroes = heroSlides.length || fallbackHeroSpotlight.length;
   const currentHero = heroSlides[heroIndex % totalHeroes];
-
-  // The full genre list shown in the sticky filter strip.
-  const mainGenres = [
-    "Action",
-    "Drama",
-    "Crime",
-    "Thriller",
-    "Sci-Fi",
-    "Comedy",
-    "Horror",
-    "Romance",
-  ];
 
   // Hydrate carousels and hero spotlight from API when configured; fall back to mocks.
   useEffect(() => {
@@ -468,72 +488,47 @@ function Home() {
           >
             All
           </button>
-          {mainGenres.map((genre) => (
+          {categories.map((category) => (
             <button
-              key={genre}
+              key={category.id}
               onClick={() => {
-                setActiveGenre(genre);
-                handleGenreClick(genre);
+                setActiveGenre(category.name);
+                handleGenreClick(category.name);
               }}
               className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border flex-shrink-0 ${
-                activeGenre === genre
+                activeGenre === category.name
                   ? "bg-blue-600 text-white border-blue-600"
                   : "bg-transparent text-white/55 border-white/15 hover:border-white/35 hover:text-white/80"
               }`}
             >
-              {genre}
+              {category.name}
             </button>
           ))}
         </div>
       </div>
 
-      {/* ── 3. Content Rows ───────────────────────────────────────────────── */}
-      <div className="max-w-screen-2xl mx-auto py-10">
-        {/* Trending Now */}
-        <CarouselSection
-          title="Trending Now"
-          items={trendingMovies}
-          onViewAll={() => navigate("/search")}
-          renderItem={(movie) => (
-            <div
-              key={movie.id}
-              className="flex-shrink-0 snap-start w-44 md:w-48"
-            >
-              <MovieCard movie={movie} />
-            </div>
-          )}
-        />
-
-        {/* Top Rated Movies */}
-        <CarouselSection
-          title="Top Rated Movies"
-          items={topRatedMovies}
-          onViewAll={() => navigate("/search?sort=rating")}
-          renderItem={(movie) => (
-            <div
-              key={movie.id}
-              className="flex-shrink-0 snap-start w-44 md:w-48"
-            >
-              <MovieCard movie={movie} />
-            </div>
-          )}
-        />
-
-        {/* Popular TV Shows */}
-        <CarouselSection
-          title="Popular TV Shows"
-          items={popularShows}
-          onViewAll={() => navigate("/search?type=show")}
-          renderItem={(show) => (
-            <div
-              key={show.id}
-              className="flex-shrink-0 snap-start w-44 md:w-48"
-            >
-              <ShowCard show={show} />
-            </div>
-          )}
-        />
-      </div>
+      {sections
+        .filter((section) => section.visible)
+        .map((section) => (
+          <CarouselSection
+            key={section.id}
+            title={section.title}
+            items={resolveItems(section.filterBy)}
+            onViewAll={() => navigate("/search")}
+            renderItem={(item) => (
+              <div
+                key={item.id}
+                className="flex-shrink-0 snap-start w-44 md:w-48"
+              >
+                {item.type === "show" ? (
+                  <ShowCard show={item} />
+                ) : (
+                  <MovieCard movie={item} />
+                )}
+              </div>
+            )}
+          />
+        ))}
     </div>
   );
 }

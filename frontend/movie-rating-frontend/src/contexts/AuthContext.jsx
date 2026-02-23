@@ -101,7 +101,8 @@ export function AuthProvider({ children }) {
 
       // Mock successful login - extract username from email
       const username = email.split("@")[0];
-      const userData = { username, email };
+      const role = email === "admin@cinematch.com" ? "admin" : "user";
+      const userData = { username, email, role };
       const mockToken = "mock-jwt-token";
 
       // Store in localStorage for persistence
@@ -211,6 +212,7 @@ export function AuthProvider({ children }) {
     user,
     isAuthenticated,
     isLoading,
+    isAdmin: user?.role === "admin",
     login,
     register,
     forgotPassword,

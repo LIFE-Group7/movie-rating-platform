@@ -32,7 +32,7 @@ function ClapperboardIcon({ className }) {
  */
 function Navbar() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -158,7 +158,7 @@ function Navbar() {
                       }}
                       className="w-full text-left px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
                     >
-                      My Watchlist
+                      Watchlist
                     </button>
                     <button
                       onClick={() => {
@@ -169,6 +169,20 @@ function Navbar() {
                     >
                       My Reviews
                     </button>
+                    {isAdmin && (
+                      <>
+                        <div className="h-px bg-white/10" />
+                        <button
+                          onClick={() => {
+                            setProfileOpen(false);
+                            navigate("/admin");
+                          }}
+                          className="w-full text-left px-4 py-3 text-sm font-semibold text-blue-400 hover:text-blue-300 hover:bg-white/5 transition-colors"
+                        >
+                          Dashboard
+                        </button>
+                      </>
+                    )}
 
                     <div className="h-px bg-white/10" />
 

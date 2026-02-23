@@ -17,6 +17,13 @@ function Search() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Accept both singular/plural type params so deep-links remain compatible.
+  const normalizeTypeParam = (type) => {
+    if (type === "movie" || type === "movies") return "movies";
+    if (type === "show" || type === "shows") return "shows";
+    return "all";
+  };
+
   const [filteredResults, setFilteredResults] = useState([...movies, ...shows]);
   const [currentQuery, setCurrentQuery] = useState("");
   const [currentGenre, setCurrentGenre] = useState("");
@@ -26,7 +33,7 @@ function Search() {
   useEffect(() => {
     const queryFromUrl = searchParams.get("q") || "";
     const genreFromUrl = searchParams.get("genre") || "";
-    const typeFromUrl = searchParams.get("type") || "all";
+    const typeFromUrl = normalizeTypeParam(searchParams.get("type"));
 
     setCurrentQuery(queryFromUrl);
     setCurrentGenre(genreFromUrl);
