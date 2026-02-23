@@ -11,7 +11,7 @@ function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
 
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +28,6 @@ function Login() {
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFormData((p) => ({ ...p, [name]: value }));
-
     if (errors[name] || errors.submit) {
       setErrors((p) => ({ ...p, [name]: "", submit: "" }));
     }
@@ -37,12 +36,7 @@ function Login() {
   // Returns a map of field name → error message; empty object means valid.
   const validateForm = () => {
     const next = {};
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!formData.email.trim()) next.email = "Email is required";
-    else if (!emailPattern.test(formData.email))
-      next.email = "Enter a valid email";
-
+    if (!formData.username.trim()) next.username = "Username is required";
     if (!formData.password) next.password = "Password is required";
     return next;
   };
@@ -57,7 +51,7 @@ function Login() {
 
     setIsSubmitting(true);
     try {
-      await login(formData.email, formData.password);
+      await login(formData.username, formData.password);
       navigate("/");
     } catch (error) {
       // Map specific error messages to user-friendly copy.
@@ -68,7 +62,9 @@ function Login() {
       else if (msg === "timeout")
         setErrors({ submit: "Request took too long. Please try again." });
       else
-        setErrors({ submit: "Invalid email or password. Please try again." });
+        setErrors({
+          submit: "Invalid username or password. Please try again.",
+        });
     } finally {
       setIsSubmitting(false);
     }
@@ -100,27 +96,29 @@ function Login() {
               </div>
             )}
 
+            {/* Username */}
             <div>
               <label className="block text-sm font-bold text-white/75 mb-2">
-                Email
+                Username
               </label>
               <input
-                name="email"
-                value={formData.email}
+                name="username"
+                value={formData.username}
                 onChange={handleInputChange}
-                className={inputClass(Boolean(errors.email))}
-                placeholder="you@example.com"
-                type="email"
-                autoComplete="email"
+                className={inputClass(Boolean(errors.username))}
+                placeholder="your_username"
+                type="text"
+                autoComplete="username"
                 disabled={isSubmitting}
               />
-              {errors.email && (
+              {errors.username && (
                 <div className="mt-2 text-xs font-semibold text-red-300">
-                  {errors.email}
+                  {errors.username}
                 </div>
               )}
             </div>
 
+            {/* Password */}
             <div>
               <label className="block text-sm font-bold text-white/75 mb-2">
                 Password
@@ -171,7 +169,7 @@ function Login() {
                 Forgot password?
               </Link>
               <div className="text-white/50">
-                Don’t have an account?{" "}
+                Don't have an account?{" "}
                 <Link
                   to="/register"
                   className="text-blue-400 hover:text-blue-300 font-bold"

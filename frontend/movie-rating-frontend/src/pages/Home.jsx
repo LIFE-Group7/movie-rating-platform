@@ -8,30 +8,6 @@ import { useAdmin } from "../contexts/AdminContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
-// ── Hero spotlight mock data ────────────────────────────────────────────────
-const fallbackHeroSpotlight = [
-  {
-    id: 1,
-    title: "Dune: Part Two",
-    rating: 8.8,
-    genres: ["Sci-Fi", "Adventure", "Drama"],
-    description:
-      "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-    bg: "from-amber-950 via-stone-950 to-zinc-950",
-    accent: "#d97706",
-  },
-  {
-    id: 2,
-    title: "Oppenheimer",
-    rating: 8.9,
-    genres: ["Drama", "History", "Thriller"],
-    description:
-      "The story of J. Robert Oppenheimer and his pivotal role in the development of the first nuclear weapon during WWII.",
-    bg: "from-orange-950 via-neutral-950 to-zinc-950",
-    accent: "#ea580c",
-  },
-];
-
 const heroPalettes = [
   { bg: "from-amber-950 via-stone-950 to-zinc-950", accent: "#d97706" },
   { bg: "from-orange-950 via-neutral-950 to-zinc-950", accent: "#ea580c" },
@@ -240,9 +216,7 @@ const resolveItems = (filterBy) => {
   if (filterBy.startsWith("genre:")) {
     const genre = filterBy.split(":")[1].toLowerCase();
     return allContent
-      .filter((item) =>
-        item.genres.some((g) => g.toLowerCase() === genre),
-      )
+      .filter((item) => item.genres.some((g) => g.toLowerCase() === genre))
       .slice(0, 12);
   }
 
@@ -262,25 +236,35 @@ const resolveItems = (filterBy) => {
 function Home() {
   const navigate = useNavigate();
   const { categories, sections } = useAdmin();
-  const [heroEntries, setHeroEntries] = useState(fallbackHeroSpotlight);
   const [heroIndex, setHeroIndex] = useState(0);
   // Used to trigger a fade-out/fade-in transition when the spotlight changes.
   const [isTransitioning, setIsTransitioning] = useState(false);
   // Tracks the active genre pill — selecting one navigates to the search page.
   const [activeGenre, setActiveGenre] = useState(null);
   const [trendingMovies, setTrendingMovies] = useState(() =>
-    movies.slice(0, 12),
+    movies.map(coerceCardItem).slice(0, 12),
   );
   const [topRatedMovies, setTopRatedMovies] = useState(() =>
     [...movies].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 12),
   );
-  const [popularShows, setPopularShows] = useState(() => shows.slice(0, 12));
+  const [popularShows, setPopularShows] = useState(() =>
+    shows.map(coerceCardItem).slice(0, 12),
+  );
 
-  const heroSlides = heroEntries.length ? heroEntries : fallbackHeroSpotlight;
-  const totalHeroes = heroSlides.length || fallbackHeroSpotlight.length;
+  const trendingHeroSource = [...trendingMovies, ...popularShows].slice(0, 6);
+  const fallbackHeroSource = getAllContent().slice(0, 6);
+  const heroSlides = (
+    trendingHeroSource.length ? trendingHeroSource : fallbackHeroSource
+  ).map(coerceHeroEntry);
+  const totalHeroes = heroSlides.length;
   const currentHero = heroSlides[heroIndex % totalHeroes];
 
-  // Hydrate carousels and hero spotlight from API when configured; fall back to mocks.
+  const openHeroDetails = (entry) => {
+    if (!entry?.id) return;
+    navigate(`/${entry.type === "show" ? "show" : "movie"}/${entry.id}`);
+  };
+
+  // Hydrate carousels from API when configured; fall back to mocks.
   useEffect(() => {
     if (!API_BASE_URL) return undefined;
 
@@ -295,16 +279,6 @@ function Home() {
     };
 
     const requests = [
-      {
-        path: "/api/home/spotlight",
-        apply: (payload) => {
-          const items = extractList(payload).map(coerceHeroEntry);
-          if (items.length) {
-            setHeroEntries(items);
-            setHeroIndex(0);
-          }
-        },
-      },
       {
         path: "/api/movies/trending",
         apply: (payload) => {
@@ -384,7 +358,7 @@ function Home() {
       {/* ── 1. Hero Carousel ─────────────────────────────────────────────── */}
       <section
         className={`relative w-full h-[78vh] min-h-[520px] overflow-hidden bg-gradient-to-br ${currentHero.bg} cursor-pointer group`}
-        onClick={() => navigate(`/movie/${currentHero.id}`)}
+        onClick={() => openHeroDetails(currentHero)}
       >
         {/* Background image for the spotlight — rendered beneath the gradient overlays */}
         {currentHero.image && (
@@ -439,7 +413,10 @@ function Home() {
 
           {/* CTA */}
           <button
-            onClick={() => navigate(`/movie/${currentHero.id}`)}
+            onClick={(e) => {
+              e.stopPropagation();
+              openHeroDetails(currentHero);
+            }}
             className="px-7 py-3 rounded-xl font-bold text-white text-base transition-all duration-200 hover:scale-105 active:scale-95 shadow-2xl"
             style={{ backgroundColor: currentHero.accent }}
           >
@@ -452,7 +429,10 @@ function Home() {
           {heroSlides.map((_, i) => (
             <button
               key={i}
-              onClick={() => changeHero(i)}
+              onClick={(e) => {
+                e.stopPropagation();
+                changeHero(i);
+              }}
               aria-label={`Go to slide ${i + 1}`}
               className={`rounded-full transition-all duration-300 ${
                 i === heroIndex
@@ -465,16 +445,20 @@ function Home() {
 
         {/* Side arrows */}
         <button
-          onClick={() =>
-            changeHero((heroIndex - 1 + totalHeroes) % totalHeroes)
-          }
+          onClick={(e) => {
+            e.stopPropagation();
+            changeHero((heroIndex - 1 + totalHeroes) % totalHeroes);
+          }}
           aria-label="Previous spotlight"
           className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 backdrop-blur-sm text-white rounded-full p-3 hover:bg-black/55 transition-all border border-white/10"
         >
           <ChevronLeftIcon />
         </button>
         <button
-          onClick={() => changeHero((heroIndex + 1) % totalHeroes)}
+          onClick={(e) => {
+            e.stopPropagation();
+            changeHero((heroIndex + 1) % totalHeroes);
+          }}
           aria-label="Next spotlight"
           className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 backdrop-blur-sm text-white rounded-full p-3 hover:bg-black/55 transition-all border border-white/10"
         >

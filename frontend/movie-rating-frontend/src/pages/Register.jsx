@@ -47,10 +47,15 @@ function Register() {
       newErrors.email = "Please enter a valid email address";
     }
 
+    const strongPasswordPattern = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/;
+
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
+    } else if (!strongPasswordPattern.test(formData.password)) {
+      newErrors.password =
+        "Password must contain at least one special character (!@#$%^&*)";
     }
 
     if (!formData.confirmPassword) {
@@ -173,7 +178,7 @@ function Register() {
                 value={formData.password}
                 onChange={handleInputChange}
                 className={inputClass(Boolean(errors.password))}
-                placeholder="At least 6 characters"
+                placeholder="Min 6 chars, include a special character"
                 type="password"
                 autoComplete="new-password"
                 disabled={isSubmitting}

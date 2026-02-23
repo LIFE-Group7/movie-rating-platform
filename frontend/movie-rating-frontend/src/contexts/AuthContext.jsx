@@ -1,114 +1,137 @@
-import { createContext, useState, useContext, useEffect } from "react";
+import {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+} from "react";
+import { post as apiPost, setUnauthorizedHandler } from "../api/apiClient";
 
-// ── Context ───────────────────────────────────────────────────────────────────
 const AuthContext = createContext();
 
-/**
- * Custom hook that enforces usage within an AuthProvider.
- * Throws a descriptive error rather than silently returning undefined,
- * making misconfigured component trees immediately obvious in development.
- */
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
 
-// ── Rate-limiting constants ───────────────────────────────────────────────────
-// After MAX_LOGIN_ATTEMPTS failed logins the user is locked out for LOCKOUT_TIME.
-// These match typical industry defaults; adjust when real backend is integrated.
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes in milliseconds
+const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+
+// ── JWT helpers ───────────────────────────────────────────────────────────────
+
+// .NET ClaimTypes serialise to verbose URI keys inside the JWT payload.
+const CLAIM_ID =
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
+const CLAIM_NAME = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name";
+const CLAIM_EMAIL =
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress";
+const CLAIM_ROLE =
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+
+/** Decodes the payload section of a JWT without an external library. */
+const decodeJwtPayload = (token) => {
+  try {
+    const [, payloadB64] = token.split(".");
+    const json = atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+};
+
+/** Maps .NET ClaimType URIs → application user shape. */
+const extractUser = (payload) => ({
+  id: payload[CLAIM_ID] ?? null,
+  username: payload[CLAIM_NAME] ?? "",
+  email: payload[CLAIM_EMAIL] ?? "",
+  role: payload[CLAIM_ROLE] ?? "User",
+});
+
+/**
+ * Returns true when the token is absent, malformed, or past its exp claim.
+ * exp is in seconds; Date.now() is in milliseconds.
+ */
+const isTokenExpired = (token) => {
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return true;
+  return Date.now() >= payload.exp * 1000;
+};
 
 // ── Provider ──────────────────────────────────────────────────────────────────
-// Wraps the entire app so any component can access auth state without prop drilling.
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // `isLoading` stays true until the persisted session check resolves — prevents
-  // a flash of unauthenticated UI on page refresh.
   const [isLoading, setIsLoading] = useState(true);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockoutTime, setLockoutTime] = useState(null);
 
-  // Check if user is already logged in on app startup
+  /** Clears all auth state and persisted token. */
+  const logout = useCallback(() => {
+    localStorage.removeItem("authToken");
+    setUser(null);
+    setIsAuthenticated(false);
+    setLoginAttempts(0);
+    setLockoutTime(null);
+  }, []);
+
+  // ── Session restoration on startup ────────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    const storedUser = localStorage.getItem("user");
 
-    if (token && storedUser) {
-      try {
-        // Parse user data from localStorage
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
-        setIsAuthenticated(true);
-        // TODO: Verify token is still valid with backend
-        // For now, we trust the token
-      } catch (error) {
-        console.error("Failed to restore session:", error);
-        // Clear invalid data
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
+    if (token) {
+      if (!isTokenExpired(token)) {
+        const payload = decodeJwtPayload(token);
+        if (payload) {
+          setUser(extractUser(payload));
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem("authToken"); // malformed — clear silently
+        }
+      } else {
+        localStorage.removeItem("authToken"); // expired — clear silently (FE-05)
       }
     }
+
     setIsLoading(false);
   }, []);
 
-  // Handle login
-  const login = async (email, password) => {
-    // Check if user is locked out
+  // ── 401 auto-logout (FE-05) ───────────────────────────────────────────────
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      logout();
+      window.location.replace("/login");
+    });
+  }, [logout]);
+
+  // ── Login ─────────────────────────────────────────────────────────────────
+  const login = async (username, password) => {
     if (lockoutTime && Date.now() < lockoutTime) {
-      const remainingTime = Math.ceil((lockoutTime - Date.now()) / 1000 / 60);
+      const remaining = Math.ceil((lockoutTime - Date.now()) / 1000 / 60);
       throw new Error(
-        `Too many login attempts. Try again in ${remainingTime} minutes.`,
+        `Too many login attempts. Try again in ${remaining} minutes.`,
       );
     }
 
-    // Reset lockout if time has passed
     if (lockoutTime && Date.now() >= lockoutTime) {
       setLockoutTime(null);
       setLoginAttempts(0);
     }
 
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await fetch('/api/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password })
-      // });
-      //
-      // if (!response.ok) {
-      //   // Increment failed attempts on API error
-      //   const newAttempts = loginAttempts + 1;
-      //   setLoginAttempts(newAttempts);
-      //
-      //   // Lock out after max attempts
-      //   if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
-      //     setLockoutTime(Date.now() + LOCKOUT_TIME);
-      //   }
-      //
-      //   throw new Error('Invalid email or password');
-      // }
-      //
-      // const data = await response.json();
-      // const userData = { email, userId: data.userId };
+      const data = await apiPost("/api/auth/login", { username, password });
 
-      // Simulate API call with slight delay
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // Backend returns { token: "..." } — handle both casings defensively
+      const rawToken = data?.token ?? data?.Token;
+      if (!rawToken) throw new Error("Invalid token received from server.");
 
-      // Mock successful login - extract username from email
-      const username = email.split("@")[0];
-      const role = email === "admin@cinematch.com" ? "admin" : "user";
-      const userData = { username, email, role };
-      const mockToken = "mock-jwt-token";
+      const payload = decodeJwtPayload(rawToken);
+      if (!payload) throw new Error("Invalid token received from server.");
 
-      // Store in localStorage for persistence
-      localStorage.setItem("authToken", mockToken);
-      localStorage.setItem("user", JSON.stringify(userData));
+      const userData = extractUser(payload);
 
+      localStorage.setItem("authToken", rawToken);
       setUser(userData);
       setIsAuthenticated(true);
       setLoginAttempts(0);
@@ -116,13 +139,12 @@ export function AuthProvider({ children }) {
 
       return userData;
     } catch (error) {
-      // Increment failed login attempts
       const newAttempts = loginAttempts + 1;
       setLoginAttempts(newAttempts);
 
-      // Lock out after max attempts
       if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
-        setLockoutTime(Date.now() + LOCKOUT_TIME);
+        const lockUntil = Date.now() + LOCKOUT_TIME;
+        setLockoutTime(lockUntil);
         throw new Error(
           `Too many login attempts. Try again in ${LOCKOUT_TIME / 1000 / 60} minutes.`,
         );
@@ -132,76 +154,22 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Handle registration
+  // ── Register ──────────────────────────────────────────────────────────────
+  // Does not auto-login — user must sign in manually after.
   const register = async (username, email, password) => {
-    try {
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await fetch('/api/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ username, email, password })
-      // });
-      //
-      // if (!response.ok) {
-      //   throw new Error('Registration failed');
-      // }
-      //
-      // const data = await response.json();
-
-      // Simulate API call with slight delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      console.log("User registered:", { username, email });
-
-      // Registration successful - don't auto-login, require manual login
-      return { success: true };
-    } catch (error) {
-      throw error;
-    }
+    await apiPost("/api/auth/register", { username, email, password });
+    return { success: true };
   };
 
-  // Handle forgot password request
-  const forgotPassword = async (email) => {
-    try {
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await fetch('/api/forgot-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email })
-      // });
-      //
-      // if (!response.ok) {
-      //   throw new Error('Failed to send reset link');
-      // }
-
-      // Simulate API call with slight delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      console.log("Password reset requested for:", email);
-
-      return { success: true };
-    } catch (error) {
-      throw error;
-    }
+  // ── Forgot password ───────────────────────────────────────────────────────
+  // TODO: implement once backend adds POST /api/auth/forgot-password
+  const forgotPassword = async (_email) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    return { success: true };
   };
 
-  // Clear all auth state and persisted tokens on logout.
-  // loginAttempts and lockoutTime are also reset so the next login starts fresh.
-  const logout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
-    setUser(null);
-    setIsAuthenticated(false);
-    setLoginAttempts(0);
-    setLockoutTime(null);
-  };
+  const isLockedOut = () => lockoutTime !== null && Date.now() < lockoutTime;
 
-  // Returns true when the account is temporarily locked due to too many failures.
-  const isLockedOut = () => {
-    return lockoutTime && Date.now() < lockoutTime;
-  };
-
-  // Returns the number of seconds remaining in the current lockout period (0 if none).
   const getLockoutTimeRemaining = () => {
     if (!lockoutTime) return 0;
     const remaining = lockoutTime - Date.now();
@@ -212,7 +180,7 @@ export function AuthProvider({ children }) {
     user,
     isAuthenticated,
     isLoading,
-    isAdmin: user?.role === "admin",
+    isAdmin: user?.role === "Admin", // matches backend UserRole.Admin.ToString()
     login,
     register,
     forgotPassword,
