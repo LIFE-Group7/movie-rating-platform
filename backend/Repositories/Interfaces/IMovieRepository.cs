@@ -11,4 +11,5 @@ public interface IMovieRepository
     Task DeleteAsync(Movie movie);
     Task<bool> ExistsAsync(int id);
     Task<IEnumerable<Movie>> GetTopRatedAsync(int count);
+    Task<IEnumerable<Movie>> SearchAsync(string searchTerm);
 }

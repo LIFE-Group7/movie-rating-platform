@@ -11,4 +11,5 @@ public interface IShowRepository
     Task<Show> UpdateAsync(Show show);
     Task DeleteAsync(Show show);
     Task<bool> ExistsAsync(int id);
+    Task<IEnumerable<Show>> SearchAsync(string searchTerm);
 }

@@ -65,4 +65,14 @@ public class MovieRepository : IMovieRepository
             .Take(count)
             .ToListAsync();
     }
+    public async Task<IEnumerable<Movie>> SearchAsync(string searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm)) return new List<Movie>();
+
+        return await _context.Movies
+            .Include(m => m.MovieGenres)
+            .ThenInclude(mg => mg.Genre)
+            .Where(m => m.Title.Contains(searchTerm))
+            .ToListAsync();
+    }
 }
