@@ -28,6 +28,16 @@ builder.Services.AddScoped<IShowService, ShowService>();
 
 builder.Services.AddScoped<ISearchService, SearchService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // React app URL
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddControllers();
 
 // 3. Configure JWT Authentication
@@ -91,6 +101,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
