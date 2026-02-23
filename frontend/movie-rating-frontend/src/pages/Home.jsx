@@ -383,14 +383,15 @@ function Home() {
     <div className="min-h-screen bg-zinc-950 text-white">
       {/* ── 1. Hero Carousel ─────────────────────────────────────────────── */}
       <section
-        className={`relative w-full h-[78vh] min-h-[520px] overflow-hidden bg-gradient-to-br ${currentHero.bg}`}
+        className={`relative w-full h-[78vh] min-h-[520px] overflow-hidden bg-gradient-to-br ${currentHero.bg} cursor-pointer group`}
+        onClick={() => navigate(`/movie/${currentHero.id}`)}
       >
         {/* Background image for the spotlight — rendered beneath the gradient overlays */}
         {currentHero.image && (
           <img
             src={currentHero.image}
             alt={currentHero.title}
-            className="absolute inset-0 w-full h-full object-cover opacity-60"
+            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity duration-300"
           />
         )}
         {/* Cinematic gradient overlays */}
@@ -438,9 +439,7 @@ function Home() {
 
           {/* CTA */}
           <button
-            onClick={() =>
-              navigate(`/search?q=${encodeURIComponent(currentHero.title)}`)
-            }
+            onClick={() => navigate(`/movie/${currentHero.id}`)}
             className="px-7 py-3 rounded-xl font-bold text-white text-base transition-all duration-200 hover:scale-105 active:scale-95 shadow-2xl"
             style={{ backgroundColor: currentHero.accent }}
           >
