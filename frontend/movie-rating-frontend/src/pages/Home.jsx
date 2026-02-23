@@ -218,32 +218,43 @@ function CarouselSection({ title, items, renderItem, onViewAll }) {
   );
 }
 
-const ALL_CONTENT = [
-  ...movies.map((item, idx) => coerceCardItem(item, idx)),
-  ...shows.map((item, idx) => coerceCardItem(item, idx)),
-];
+let allContentCache = null;
+
+const getAllContent = () => {
+  if (!allContentCache) {
+    allContentCache = [
+      ...movies.map((item, idx) => coerceCardItem(item, idx)),
+      ...shows.map((item, idx) => coerceCardItem(item, idx)),
+    ];
+  }
+  return allContentCache;
+};
 
 /**
  * Resolves a section's filterBy string into a list of content items.
  * Supports: "rating", "year", "genre:<Name>"
  */
 const resolveItems = (filterBy) => {
+  const allContent = getAllContent();
+
   if (filterBy.startsWith("genre:")) {
     const genre = filterBy.split(":")[1].toLowerCase();
-    return ALL_CONTENT.filter((item) =>
-      item.genres.some((g) => g.toLowerCase() === genre),
-    ).slice(0, 12);
+    return allContent
+      .filter((item) =>
+        item.genres.some((g) => g.toLowerCase() === genre),
+      )
+      .slice(0, 12);
   }
 
   switch (filterBy) {
     case "rating":
-      return [...ALL_CONTENT].sort((a, b) => b.rating - a.rating).slice(0, 12);
+      return [...allContent].sort((a, b) => b.rating - a.rating).slice(0, 12);
     case "year":
-      return [...ALL_CONTENT]
+      return [...allContent]
         .sort((a, b) => (b.year || 0) - (a.year || 0))
         .slice(0, 12);
     default:
-      return ALL_CONTENT.slice(0, 12);
+      return allContent.slice(0, 12);
   }
 };
 

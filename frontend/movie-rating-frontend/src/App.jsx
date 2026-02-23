@@ -62,15 +62,14 @@ function App() {
 
                 {/* ── Admin: role-guarded, no Footer ── */}
                 <Route
-                  path="/admin"
                   element={
                     <AdminRoute>
-                      <AdminLayout>
-                        <AdminDashboard />
-                      </AdminLayout>
+                      <AdminLayout />
                     </AdminRoute>
                   }
-                />
+                >
+                  <Route path="/admin" element={<AdminDashboard />} />
+                </Route>
               </Routes>
             </ReviewsProvider>
           </WatchlistProvider>
