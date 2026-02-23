@@ -1,8 +1,8 @@
 ﻿using Moq;
 using MovieRating.Backend.Common;
-using MovieRating.Backend.DTOs.Reviews;
+using MovieRating.Backend.DTOs;
 using MovieRating.Backend.Models.Basics;
-using MovieRating.Backend.Repositories.Interfaces;
+using MovieRating.Backend.Repositories;
 using MovieRating.Backend.Services;
 using Xunit;
 
@@ -136,6 +136,67 @@ public class ReviewServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal("An unexpected error occurred.", result.Error);
         Assert.Equal(ErrorType.Failure, result.Type);
+    }
+
+    #endregion
+
+    #region GetUserReviewsAsync Tests
+
+    [Fact]
+    public async Task GetUserReviewsAsync_WhenRepositorySucceeds_ReturnsSuccessResultWithMappedData()
+    {
+        var userId = 1;
+        var mockReviews = new List<Review>
+        {
+            new Review
+            {
+                MovieId = 10,
+                UserId = userId,
+                Rating = 9,
+                Comment = "Amazing!",
+                CreatedAt = DateTime.UtcNow,
+                Movie = new Movie { Title = "Inception", CoverImageUrl = "url.jpg" } // Mock included movie
+            }
+        };
+
+        _mockRepo.Setup(r => r.GetReviewsByUserIdAsync(userId))
+                 .ReturnsAsync(mockReviews);
+
+        var result = await _reviewService.GetUserReviewsAsync(userId);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Single(result.Data);
+
+        var firstReview = result.Data.First();
+        Assert.Equal(10, firstReview.MovieId);
+        Assert.Equal("Inception", firstReview.MovieTitle);
+        Assert.Equal("url.jpg", firstReview.MovieCoverImageUrl);
+        Assert.Equal(9, firstReview.Rating);
+    }
+
+    [Fact]
+    public async Task GetUserReviewsAsync_WhenExceptionThrown_ReturnsFailureAndLogsError()
+    {
+        var userId = 1;
+
+        _mockRepo.Setup(r => r.GetReviewsByUserIdAsync(userId))
+                 .ThrowsAsync(new Exception("Database connection failed"));
+
+        var result = await _reviewService.GetUserReviewsAsync(userId);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("An unexpected error occurred.", result.Error);
+        Assert.Equal(ErrorType.Failure, result.Type);
+
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => true),
+                It.IsAny<Exception>(),
+                It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)),
+            Times.Once);
     }
 
     #endregion

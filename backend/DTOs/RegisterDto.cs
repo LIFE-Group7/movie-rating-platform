@@ -1,5 +1,4 @@
-﻿using System.ComponentModel; // Required for [DefaultValue]
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using MovieRating.Backend.Validation;
 
 namespace MovieRating.Backend.DTOs;
