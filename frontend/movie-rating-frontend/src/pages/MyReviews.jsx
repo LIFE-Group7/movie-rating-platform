@@ -70,6 +70,7 @@ function ReviewEditForm({ review, onSave, onCancel }) {
  */
 const buildDetailPath = (movieId, type) =>
   type === "show" ? `/show/${movieId}` : `/movie/${movieId}`;
+const buildReviewKey = (movieId, type) => `${type || "movie"}:${movieId}`;
 
 /**
  * Format an ISO timestamp string into a localised date for display.
@@ -92,7 +93,7 @@ function MyReviews() {
 
   // Track which review card is currently open for editing.
   // Uses movieId as the identifier because review objects have no `id` field.
-  const [editingMovieId, setEditingMovieId] = useState(null);
+  const [editingReviewKey, setEditingReviewKey] = useState(null);
 
   // Redirect unauthenticated users rather than showing an empty page.
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -107,9 +108,9 @@ function MyReviews() {
    * Apply edited fields to a review and close the edit form.
    * ReviewContext.updateReview stamps an `updatedAt` timestamp automatically.
    */
-  const handleUpdate = (movieId, updatedFields) => {
-    updateReview(movieId, updatedFields);
-    setEditingMovieId(null);
+  const handleUpdate = (movieId, type, updatedFields) => {
+    updateReview(movieId, updatedFields, type);
+    setEditingReviewKey(null);
   };
 
   return (
@@ -145,7 +146,7 @@ function MyReviews() {
             {sortedReviews.map((review) => (
               // BUG FIX: was `review.id` (undefined) — movieId is the unique key.
               <div
-                key={review.movieId}
+                key={buildReviewKey(review.movieId, review.type)}
                 className="flex flex-col md:flex-row gap-6 p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur hover:bg-white/7 transition-colors"
               >
                 {/* Poster Thumbnail */}
@@ -189,17 +190,24 @@ function MyReviews() {
                     </div>
 
                     {/* Action buttons — hidden while the edit form is open */}
-                    {editingMovieId !== review.movieId && (
+                    {editingReviewKey !==
+                      buildReviewKey(review.movieId, review.type) && (
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setEditingMovieId(review.movieId)}
+                          onClick={() =>
+                            setEditingReviewKey(
+                              buildReviewKey(review.movieId, review.type),
+                            )
+                          }
                           className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                         >
                           Edit
                         </button>
                         {/* BUG FIX: was `removeReview` (not exported) — correct is `deleteReview`. */}
                         <button
-                          onClick={() => deleteReview(review.movieId)}
+                          onClick={() =>
+                            deleteReview(review.movieId, review.type || "movie")
+                          }
                           className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors"
                         >
                           Delete
@@ -209,13 +217,18 @@ function MyReviews() {
                   </div>
 
                   {/* Inline edit form or read-only review display */}
-                  {editingMovieId === review.movieId ? (
+                  {editingReviewKey ===
+                  buildReviewKey(review.movieId, review.type) ? (
                     <ReviewEditForm
                       review={review}
                       onSave={(updatedFields) =>
-                        handleUpdate(review.movieId, updatedFields)
+                        handleUpdate(
+                          review.movieId,
+                          review.type || "movie",
+                          updatedFields,
+                        )
                       }
-                      onCancel={() => setEditingMovieId(null)}
+                      onCancel={() => setEditingReviewKey(null)}
                     />
                   ) : (
                     <div>

@@ -34,6 +34,10 @@ const readFromStorage = (key, fallback) => {
  * are isolated from other accounts on the same browser.
  */
 const buildScopedKey = (baseKey, email) => `${baseKey}:${email || "guest"}`;
+const normalizeType = (type) => type || "movie";
+const matchesReview = (review, movieId, type = "movie") =>
+  review.movieId === movieId &&
+  normalizeType(review.type) === normalizeType(type);
 
 export const useReviews = () => {
   const context = useContext(ReviewsContext);
@@ -87,9 +91,12 @@ export function ReviewsProvider({ children }) {
 
       const { movieId, movieTitle, movieImageUrl, rating, comment, type } =
         reviewData;
+      const reviewType = normalizeType(type);
 
       setReviews((previous) => {
-        const alreadyReviewed = previous.some((r) => r.movieId === movieId);
+        const alreadyReviewed = previous.some((r) =>
+          matchesReview(r, movieId, reviewType),
+        );
         if (alreadyReviewed) return previous;
 
         const newReview = {
@@ -98,7 +105,7 @@ export function ReviewsProvider({ children }) {
           movieImageUrl,
           rating,
           comment: comment || "",
-          type: type || "movie",
+          type: reviewType,
           createdAt: new Date().toISOString(),
           updatedAt: null,
         };
@@ -118,12 +125,12 @@ export function ReviewsProvider({ children }) {
    * and stamp the updatedAt timestamp so the UI can surface "Edited on…".
    */
   const updateReview = useCallback(
-    (movieId, updatedFields) => {
+    (movieId, updatedFields, type = "movie") => {
       if (!isAuthenticated || !user?.email) return false;
 
       setReviews((previous) => {
         const next = previous.map((review) => {
-          if (review.movieId !== movieId) return review;
+          if (!matchesReview(review, movieId, type)) return review;
           return {
             ...review,
             ...updatedFields,
@@ -141,11 +148,13 @@ export function ReviewsProvider({ children }) {
 
   // Permanently remove a review by movieId
   const deleteReview = useCallback(
-    (movieId) => {
+    (movieId, type = "movie") => {
       if (!isAuthenticated || !user?.email) return;
 
       setReviews((previous) => {
-        const next = previous.filter((review) => review.movieId !== movieId);
+        const next = previous.filter(
+          (review) => !matchesReview(review, movieId, type),
+        );
         persistReviews(next);
         return next;
       });
@@ -155,14 +164,27 @@ export function ReviewsProvider({ children }) {
 
   // True if the user already has a review for the given movie
   const hasReviewedMovie = useCallback(
-    (movieId) => reviews.some((review) => review.movieId === movieId),
+    (movieId, type = "movie") =>
+      reviews.some((review) => matchesReview(review, movieId, type)),
     [reviews],
   );
 
   // Return the user's review object for a movie, or null if none exists
   const getReviewForMovie = useCallback(
-    (movieId) => reviews.find((review) => review.movieId === movieId) ?? null,
+    (movieId, type = "movie") =>
+      reviews.find((review) => matchesReview(review, movieId, type)) ?? null,
     [reviews],
+  );
+
+  // Content-type-aware aliases for detail pages and new callers.
+  const hasReviewedItem = useCallback(
+    ({ movieId, type = "movie" }) => hasReviewedMovie(movieId, type),
+    [hasReviewedMovie],
+  );
+
+  const getReviewForItem = useCallback(
+    ({ movieId, type = "movie" }) => getReviewForMovie(movieId, type),
+    [getReviewForMovie],
   );
 
   const value = useMemo(
@@ -173,6 +195,8 @@ export function ReviewsProvider({ children }) {
       deleteReview,
       hasReviewedMovie,
       getReviewForMovie,
+      hasReviewedItem,
+      getReviewForItem,
     }),
     [
       reviews,
@@ -181,6 +205,8 @@ export function ReviewsProvider({ children }) {
       deleteReview,
       hasReviewedMovie,
       getReviewForMovie,
+      hasReviewedItem,
+      getReviewForItem,
     ],
   );
 

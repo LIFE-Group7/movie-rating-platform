@@ -100,6 +100,7 @@ function MovieDetails() {
 
   const inWatchlist = isInWatchlist(movieData.id);
   const genres = movieData.genres || (movieData.genre ? [movieData.genre] : []);
+  const reviewMovieData = { ...movieData, type: movieData.type || "movie" };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-20">
@@ -156,7 +157,11 @@ function MovieDetails() {
               <button
                 onClick={() => {
                   if (!isAuthenticated) navigate("/login");
-                  else reviewsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  else
+                    reviewsRef.current?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
                 }}
                 className="flex-1 px-6 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white hover:bg-indigo-500 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-900"
               >
@@ -221,7 +226,7 @@ function MovieDetails() {
             Reviews & Ratings
           </h2>
           <ReviewForm
-            movie={movieData}
+            movie={reviewMovieData}
             onSubmitSuccess={handleReviewSubmitted}
           />
         </div>

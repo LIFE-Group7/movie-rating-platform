@@ -14,8 +14,8 @@ import StarRating from "./StarRating";
  */
 function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
-  const { addReview } = useReviews();
+  const { isAuthenticated } = useAuth();
+  const { addReview, getReviewForItem } = useReviews();
 
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
@@ -29,6 +29,14 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
   const isCharLimitExceeded = currentCharCount > MAX_CHARACTERS;
   const isFormValid =
     rating > 0 && reviewText.trim() !== "" && !isCharLimitExceeded;
+
+  const movieType = movie?.type || "movie";
+  const titleLabel = movieType === "show" ? "show" : "movie";
+  const existingReview = getReviewForItem({
+    movieId: movie?.id,
+    type: movieType,
+  });
+  const isAlreadyReviewed = Boolean(existingReview);
 
   /**
    * Validate, simulate API submission, persist to ReviewContext, then notify parent.
@@ -54,14 +62,20 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
       // TODO: replace with real API call when backend is ready
       await new Promise((resolve) => setTimeout(resolve, 700));
 
-      addReview({
+      const saved = addReview({
         movieId: movie.id,
         movieTitle: movie.title,
         movieImageUrl: movie.imageUrl,
         rating,
         comment: reviewText.trim(),
-        type: movie.type || "movie",
+        type: movieType,
       });
+
+      if (!saved) {
+        setError("You already reviewed this title.");
+        setSuccess(false);
+        return;
+      }
 
       setSuccess(true);
       // Brief success window before resetting the form and notifying the parent.
@@ -95,6 +109,46 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
           className="mt-4 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors text-white font-bold text-sm"
         >
           Go to Login
+        </button>
+      </div>
+    );
+  }
+
+  if (isAlreadyReviewed) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-white">
+        <h3 className="text-lg font-extrabold tracking-tight">
+          Review already submitted
+        </h3>
+        <p className="text-sm text-white/55 mt-1">
+          You already rated this{" "}
+          <span className="text-white/85 font-semibold">{titleLabel}</span>.
+        </p>
+
+        <div className="mt-5 rounded-xl border border-white/10 bg-black/20 p-4">
+          <div className="mb-3">
+            <div className="text-xs font-bold text-white/50 uppercase mb-2">
+              Your rating
+            </div>
+            <StarRating rating={existingReview.rating} readOnly />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-white/50 uppercase mb-2">
+              Your review
+            </div>
+            <p className="text-sm text-white/80 leading-relaxed">
+              {existingReview.comment || (
+                <em className="text-white/30">No written review.</em>
+              )}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => navigate("/my-reviews")}
+          className="mt-4 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors text-white font-bold text-sm"
+        >
+          Manage in My Reviews
         </button>
       </div>
     );
