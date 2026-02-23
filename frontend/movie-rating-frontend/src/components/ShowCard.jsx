@@ -62,7 +62,13 @@ function ShowCard({ show }) {
             className="absolute inset-0 w-full h-full object-cover"
             loading="lazy"
           />
-        ) : null}
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <span className="text-white/20 text-sm font-bold text-center leading-snug line-clamp-3">
+              {show.title}
+            </span>
+          </div>
+        )}
 
         <span className="absolute top-2 right-2 px-2 py-1 rounded-lg text-[11px] font-extrabold bg-black/60 backdrop-blur border border-white/10 text-white/80 uppercase tracking-wider">
           Series
@@ -100,7 +106,7 @@ function ShowCard({ show }) {
       </div>
 
       {/* Info Area - Fixed Height */}
-      <div className="p-3 flex flex-col justify-between flex-1 min-h-[105px]">
+      <div className="p-3 flex flex-col justify-between flex-1 min-h-[104px]">
         <div>
           <h3
             className="text-[13px] font-bold text-white leading-tight line-clamp-2"
@@ -109,23 +115,27 @@ function ShowCard({ show }) {
             {show.title}
           </h3>
 
-          <div className="mt-1 flex items-center gap-2 text-[11px] text-white/55">
-            <span className="font-semibold whitespace-nowrap">
-              {show?.seasons
-                ? `${show.seasons} season${show.seasons > 1 ? "s" : ""}`
-                : "—"}
-            </span>
-            <span>•</span>
-            <span className="inline-flex items-center gap-1.5 font-semibold whitespace-nowrap">
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  isOngoing ? "bg-emerald-400" : "bg-white/30"
-                }`}
-                aria-hidden="true"
-              />
-              {show?.status || "Unknown"}
-            </span>
-          </div>
+          {(show?.seasons || show?.status) && (
+            <div className="mt-1 flex items-center gap-2 text-[11px] text-white/55">
+              {show?.seasons && (
+                <span className="font-semibold whitespace-nowrap">
+                  {show.seasons} season{show.seasons > 1 ? "s" : ""}
+                </span>
+              )}
+              {show?.seasons && show?.status && <span>•</span>}
+              {show?.status && (
+                <span className="inline-flex items-center gap-1.5 font-semibold whitespace-nowrap">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isOngoing ? "bg-emerald-400" : "bg-white/30"
+                    }`}
+                    aria-hidden="true"
+                  />
+                  {show.status}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Genres container - line-clamp-1 prevents wrapping to new lines */}

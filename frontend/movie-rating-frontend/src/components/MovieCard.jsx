@@ -98,7 +98,7 @@ function MovieCard({ movie }) {
       </div>
 
       {/* Info Area - Fixed Height */}
-      <div className="p-3 flex flex-col justify-between flex-1 min-h-[84px]">
+      <div className="p-3 flex flex-col justify-between flex-1 min-h-[104px]">
         <h3
           className="text-[13px] font-bold text-white leading-tight line-clamp-2"
           title={movie.title}
