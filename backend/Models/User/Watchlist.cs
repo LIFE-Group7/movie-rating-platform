@@ -1,6 +1,4 @@
-using MovieRating.Backend.Models.Basics;
-
-namespace MovieRating.Backend.Models.Extra;
+namespace MovieRating.Backend.Models.User;
 
 public class Watchlist
 {
@@ -8,7 +6,7 @@ public class Watchlist
     public User User { get; set; } = null!;
     
     public int MovieId { get; set; }
-    public Movie Movie { get; set; } = null!;
+    public Movie.Movie Movie { get; set; } = null!;
     
     public DateTime AddedAt { get; set; }
 }

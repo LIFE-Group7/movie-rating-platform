@@ -1,4 +1,4 @@
-using MovieRating.Backend.Models.Basics;
+using MovieRating.Backend.Models.Movie;
 
 namespace MovieRating.Backend.Repositories.Interfaces;
 

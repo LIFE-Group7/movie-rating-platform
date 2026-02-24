@@ -1,7 +1,8 @@
 using Moq;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.DTOs.Show;
-using MovieRating.Backend.Models.Basics;
+using MovieRating.Backend.Models.Generic;
+using MovieRating.Backend.Models.Show;
 using MovieRating.Backend.Repositories.Interfaces;
 using MovieRating.Backend.Services;
 using Xunit;

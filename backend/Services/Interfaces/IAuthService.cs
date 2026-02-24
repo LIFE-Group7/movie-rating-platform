@@ -1,8 +1,8 @@
 ﻿using MovieRating.Backend.Common;
-using MovieRating.Backend.DTOs;
-using MovieRating.Backend.Models.Basics;
+using MovieRating.Backend.DTOs.User;
+using MovieRating.Backend.Models.User;
 
-namespace MovieRating.Backend.Services;
+namespace MovieRating.Backend.Services.Interfaces;
 
 public interface IAuthService
 {

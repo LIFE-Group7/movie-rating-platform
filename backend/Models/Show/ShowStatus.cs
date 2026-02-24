@@ -1,4 +1,4 @@
-namespace MovieRating.Backend.Models.Basics;
+namespace MovieRating.Backend.Models.Show;
 
 public enum ShowStatus
 {

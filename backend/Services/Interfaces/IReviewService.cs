@@ -1,8 +1,7 @@
 ﻿using MovieRating.Backend.Common;
-using MovieRating.Backend.DTOs;
-using MovieRating.Backend.DTOs.Reviews;
+using MovieRating.Backend.DTOs.User;
 
-namespace MovieRating.Backend.Services;
+namespace MovieRating.Backend.Services.Interfaces;
 
 public interface IReviewService
 {

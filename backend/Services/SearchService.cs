@@ -1,6 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using MovieRating.Backend.Common;
-using MovieRating.Backend.DTOs.Search;
+﻿using MovieRating.Backend.Common;
+using MovieRating.Backend.DTOs.Generic;
 using MovieRating.Backend.Repositories.Interfaces;
 using MovieRating.Backend.Services.Interfaces;
 

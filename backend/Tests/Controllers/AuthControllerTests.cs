@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.Controllers;
-using MovieRating.Backend.DTOs;
-using MovieRating.Backend.Models.Basics;
-using MovieRating.Backend.Services;
+using MovieRating.Backend.DTOs.User;
+using MovieRating.Backend.Models.User;
+using MovieRating.Backend.Services.Interfaces;
 using Xunit;
 
 namespace MovieRating.Backend.Tests.Controllers;

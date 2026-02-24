@@ -1,6 +1,4 @@
-using MovieRating.Backend.Models.Basics;
-
-namespace MovieRating.Backend.Models.Extra;
+namespace MovieRating.Backend.Models.Dashboard;
 
 public class HomeSectionMovie
 {
@@ -8,7 +6,7 @@ public class HomeSectionMovie
     public HomeSection HomeSection { get; set; } = null!;
     
     public int MovieId { get; set; }
-    public Movie Movie { get; set; } = null!;
+    public Movie.Movie Movie { get; set; } = null!;
     
     public int DisplayOrder { get; set; }
 }

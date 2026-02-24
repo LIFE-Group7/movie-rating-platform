@@ -1,5 +1,5 @@
 ﻿using MovieRating.Backend.Common;
-using MovieRating.Backend.DTOs.Search;
+using MovieRating.Backend.DTOs.Generic;
 
 namespace MovieRating.Backend.Services.Interfaces;
 

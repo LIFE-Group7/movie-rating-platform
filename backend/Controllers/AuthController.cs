@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MovieRating.Backend.DTOs;
-using MovieRating.Backend.Services;
+using MovieRating.Backend.DTOs.User;
+using MovieRating.Backend.Services.Interfaces;
 
 namespace MovieRating.Backend.Controllers;
 

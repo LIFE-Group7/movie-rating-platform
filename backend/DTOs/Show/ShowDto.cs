@@ -1,5 +1,3 @@
-using MovieRating.Backend.Models.Basics;
-
 namespace MovieRating.Backend.DTOs.Show;
 
 public class ShowDto

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using MovieRating.Backend.Models.Basics;
+using MovieRating.Backend.Models.Generic;
 
-namespace MovieRating.Backend.Models.Extra;
+namespace MovieRating.Backend.Models.Dashboard;
 
 public class HomeSection
 {

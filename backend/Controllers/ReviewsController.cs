@@ -3,6 +3,8 @@ using MovieRating.Backend.Services;
 using MovieRating.Backend.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using MovieRating.Backend.DTOs.User;
+using MovieRating.Backend.Services.Interfaces;
 
 namespace MovieRating.Backend.Controllers;
 

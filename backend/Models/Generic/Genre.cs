@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using MovieRating.Backend.Models.Movie;
+using MovieRating.Backend.Models.Show;
 
-namespace MovieRating.Backend.Models.Basics;
+namespace MovieRating.Backend.Models.Generic;
 
 public class Genre
 {

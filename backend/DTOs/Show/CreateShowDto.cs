@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using MovieRating.Backend.Models.Basics;
+using MovieRating.Backend.Models.Show;
 
 namespace MovieRating.Backend.DTOs.Show;
 

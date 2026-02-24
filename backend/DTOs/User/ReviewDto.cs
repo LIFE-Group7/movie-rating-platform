@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MovieRating.Backend.DTOs;
+namespace MovieRating.Backend.DTOs.User;
 
 public class ReviewRequestDto
 {

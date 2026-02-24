@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using MovieRating.Backend.Models.Extra;
 
-namespace MovieRating.Backend.Models.Basics;
+namespace MovieRating.Backend.Models.User;
 
 public class User
 {

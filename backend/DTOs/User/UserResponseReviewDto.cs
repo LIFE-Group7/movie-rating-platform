@@ -1,4 +1,4 @@
-﻿namespace MovieRating.Backend.DTOs.Reviews;
+﻿namespace MovieRating.Backend.DTOs.User;
 
 public class UserReviewResponseDto
 {

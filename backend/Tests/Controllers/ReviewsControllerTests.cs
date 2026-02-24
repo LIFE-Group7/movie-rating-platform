@@ -2,10 +2,9 @@
 using Moq;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.Controllers;
-using MovieRating.Backend.DTOs;
-using MovieRating.Backend.DTOs.Reviews;
-using MovieRating.Backend.Services;
 using System.Security.Claims;
+using MovieRating.Backend.DTOs.User;
+using MovieRating.Backend.Services.Interfaces;
 using Xunit;
 
 namespace MovieRating.Backend.Tests.Controllers;

@@ -2,12 +2,13 @@
 using Microsoft.IdentityModel.Tokens;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.Data;
-using MovieRating.Backend.DTOs;
 using MovieRating.Backend.Exceptions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using MovieRating.Backend.Models.Basics;
+using MovieRating.Backend.DTOs.User;
+using MovieRating.Backend.Models.User;
+using MovieRating.Backend.Services.Interfaces;
 
 namespace MovieRating.Backend.Services;
 

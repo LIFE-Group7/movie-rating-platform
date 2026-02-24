@@ -2,7 +2,7 @@
 using Moq;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.Controllers;
-using MovieRating.Backend.DTOs.Search;
+using MovieRating.Backend.DTOs.Generic;
 using MovieRating.Backend.Services.Interfaces;
 using Xunit;
 

@@ -1,35 +1,39 @@
 using System.ComponentModel.DataAnnotations;
-using MovieRating.Backend.Models.Extra;
 
-namespace MovieRating.Backend.Models.Basics;
+namespace MovieRating.Backend.Models.Show;
 
-public class Movie
+public class Show
 {
     public int Id { get; set; }
-    
+
     [Required]
     [MaxLength(200)]
     public required string Title { get; set; }
 
-    [MaxLength(2000)] 
+    [MaxLength(2000)]
     public string? Description { get; set; }
-    
-    public DateOnly ReleaseDate { get; set; }
-    
+
+    public DateOnly FirstAirDate { get; set; }
+
+    public DateOnly? LastAirDate { get; set; }
+
     [MaxLength(150)]
-    public string? Director { get; set; }
-    
-    [Range(1, 600)]
-    public int DurationMinutes {get; set;}
-    
+    public string? Creator { get; set; }
+
     [MaxLength(500)]
     public string? CoverImageUrl { get; set; }
-    
+
     public DateTime AddedAt { get; set; }
-    
+
     public double AverageRating { get; private set; }
-    
+
     public int ReviewCount { get; private set; }
+
+    public int Seasons { get; set; }
+
+    public int Episodes { get; set; }
+
+    public ShowStatus Status { get; set; } = ShowStatus.Ongoing;
 
     public void UpdateReviewStats(double averageRating, int reviewCount)
     {
@@ -37,9 +41,5 @@ public class Movie
         ReviewCount = reviewCount;
     }
 
-    public ICollection<Review> Reviews { get; set; } = new List<Review>();
-    
-    public ICollection<MovieGenre> MovieGenres { get; set; } = new List<MovieGenre>();
-    
-    public ICollection<Watchlist> Watchlist { get; set; } = new List<Watchlist>();
+    public ICollection<ShowGenre> ShowGenres { get; set; } = new List<ShowGenre>();
 }

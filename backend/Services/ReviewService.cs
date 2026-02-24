@@ -1,8 +1,8 @@
 ﻿using MovieRating.Backend.Common;
-using MovieRating.Backend.DTOs;
-using MovieRating.Backend.DTOs.Reviews;
-using MovieRating.Backend.Models.Basics;
-using MovieRating.Backend.Repositories;
+using MovieRating.Backend.DTOs.User;
+using MovieRating.Backend.Models.User;
+using MovieRating.Backend.Repositories.Interfaces;
+using MovieRating.Backend.Services.Interfaces;
 
 namespace MovieRating.Backend.Services;
 

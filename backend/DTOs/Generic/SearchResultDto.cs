@@ -1,4 +1,4 @@
-﻿namespace MovieRating.Backend.DTOs.Search;
+﻿namespace MovieRating.Backend.DTOs.Generic;
 
 public class SearchResultDto
 {

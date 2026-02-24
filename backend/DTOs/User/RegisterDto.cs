@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using MovieRating.Backend.Validation;
 
-namespace MovieRating.Backend.DTOs;
+namespace MovieRating.Backend.DTOs.User;
 
 public class RegisterDto
 {
