@@ -78,6 +78,19 @@ function MovieCard({ movie }) {
         {/* Hover overlay — the visible watchlist / details buttons live here */}
         <div className={`absolute inset-0 transition-opacity ${isHovering ? "opacity-100" : "opacity-0"}`}>
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+          {/* Genres displayed on hover - top right */}
+          {movieGenres.length > 0 && (
+            <div className="absolute top-3 right-3 flex flex-col gap-1">
+              {movieGenres.map((g) => (
+                <span
+                  key={g}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-neutral-700  text-white"
+                >
+                  {g}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
             <button
               type="button"
@@ -108,22 +121,6 @@ function MovieCard({ movie }) {
         >
           {movie.title}
         </h3>
-
-        {/* Genres container - line-clamp-1 prevents wrapping to new lines */}
-        <div className="mt-1.5 flex gap-1.5 overflow-hidden w-full">
-          {movieGenres.length > 0 ? (
-            movieGenres.map((g) => (
-              <span
-                key={g}
-                className="whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 border border-white/10 text-white/65 flex-shrink-0"
-              >
-                {g}
-              </span>
-            ))
-          ) : (
-            <span className="h-[22px]" /> /* Empty spacer to maintain layout height */
-          )}
-        </div>
       </div>
     </div>
   );
