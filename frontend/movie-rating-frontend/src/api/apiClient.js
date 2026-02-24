@@ -1,4 +1,4 @@
-const BASE_URL = "https://localhost:7206";
+const BASE_URL = "http://localhost:5243";
 const REQUEST_TIMEOUT_MS = 10_000;
 
 // Registered once by AuthContext; called on every 401 response.
