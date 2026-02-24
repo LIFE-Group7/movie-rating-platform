@@ -7,6 +7,10 @@ import {
   useState,
 } from "react";
 import { useAuth } from "./AuthContext";
+import {
+  createReview as apiCreateReview,
+  fetchUserReviews,
+} from "../api/reviewApi";
 
 // ── Storage helpers ───────────────────────────────────────────────────────────
 
@@ -61,11 +65,25 @@ export function ReviewsProvider({ children }) {
       return;
     }
 
-    const storedReviews = readFromStorage(
-      buildScopedKey(USER_REVIEWS_KEY, user.email),
-      [],
-    );
-    setReviews(storedReviews);
+    const load = async () => {
+      try {
+        const apiReviews = await fetchUserReviews();
+        const normalized = Array.isArray(apiReviews) ? apiReviews : [];
+        setReviews(normalized);
+        // Keep localStorage in sync as an offline cache
+        const storageKey = buildScopedKey(USER_REVIEWS_KEY, user.email);
+        localStorage.setItem(storageKey, JSON.stringify(normalized));
+      } catch {
+        // API unavailable — fall back to local cache
+        const cached = readFromStorage(
+          buildScopedKey(USER_REVIEWS_KEY, user.email),
+          [],
+        );
+        setReviews(cached);
+      }
+    };
+
+    load();
   }, [isAuthenticated, user?.email]);
 
   /**
@@ -86,30 +104,35 @@ export function ReviewsProvider({ children }) {
    * same movie — one review per user per movie, matching backend constraint.
    */
   const addReview = useCallback(
-    (reviewData) => {
+    async (reviewData) => {
       if (!isAuthenticated || !user?.email) return false;
 
       const { movieId, movieTitle, movieImageUrl, rating, comment, type } =
         reviewData;
       const reviewType = normalizeType(type);
 
+      // Fast duplicate check against local state before hitting the network
+      const alreadyReviewed = reviews.some((r) =>
+        matchesReview(r, movieId, reviewType),
+      );
+      if (alreadyReviewed) return false;
+
+      // POST to the real backend
+      // NOTE: adjust the body fields below if your backend DTO uses different names
+      await apiCreateReview({ movieId, rating, comment });
+
+      const newReview = {
+        movieId,
+        movieTitle,
+        movieImageUrl,
+        rating,
+        comment: comment || "",
+        type: reviewType,
+        createdAt: new Date().toISOString(),
+        updatedAt: null,
+      };
+
       setReviews((previous) => {
-        const alreadyReviewed = previous.some((r) =>
-          matchesReview(r, movieId, reviewType),
-        );
-        if (alreadyReviewed) return previous;
-
-        const newReview = {
-          movieId,
-          movieTitle,
-          movieImageUrl,
-          rating,
-          comment: comment || "",
-          type: reviewType,
-          createdAt: new Date().toISOString(),
-          updatedAt: null,
-        };
-
         const next = [newReview, ...previous];
         persistReviews(next);
         return next;
@@ -117,7 +140,7 @@ export function ReviewsProvider({ children }) {
 
       return true;
     },
-    [isAuthenticated, user?.email, persistReviews],
+    [isAuthenticated, user?.email, persistReviews, reviews],
   );
 
   /**

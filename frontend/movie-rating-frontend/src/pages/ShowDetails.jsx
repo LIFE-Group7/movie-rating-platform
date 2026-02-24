@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { shows } from "../data/mockShows";
+import { fetchShowById } from "../api/contentApi";
 import ReviewForm from "../components/ReviewForm";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -29,14 +29,27 @@ function ShowDetails() {
   const reviewsRef = useRef(null);
 
   useEffect(() => {
-    const foundShow = shows.find((s) => s.id === parseInt(id));
-    if (foundShow) {
-      setShowData(foundShow);
-      addRecentlyViewed(foundShow);
-    } else {
-      setShowData(null);
-    }
-    setLoading(false);
+    let isMounted = true;
+    const load = async () => {
+      try {
+        setShowData(null);
+        setLoading(true);
+        const show = await fetchShowById(id);
+        if (isMounted) {
+          setShowData(show);
+          addRecentlyViewed(show);
+        }
+      } catch (err) {
+        console.error("Failed to load show:", err);
+        if (isMounted) setShowData(null);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      isMounted = false;
+    };
   }, [id, addRecentlyViewed]);
 
   useEffect(() => {

@@ -62,7 +62,7 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
       // TODO: replace with real API call when backend is ready
       await new Promise((resolve) => setTimeout(resolve, 700));
 
-      const saved = addReview({
+      const saved = await addReview({
         movieId: movie.id,
         movieTitle: movie.title,
         movieImageUrl: movie.imageUrl,

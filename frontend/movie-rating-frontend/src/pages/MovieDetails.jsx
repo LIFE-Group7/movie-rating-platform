@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { movies } from "../data/mockMovies";
+import { fetchMovieById } from "../api/contentApi";
 import ReviewForm from "../components/ReviewForm";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -31,14 +31,27 @@ function MovieDetails() {
   const reviewsRef = useRef(null);
 
   useEffect(() => {
-    const foundMovie = movies.find((m) => m.id === parseInt(id));
-    if (foundMovie) {
-      setMovieData(foundMovie);
-      addRecentlyViewed(foundMovie);
-    } else {
-      setMovieData(null);
-    }
-    setLoading(false);
+    let isMounted = true;
+    const load = async () => {
+      try {
+        setMovieData(null);
+        setLoading(true);
+        const movie = await fetchMovieById(id);
+        if (isMounted) {
+          setMovieData(movie);
+          addRecentlyViewed(movie);
+        }
+      } catch (err) {
+        console.error("Failed to load movie:", err);
+        if (isMounted) setMovieData(null);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      isMounted = false;
+    };
   }, [id, addRecentlyViewed]);
 
   // Scroll to the review form when navigated here with the scrollToReview flag

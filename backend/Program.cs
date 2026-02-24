@@ -40,6 +40,16 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 
+// Allow the Vite dev server to call the API during development.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendDev", policy =>
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());
+});
+
 // 3. Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
