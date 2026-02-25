@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using Microsoft.AspNetCore.Http;
+using Moq;
 using Xunit;
 using Microsoft.AspNetCore.Mvc;
 using MovieRating.Backend.Controllers;

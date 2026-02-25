@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using Microsoft.Extensions.Logging;
+using Moq;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.Models.Movie;
 using MovieRating.Backend.Models.Show;

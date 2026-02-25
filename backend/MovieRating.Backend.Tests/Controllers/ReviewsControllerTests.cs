@@ -3,6 +3,7 @@ using Moq;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.Controllers;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using MovieRating.Backend.DTOs.User;
 using MovieRating.Backend.Services.Interfaces;
 using Xunit;
