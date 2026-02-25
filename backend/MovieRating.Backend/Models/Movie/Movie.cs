@@ -25,6 +25,9 @@ public class Movie
     [MaxLength(500)]
     public string? CoverImageUrl { get; set; }
     
+    [MaxLength(500)]
+    public string? BackdropImageUrl { get; set; }
+    
     public DateTime AddedAt { get; set; }
     
     public double AverageRating { get; private set; }
@@ -37,7 +40,7 @@ public class Movie
         ReviewCount = reviewCount;
     }
 
-    public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public ICollection<ReviewMovie> MovieReviews { get; set; } = new List<ReviewMovie>();
     
     public ICollection<MovieGenre> MovieGenres { get; set; } = new List<MovieGenre>();
     

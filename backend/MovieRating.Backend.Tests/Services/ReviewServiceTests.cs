@@ -32,7 +32,7 @@ public class ReviewServiceTests
         var request = new ReviewRequestDto { MovieId = 10, Rating = 9, Comment = "Amazing!" };
         var review = new Review { MovieId = 10, UserId = userId, Rating = 9, Comment = "Amazing!" };
 
-        _mockRepo.Setup(r => r.AddReviewAsync(It.IsAny<Review>()))
+        _mockRepo.Setup(r => r.AddMovieReviewAsync(It.IsAny<Review>()))
                  .ReturnsAsync(Result<Review>.Success(review));
 
         var result = await _reviewService.CreateReviewAsync(userId, request);
@@ -49,7 +49,7 @@ public class ReviewServiceTests
         var userId = 1;
         var request = new ReviewRequestDto { MovieId = 999, Rating = 5 }; // Non-existent movie
 
-        _mockRepo.Setup(r => r.AddReviewAsync(It.IsAny<Review>()))
+        _mockRepo.Setup(r => r.AddMovieReviewAsync(It.IsAny<Review>()))
                  .ReturnsAsync(Result<Review>.Failure("Movie not found.", ErrorType.NotFound));
 
         var result = await _reviewService.CreateReviewAsync(userId, request);
@@ -66,7 +66,7 @@ public class ReviewServiceTests
         var userId = 1;
         var request = new ReviewRequestDto { MovieId = 10, Rating = 9 };
 
-        _mockRepo.Setup(r => r.AddReviewAsync(It.IsAny<Review>()))
+        _mockRepo.Setup(r => r.AddMovieReviewAsync(It.IsAny<Review>()))
                  .ThrowsAsync(new Exception("Database connection failed"));
 
         var result = await _reviewService.CreateReviewAsync(userId, request);
@@ -96,7 +96,7 @@ public class ReviewServiceTests
         var request = new ReviewRequestDto { MovieId = 10, Rating = 5, Comment = "Changed my mind." };
         var updatedReview = new Review { MovieId = 10, UserId = userId, Rating = 5, Comment = "Changed my mind.", UpdatedAt = DateTime.UtcNow };
 
-        _mockRepo.Setup(r => r.UpdateReviewAsync(It.IsAny<Review>()))
+        _mockRepo.Setup(r => r.UpdateMovieReviewAsync(It.IsAny<Review>()))
                  .ReturnsAsync(Result<Review>.Success(updatedReview));
 
         var result = await _reviewService.UpdateReviewAsync(userId, request);
@@ -114,7 +114,7 @@ public class ReviewServiceTests
         var userId = 1;
         var request = new ReviewRequestDto { MovieId = 10, Rating = 5 };
 
-        _mockRepo.Setup(r => r.UpdateReviewAsync(It.IsAny<Review>()))
+        _mockRepo.Setup(r => r.UpdateMovieReviewAsync(It.IsAny<Review>()))
                  .ReturnsAsync(Result<Review>.Failure("Review not found.", ErrorType.NotFound));
 
         var result = await _reviewService.UpdateReviewAsync(userId, request);
@@ -130,7 +130,7 @@ public class ReviewServiceTests
         var userId = 1;
         var request = new ReviewRequestDto { MovieId = 10, Rating = 5 };
 
-        _mockRepo.Setup(r => r.UpdateReviewAsync(It.IsAny<Review>()))
+        _mockRepo.Setup(r => r.UpdateMovieReviewAsync(It.IsAny<Review>()))
                  .ThrowsAsync(new Exception("Database timeout"));
 
         var result = await _reviewService.UpdateReviewAsync(userId, request);
@@ -161,10 +161,10 @@ public class ReviewServiceTests
             }
         };
 
-        _mockRepo.Setup(r => r.GetReviewsByUserIdAsync(userId))
+        _mockRepo.Setup(r => r.GetMovieReviewsByUserIdAsync(userId))
                  .ReturnsAsync(mockReviews);
 
-        var result = await _reviewService.GetUserReviewsAsync(userId);
+        var result = await _reviewService.GetMovieUserReviewsAsync(userId);
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
@@ -182,10 +182,10 @@ public class ReviewServiceTests
     {
         var userId = 1;
 
-        _mockRepo.Setup(r => r.GetReviewsByUserIdAsync(userId))
+        _mockRepo.Setup(r => r.GetMovieReviewsByUserIdAsync(userId))
                  .ThrowsAsync(new Exception("Database connection failed"));
 
-        var result = await _reviewService.GetUserReviewsAsync(userId);
+        var result = await _reviewService.GetMovieUserReviewsAsync(userId);
 
         Assert.False(result.IsSuccess);
         Assert.Equal("An unexpected error occurred.", result.Error);

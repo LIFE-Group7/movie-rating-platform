@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MovieRating.Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class ImprovedDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,7 +35,8 @@ namespace MovieRating.Backend.Migrations
                     ReleaseDate = table.Column<DateOnly>(type: "date", nullable: false),
                     Director = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
                     DurationMinutes = table.Column<int>(type: "int", nullable: false),
-                    CoverImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CoverImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    BackdropImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     AddedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     AverageRating = table.Column<double>(type: "float(4)", precision: 4, scale: 2, nullable: false),
                     ReviewCount = table.Column<int>(type: "int", nullable: false)
@@ -43,6 +44,31 @@ namespace MovieRating.Backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Movies", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Shows",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    FirstAirDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    LastAirDate = table.Column<DateOnly>(type: "date", nullable: true),
+                    Director = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
+                    CoverImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    BackdropImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    AddedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    AverageRating = table.Column<double>(type: "float(4)", precision: 4, scale: 2, nullable: false),
+                    ReviewCount = table.Column<int>(type: "int", nullable: false),
+                    Seasons = table.Column<int>(type: "int", nullable: false),
+                    Episodes = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Shows", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -113,7 +139,31 @@ namespace MovieRating.Backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Reviews",
+                name: "ShowGenres",
+                columns: table => new
+                {
+                    ShowId = table.Column<int>(type: "int", nullable: false),
+                    GenreId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ShowGenres", x => new { x.ShowId, x.GenreId });
+                    table.ForeignKey(
+                        name: "FK_ShowGenres_Genres_GenreId",
+                        column: x => x.GenreId,
+                        principalTable: "Genres",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ShowGenres_Shows_ShowId",
+                        column: x => x.ShowId,
+                        principalTable: "Shows",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReviewMovies",
                 columns: table => new
                 {
                     UserId = table.Column<int>(type: "int", nullable: false),
@@ -125,15 +175,43 @@ namespace MovieRating.Backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Reviews", x => new { x.UserId, x.MovieId });
+                    table.PrimaryKey("PK_ReviewMovies", x => new { x.UserId, x.MovieId });
                     table.ForeignKey(
-                        name: "FK_Reviews_Movies_MovieId",
+                        name: "FK_ReviewMovies_Movies_MovieId",
                         column: x => x.MovieId,
                         principalTable: "Movies",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Reviews_Users_UserId",
+                        name: "FK_ReviewMovies_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReviewShows",
+                columns: table => new
+                {
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    ShowId = table.Column<int>(type: "int", nullable: false),
+                    Rating = table.Column<int>(type: "int", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReviewShows", x => new { x.UserId, x.ShowId });
+                    table.ForeignKey(
+                        name: "FK_ReviewShows_Shows_ShowId",
+                        column: x => x.ShowId,
+                        principalTable: "Shows",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ReviewShows_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -212,9 +290,19 @@ namespace MovieRating.Backend.Migrations
                 column: "GenreId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reviews_MovieId",
-                table: "Reviews",
+                name: "IX_ReviewMovies_MovieId",
+                table: "ReviewMovies",
                 column: "MovieId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReviewShows_ShowId",
+                table: "ReviewShows",
+                column: "ShowId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShowGenres_GenreId",
+                table: "ShowGenres",
+                column: "GenreId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
@@ -244,13 +332,22 @@ namespace MovieRating.Backend.Migrations
                 name: "MovieGenres");
 
             migrationBuilder.DropTable(
-                name: "Reviews");
+                name: "ReviewMovies");
+
+            migrationBuilder.DropTable(
+                name: "ReviewShows");
+
+            migrationBuilder.DropTable(
+                name: "ShowGenres");
 
             migrationBuilder.DropTable(
                 name: "Watchlist");
 
             migrationBuilder.DropTable(
                 name: "HomeSections");
+
+            migrationBuilder.DropTable(
+                name: "Shows");
 
             migrationBuilder.DropTable(
                 name: "Movies");

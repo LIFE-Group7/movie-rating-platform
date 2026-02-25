@@ -1,22 +1,38 @@
-import { get, post, put } from "./apiClient";
-
-/**
- * POST /api/Reviews
- * Body: { movieId, rating, comment }
- * The user identity comes from the JWT Bearer token (handled by apiClient).
- * NOTE: If your backend uses a different field name (e.g. "showId", "contentId"),
- * adjust the body shape here to match the actual DTO.
- */
-export const createReview = (reviewData) => post("/api/Reviews", reviewData);
-
-/**
- * PUT /api/Reviews
- * Body: { movieId, rating, comment }
- */
-export const updateReview = (reviewData) => put("/api/Reviews", reviewData);
+import { del, get, post, put } from "./apiClient";
 
 /**
  * GET /api/Reviews/user
  * Returns the authenticated user's reviews.
  */
 export const fetchUserReviews = () => get("/api/Reviews/user");
+
+/**
+ * POST /api/Reviews/movies
+ */
+export const createMovieReview = (reviewData) => post("/api/Reviews/movies", reviewData);
+
+/**
+ * PUT /api/Reviews/movies
+ */
+export const updatMovieeReview = (reviewData) => put("/api/Reviews/movies", reviewData);
+
+/**
+* DEL /api/Reviews/movies/{movieId}
+*/
+export const deleteMovieReview = (movieId) => del(`/api/Reviews/movies/${movieId}`);
+
+/**
+ * POST /api/Reviews/shows
+ */
+export const createShowReview = (reviewData) => post("/api/Reviews/shows", reviewData);
+
+/**
+ * PUT /api/Reviews/shows
+ */
+export const updateShowReview = (reviewData) =>
+    put("/api/Reviews/shows", reviewData);
+
+/**
+ * DEL /api/Reviews/shows/{showId}
+ */
+export const deleteShowReview = (showId) => del(`/api/Reviews/shows/${showId}`);

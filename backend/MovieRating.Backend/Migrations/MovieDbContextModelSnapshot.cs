@@ -22,7 +22,63 @@ namespace MovieRating.Backend.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.Genre", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.Dashboard.HomeSection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("GenreId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GenreId");
+
+                    b.ToTable("HomeSections");
+                });
+
+            modelBuilder.Entity("MovieRating.Backend.Models.Dashboard.HomeSectionMovie", b =>
+                {
+                    b.Property<int>("HomeSectionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MovieId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("HomeSectionId", "MovieId");
+
+                    b.HasIndex("MovieId");
+
+                    b.ToTable("HomeSectionMovies");
+                });
+
+            modelBuilder.Entity("MovieRating.Backend.Models.Generic.Genre", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -40,10 +96,10 @@ namespace MovieRating.Backend.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Genres", (string)null);
+                    b.ToTable("Genres");
                 });
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.Movie", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.Movie.Movie", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -59,6 +115,10 @@ namespace MovieRating.Backend.Migrations
                     b.Property<double>("AverageRating")
                         .HasPrecision(4, 2)
                         .HasColumnType("float(4)");
+
+                    b.Property<string>("BackdropImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("CoverImageUrl")
                         .HasMaxLength(500)
@@ -88,10 +148,10 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Movies", (string)null);
+                    b.ToTable("Movies");
                 });
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.MovieGenre", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.Movie.MovieGenre", b =>
                 {
                     b.Property<int>("MovieId")
                         .HasColumnType("int");
@@ -103,10 +163,10 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("MovieGenres", (string)null);
+                    b.ToTable("MovieGenres");
                 });
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.Review", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.Movie.ReviewMovie", b =>
                 {
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -133,10 +193,40 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("ReviewMovies");
                 });
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.Show", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.Show.ReviewShow", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShowId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "ShowId");
+
+                    b.HasIndex("ShowId");
+
+                    b.ToTable("ReviewShows");
+                });
+
+            modelBuilder.Entity("MovieRating.Backend.Models.Show.Show", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -153,16 +243,21 @@ namespace MovieRating.Backend.Migrations
                         .HasPrecision(4, 2)
                         .HasColumnType("float(4)");
 
-                    b.Property<string>("CoverImageUrl")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("BackdropImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("Creator")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                    b.Property<string>("CoverImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Director")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<int>("Episodes")
                         .HasColumnType("int");
@@ -190,10 +285,10 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Shows", (string)null);
+                    b.ToTable("Shows");
                 });
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.ShowGenre", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.Show.ShowGenre", b =>
                 {
                     b.Property<int>("ShowId")
                         .HasColumnType("int");
@@ -205,10 +300,10 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("ShowGenres", (string)null);
+                    b.ToTable("ShowGenres");
                 });
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.User", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.User.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -252,66 +347,10 @@ namespace MovieRating.Backend.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Extra.HomeSection", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("GenreId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GenreId");
-
-                    b.ToTable("HomeSections", (string)null);
-                });
-
-            modelBuilder.Entity("MovieRating.Backend.Models.Extra.HomeSectionMovie", b =>
-                {
-                    b.Property<int>("HomeSectionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MovieId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("HomeSectionId", "MovieId");
-
-                    b.HasIndex("MovieId");
-
-                    b.ToTable("HomeSectionMovies", (string)null);
-                });
-
-            modelBuilder.Entity("MovieRating.Backend.Models.Extra.Watchlist", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.User.Watchlist", b =>
                 {
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -328,69 +367,12 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("Watchlist", (string)null);
+                    b.ToTable("Watchlist");
                 });
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.MovieGenre", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.Dashboard.HomeSection", b =>
                 {
-                    b.HasOne("MovieRating.Backend.Models.Basics.Genre", "Genre")
-                        .WithMany("MovieGenres")
-                        .HasForeignKey("GenreId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("MovieRating.Backend.Models.Basics.Movie", "Movie")
-                        .WithMany("MovieGenres")
-                        .HasForeignKey("MovieId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Genre");
-
-                    b.Navigation("Movie");
-                });
-
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.Review", b =>
-                {
-                    b.HasOne("MovieRating.Backend.Models.Basics.Movie", "Movie")
-                        .WithMany("Reviews")
-                        .HasForeignKey("MovieId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MovieRating.Backend.Models.Basics.User", "User")
-                        .WithMany("Reviews")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Movie");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.ShowGenre", b =>
-                {
-                    b.HasOne("MovieRating.Backend.Models.Basics.Genre", "Genre")
-                        .WithMany("ShowGenres")
-                        .HasForeignKey("GenreId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("MovieRating.Backend.Models.Basics.Show", "Show")
-                        .WithMany("ShowGenres")
-                        .HasForeignKey("ShowId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Genre");
-
-                    b.Navigation("Show");
-                });
-
-            modelBuilder.Entity("MovieRating.Backend.Models.Extra.HomeSection", b =>
-                {
-                    b.HasOne("MovieRating.Backend.Models.Basics.Genre", "Genre")
+                    b.HasOne("MovieRating.Backend.Models.Generic.Genre", "Genre")
                         .WithMany()
                         .HasForeignKey("GenreId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -398,15 +380,15 @@ namespace MovieRating.Backend.Migrations
                     b.Navigation("Genre");
                 });
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Extra.HomeSectionMovie", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.Dashboard.HomeSectionMovie", b =>
                 {
-                    b.HasOne("MovieRating.Backend.Models.Extra.HomeSection", "HomeSection")
+                    b.HasOne("MovieRating.Backend.Models.Dashboard.HomeSection", "HomeSection")
                         .WithMany("Movies")
                         .HasForeignKey("HomeSectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MovieRating.Backend.Models.Basics.Movie", "Movie")
+                    b.HasOne("MovieRating.Backend.Models.Movie.Movie", "Movie")
                         .WithMany()
                         .HasForeignKey("MovieId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -417,15 +399,91 @@ namespace MovieRating.Backend.Migrations
                     b.Navigation("Movie");
                 });
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Extra.Watchlist", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.Movie.MovieGenre", b =>
                 {
-                    b.HasOne("MovieRating.Backend.Models.Basics.Movie", "Movie")
+                    b.HasOne("MovieRating.Backend.Models.Generic.Genre", "Genre")
+                        .WithMany("MovieGenres")
+                        .HasForeignKey("GenreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MovieRating.Backend.Models.Movie.Movie", "Movie")
+                        .WithMany("MovieGenres")
+                        .HasForeignKey("MovieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Genre");
+
+                    b.Navigation("Movie");
+                });
+
+            modelBuilder.Entity("MovieRating.Backend.Models.Movie.ReviewMovie", b =>
+                {
+                    b.HasOne("MovieRating.Backend.Models.Movie.Movie", "Movie")
+                        .WithMany("MovieReviews")
+                        .HasForeignKey("MovieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MovieRating.Backend.Models.User.User", "User")
+                        .WithMany("MovieReviews")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Movie");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MovieRating.Backend.Models.Show.ReviewShow", b =>
+                {
+                    b.HasOne("MovieRating.Backend.Models.Show.Show", "Show")
+                        .WithMany("ShowReviews")
+                        .HasForeignKey("ShowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MovieRating.Backend.Models.User.User", "User")
+                        .WithMany("ShowReviews")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Show");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MovieRating.Backend.Models.Show.ShowGenre", b =>
+                {
+                    b.HasOne("MovieRating.Backend.Models.Generic.Genre", "Genre")
+                        .WithMany("ShowGenres")
+                        .HasForeignKey("GenreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MovieRating.Backend.Models.Show.Show", "Show")
+                        .WithMany("ShowGenres")
+                        .HasForeignKey("ShowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Genre");
+
+                    b.Navigation("Show");
+                });
+
+            modelBuilder.Entity("MovieRating.Backend.Models.User.Watchlist", b =>
+                {
+                    b.HasOne("MovieRating.Backend.Models.Movie.Movie", "Movie")
                         .WithMany("Watchlist")
                         .HasForeignKey("MovieId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MovieRating.Backend.Models.Basics.User", "User")
+                    b.HasOne("MovieRating.Backend.Models.User.User", "User")
                         .WithMany("Watchlist")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -436,37 +494,41 @@ namespace MovieRating.Backend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.Genre", b =>
-                {
-                    b.Navigation("MovieGenres");
-
-                    b.Navigation("ShowGenres");
-                });
-
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.Movie", b =>
-                {
-                    b.Navigation("MovieGenres");
-
-                    b.Navigation("Reviews");
-
-                    b.Navigation("Watchlist");
-                });
-
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.Show", b =>
-                {
-                    b.Navigation("ShowGenres");
-                });
-
-            modelBuilder.Entity("MovieRating.Backend.Models.Basics.User", b =>
-                {
-                    b.Navigation("Reviews");
-
-                    b.Navigation("Watchlist");
-                });
-
-            modelBuilder.Entity("MovieRating.Backend.Models.Extra.HomeSection", b =>
+            modelBuilder.Entity("MovieRating.Backend.Models.Dashboard.HomeSection", b =>
                 {
                     b.Navigation("Movies");
+                });
+
+            modelBuilder.Entity("MovieRating.Backend.Models.Generic.Genre", b =>
+                {
+                    b.Navigation("MovieGenres");
+
+                    b.Navigation("ShowGenres");
+                });
+
+            modelBuilder.Entity("MovieRating.Backend.Models.Movie.Movie", b =>
+                {
+                    b.Navigation("MovieGenres");
+
+                    b.Navigation("MovieReviews");
+
+                    b.Navigation("Watchlist");
+                });
+
+            modelBuilder.Entity("MovieRating.Backend.Models.Show.Show", b =>
+                {
+                    b.Navigation("ShowGenres");
+
+                    b.Navigation("ShowReviews");
+                });
+
+            modelBuilder.Entity("MovieRating.Backend.Models.User.User", b =>
+                {
+                    b.Navigation("MovieReviews");
+
+                    b.Navigation("ShowReviews");
+
+                    b.Navigation("Watchlist");
                 });
 #pragma warning restore 612, 618
         }

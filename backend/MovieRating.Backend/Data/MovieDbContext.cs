@@ -14,7 +14,9 @@ public class MovieDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Movie> Movies => Set<Movie>();
     public DbSet<Genre> Genres => Set<Genre>();
-    public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<ReviewMovie> ReviewMovies => Set<ReviewMovie>();
+    
+    public DbSet<ReviewShow> ReviewShows => Set<ReviewShow>();
     public DbSet<MovieGenre> MovieGenres => Set<MovieGenre>();
     public DbSet<Watchlist> Watchlist => Set<Watchlist>();
     public DbSet<HomeSection> HomeSections => Set<HomeSection>();
@@ -76,24 +78,44 @@ public class MovieDbContext : DbContext
                   .OnDelete(DeleteBehavior.Restrict);
         });
         
-        modelBuilder.Entity<Review>(entity =>
+        modelBuilder.Entity<ReviewMovie>(entity =>
         {
-            entity.HasKey(r => new { r.UserId, r.MovieId });
+              entity.HasKey(r => new { r.UserId, r.MovieId });
 
-            entity.HasOne(r => r.User)
-                  .WithMany(u => u.Reviews)
-                  .HasForeignKey(r => r.UserId)
-                  .OnDelete(DeleteBehavior.Cascade);
+              entity.HasOne(r => r.User)
+                    .WithMany(u => u.MovieReviews)
+                    .HasForeignKey(r => r.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(r => r.Movie)
-                  .WithMany(m => m.Reviews)
-                  .HasForeignKey(r => r.MovieId)
-                  .OnDelete(DeleteBehavior.Cascade);
+              entity.HasOne(r => r.Movie)
+                    .WithMany(m => m.MovieReviews)
+                    .HasForeignKey(r => r.MovieId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-            entity.Property(r => r.CreatedAt)
-                  .HasDefaultValueSql("GETUTCDATE()");
+              entity.Property(r => r.CreatedAt)
+                    .HasDefaultValueSql("GETUTCDATE()");
             
-            entity.HasQueryFilter(r => !r.User.IsDeleted);
+              entity.HasQueryFilter(r => !r.User.IsDeleted);
+        });
+        
+        modelBuilder.Entity<ReviewShow>(entity =>
+        {
+              entity.HasKey(r => new { r.UserId, r.ShowId });
+
+              entity.HasOne(r => r.User)
+                    .WithMany(u => u.ShowReviews)
+                    .HasForeignKey(r => r.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+              entity.HasOne(r => r.Show)
+                    .WithMany(sh => sh.ShowReviews)
+                    .HasForeignKey(r => r.ShowId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+              entity.Property(r => r.CreatedAt)
+                    .HasDefaultValueSql("GETUTCDATE()");
+            
+              entity.HasQueryFilter(r => !r.User.IsDeleted);
         });
         
         modelBuilder.Entity<Watchlist>(entity =>

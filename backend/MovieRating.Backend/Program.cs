@@ -28,16 +28,6 @@ builder.Services.AddScoped<IShowService, ShowService>();
 
 builder.Services.AddScoped<ISearchService, SearchService>();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173") // React app URL
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
-
 builder.Services.AddControllers();
 
 // Allow the Vite dev server to call the API during development.
@@ -102,6 +92,16 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddHttpClient("tmdb", (sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.DefaultRequestHeaders.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue(
+            "Bearer", config["Tmdb:AccessToken"]);
+});
+
+builder.Services.AddScoped<ITmdbImportService, TmdbImportService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -112,7 +112,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowFrontend");
+app.UseCors("FrontendDev");
 
 app.UseAuthentication();
 app.UseAuthorization();

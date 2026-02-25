@@ -116,18 +116,18 @@ public class ReviewsControllerTests
     public async Task GetUserReviews_WhenSuccessful_ReturnsOkWithData()
     {
         SetupUserClaims("123");
-        var mockReviews = new List<UserReviewResponseDto>
+        var mockReviews = new List<UserMovieResponseReviewDto>
         {
             new() { MovieId = 1, MovieTitle = "Inception", Rating = 10 }
         };
 
-        _mockService.Setup(s => s.GetUserReviewsAsync(123))
-                    .ReturnsAsync(Result<IEnumerable<UserReviewResponseDto>>.Success(mockReviews));
+        _mockService.Setup(s => s.GetMovieUserReviewsAsync(123))
+                    .ReturnsAsync(Result<IEnumerable<UserMovieResponseReviewDto>>.Success(mockReviews));
 
         var result = await _controller.GetUserReviews();
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedData = Assert.IsAssignableFrom<IEnumerable<UserReviewResponseDto>>(okResult.Value);
+        var returnedData = Assert.IsAssignableFrom<IEnumerable<UserMovieResponseReviewDto>>(okResult.Value);
         Assert.Single(returnedData);
     }
 
