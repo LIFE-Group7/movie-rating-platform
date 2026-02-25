@@ -111,7 +111,7 @@ function ShowDetails() {
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent z-10" />
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent z-10" />
         <img
-          src={showData.imageUrl}
+          src={showData.backdropUrl ?? showData.imageUrl}
           alt={showData.title}
           className="w-full h-full object-cover opacity-60"
         />

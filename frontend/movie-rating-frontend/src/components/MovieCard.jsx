@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,18 +7,37 @@ import { useAuth } from "../contexts/AuthContext";
  * Compact movie card used in grid and carousel layouts.
  * Clicking anywhere on the card navigates to the movie detail page.
  * The hover overlay exposes "Details" and "Save/Saved" quick-action buttons.
+ * On hover, overflowing genre pills scroll horizontally (marquee effect).
  */
 function MovieCard({ movie }) {
   const navigate = useNavigate();
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
   const { isAuthenticated } = useAuth();
 
-  // Normalise either `genres` array or legacy `genre` string into one shape.
   const movieGenres = movie?.genres || (movie?.genre ? [movie.genre] : []);
   const inWatchlist = isInWatchlist(movie.id);
   const [isHovering, setIsHovering] = useState(false);
 
-  // Memoised so the number format isn't recomputed on every render cycle.
+  // Refs to measure whether the genre pills actually overflow the container.
+  const trackRef = useRef(null);
+  const containerRef = useRef(null);
+  const [shouldScroll, setShouldScroll] = useState(false);
+  const [scrollAmount, setScrollAmount] = useState(0);
+
+  // Recalculate overflow whenever genres change or hover starts.
+  useEffect(() => {
+    if (!trackRef.current || !containerRef.current) return;
+    const overflow =
+      trackRef.current.scrollWidth - containerRef.current.clientWidth;
+    if (overflow > 0) {
+      setShouldScroll(true);
+      setScrollAmount(overflow);
+    } else {
+      setShouldScroll(false);
+      setScrollAmount(0);
+    }
+  }, [movieGenres, isHovering]);
+
   const ratingText = useMemo(() => {
     const r = Number(movie?.rating);
     return Number.isFinite(r) ? r.toFixed(1) : "–";
@@ -26,11 +45,6 @@ function MovieCard({ movie }) {
 
   const openDetails = () => navigate(`/movie/${movie.id}`);
 
-  /**
-   * Toggle watchlist membership from the card without opening the detail page.
-   * Stops event propagation so the card's own click handler doesn't fire.
-   * Unauthenticated users are redirected to /login instead of silently failing.
-   */
   const toggleWatchlist = (e) => {
     e.stopPropagation();
     if (!isAuthenticated) {
@@ -75,8 +89,10 @@ function MovieCard({ movie }) {
           </span>
         </div>
 
-        {/* Hover overlay — the visible watchlist / details buttons live here */}
-        <div className={`absolute inset-0 transition-opacity ${isHovering ? "opacity-100" : "opacity-0"}`}>
+        {/* Hover overlay */}
+        <div
+          className={`absolute inset-0 transition-opacity ${isHovering ? "opacity-100" : "opacity-0"}`}
+        >
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
             <button
@@ -100,7 +116,7 @@ function MovieCard({ movie }) {
         </div>
       </div>
 
-      {/* Info Area - Fixed Height */}
+      {/* Info Area */}
       <div className="p-3 flex flex-col justify-between flex-1 min-h-[104px]">
         <h3
           className="text-[13px] font-bold text-white leading-tight line-clamp-2"
@@ -109,20 +125,43 @@ function MovieCard({ movie }) {
           {movie.title}
         </h3>
 
-        {/* Genres container - line-clamp-1 prevents wrapping to new lines */}
-        <div className="mt-1.5 flex gap-1.5 overflow-hidden w-full">
-          {movieGenres.length > 0 ? (
-            movieGenres.map((g) => (
-              <span
-                key={g}
-                className="whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 border border-white/10 text-white/65 flex-shrink-0"
-              >
-                {g}
-              </span>
-            ))
-          ) : (
-            <span className="h-[22px]" /> /* Empty spacer to maintain layout height */
+        {/* Genres — scrolls left on hover if pills overflow the container */}
+        <div
+          ref={containerRef}
+          className="mt-1.5 overflow-hidden w-full relative"
+        >
+          {/* Left fade mask — only visible when scrolling */}
+          {shouldScroll && isHovering && (
+            <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-zinc-900 to-transparent z-10 pointer-events-none" />
           )}
+
+          <div
+            ref={trackRef}
+            className="flex gap-1.5"
+            style={{
+              transform:
+                isHovering && shouldScroll
+                  ? `translateX(-${scrollAmount}px)`
+                  : "translateX(0px)",
+              transition:
+                isHovering && shouldScroll
+                  ? `transform ${Math.max(1.2, scrollAmount / 60)}s linear ${0.3}s`
+                  : "transform 0.4s ease",
+            }}
+          >
+            {movieGenres.length > 0 ? (
+              movieGenres.map((g) => (
+                <span
+                  key={g}
+                  className="whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 border border-white/10 text-white/65 flex-shrink-0"
+                >
+                  {g}
+                </span>
+              ))
+            ) : (
+              <span className="h-[22px]" />
+            )}
+          </div>
         </div>
       </div>
     </div>

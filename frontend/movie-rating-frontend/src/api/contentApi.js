@@ -22,8 +22,18 @@ const coerceGenres = (input) => {
 // Normalizes a raw Movie DTO from the backend into the shape the UI expects
 const normalizeMovie = (item, idx = 0) => {
   const title = item.title ?? item.name ?? `Untitled ${idx + 1}`;
+  const backdropUrl =
+    item.backdropUrl ??
+    item.backdropImageUrl ??
+    item.BackdropImageUrl ??
+    item.backdropPath ??
+    (item.backdrop_path
+      ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}`
+      : undefined);
   const imageUrl =
     item.imageUrl ??
+    item.coverImageUrl ??
+    item.CoverImageUrl ??
     item.posterUrl ??
     (item.poster_path
       ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
@@ -38,6 +48,7 @@ const normalizeMovie = (item, idx = 0) => {
         ? item.rating
         : Number(item.averageRating ?? item.vote_average ?? 0),
     genres: coerceGenres(item.genres ?? item.genre),
+    backdropUrl,
     imageUrl,
     description: item.description ?? item.overview ?? "",
   };
@@ -46,7 +57,20 @@ const normalizeMovie = (item, idx = 0) => {
 // Normalizes a raw Show DTO from the backend into the shape the UI expects
 const normalizeShow = (item, idx = 0) => {
   const title = item.title ?? item.name ?? `Untitled ${idx + 1}`;
-  const imageUrl = item.imageUrl ?? item.posterUrl ?? placeholder(title);
+  const backdropUrl =
+    item.backdropUrl ??
+    item.backdropImageUrl ??
+    item.BackdropImageUrl ??
+    item.backdropPath ??
+    (item.backdrop_path
+      ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}`
+      : undefined);
+  const imageUrl =
+    item.imageUrl ??
+    item.coverImageUrl ??
+    item.CoverImageUrl ??
+    item.posterUrl ??
+    placeholder(title);
   return {
     ...item,
     id: item.id ?? item.showId ?? `${title}-${idx}`,
@@ -57,6 +81,7 @@ const normalizeShow = (item, idx = 0) => {
         ? item.rating
         : Number(item.averageRating ?? item.vote_average ?? 0),
     genres: coerceGenres(item.genres ?? item.genre),
+    backdropUrl,
     imageUrl,
     description: item.description ?? item.overview ?? "",
   };

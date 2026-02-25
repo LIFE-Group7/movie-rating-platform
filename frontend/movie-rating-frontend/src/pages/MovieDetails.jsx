@@ -122,7 +122,7 @@ function MovieDetails() {
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent z-10" />
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent z-10" />
         <img
-          src={movieData.imageUrl}
+          src={movieData.backdropUrl ?? movieData.imageUrl}
           alt={movieData.title}
           className="w-full h-full object-cover opacity-60"
         />
