@@ -1,14 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MovieRating.Backend.Models.User;
+namespace MovieRating.Backend.Models.Movie;
 
-public class Review
+public class ReviewMovie
 {
     public int UserId { get; set; }
-    public User User { get; set; } = null!;
+    public User.User User { get; set; } = null!;
     
     public int MovieId { get; set; }
-    public Movie.Movie Movie { get; set; } = null!;
+    public Movie Movie { get; set; } = null!;
     
     [Range(1, 10)]
     public int Rating { get; set; }

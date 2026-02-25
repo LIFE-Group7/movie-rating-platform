@@ -44,6 +44,7 @@ public class MovieService : IMovieService
             Director = movieDto.Director,
             DurationMinutes = movieDto.DurationMinutes,
             CoverImageUrl = movieDto.CoverImageUrl,
+            BackdropImageUrl = movieDto.BackdropImageUrl,
             AddedAt = DateTime.UtcNow,
             MovieGenres = movieDto.GenreIds.Select(id => new MovieGenre()
             {
@@ -69,6 +70,7 @@ public class MovieService : IMovieService
         if (movieDto.Director is not null) movie.Director = movieDto.Director;
         if (movieDto.DurationMinutes is not null) movie.DurationMinutes = movieDto.DurationMinutes.Value;
         if(movieDto.CoverImageUrl is not null)  movie.CoverImageUrl = movieDto.CoverImageUrl;
+        if(movieDto.BackdropImageUrl is not null) movie.BackdropImageUrl = movieDto.BackdropImageUrl;
 
         if (movieDto.GenreIds is not null)
         {
@@ -126,6 +128,7 @@ public class MovieService : IMovieService
             Director = movie.Director,
             DurationMinutes = movie.DurationMinutes,
             CoverImageUrl = movie.CoverImageUrl,
+            BackdropImageUrl = movie.BackdropImageUrl,
             AddedAt = movie.AddedAt,
             AverageRating = movie.AverageRating,
             ReviewCount = movie.ReviewCount,

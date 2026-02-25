@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using MovieRating.Backend.Models.Movie;
+using MovieRating.Backend.Models.Show;
 
 namespace MovieRating.Backend.Models.User;
 
@@ -27,7 +29,9 @@ public class User
     
     public DateTime? LastLoginAt { get; set; }
 
-    public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public ICollection<ReviewMovie> MovieReviews { get; set; } = new List<ReviewMovie>();
+    
+    public ICollection<ReviewShow> ShowReviews { get; set; } = new List<ReviewShow>();
     
     public ICollection<Watchlist> Watchlist { get; set; } = new List<Watchlist>();
 }

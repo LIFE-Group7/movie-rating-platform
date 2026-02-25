@@ -44,8 +44,9 @@ public class ShowService : IShowService
             Description = showDto.Description,
             FirstAirDate = showDto.FirstAirDate,
             LastAirDate = showDto.LastAirDate,
-            Creator = showDto.Creator,
+            Director = showDto.Creator,
             CoverImageUrl = showDto.CoverImageUrl,
+            BackdropImageUrl = showDto.BackdropImageUrl,
             Seasons = showDto.Seasons,
             Episodes = showDto.Episodes,
             Status = showDto.Status,
@@ -70,8 +71,9 @@ public class ShowService : IShowService
         if (showDto.Description is not null) show.Description = showDto.Description;
         if (showDto.FirstAirDate is not null) show.FirstAirDate = showDto.FirstAirDate.Value;
         if (showDto.LastAirDate is not null) show.LastAirDate = showDto.LastAirDate.Value;
-        if (showDto.Creator is not null) show.Creator = showDto.Creator;
+        if (showDto.Creator is not null) show.Director = showDto.Creator;
         if (showDto.CoverImageUrl is not null) show.CoverImageUrl = showDto.CoverImageUrl;
+        if (showDto.BackdropImageUrl is not null) show.BackdropImageUrl = showDto.BackdropImageUrl;
         if (showDto.Seasons is not null) show.Seasons = showDto.Seasons.Value;
         if (showDto.Episodes is not null) show.Episodes = showDto.Episodes.Value;
         if (showDto.Status is not null) show.Status = showDto.Status.Value;
@@ -106,8 +108,9 @@ public class ShowService : IShowService
         Description = show.Description,
         FirstAirDate = show.FirstAirDate,
         LastAirDate = show.LastAirDate,
-        Creator = show.Creator,
+        Director = show.Director,
         CoverImageUrl = show.CoverImageUrl,
+        BackdropImageUrl = show.BackdropImageUrl,
         AddedAt = show.AddedAt,
         AverageRating = show.AverageRating,
         ReviewCount = show.ReviewCount,

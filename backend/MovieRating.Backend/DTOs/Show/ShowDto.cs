@@ -7,8 +7,10 @@ public class ShowDto
     public string? Description { get; set; }
     public DateOnly FirstAirDate { get; set; }
     public DateOnly? LastAirDate { get; set; }
-    public string? Creator { get; set; }
+    public string? Director { get; set; }
     public string? CoverImageUrl { get; set; }
+    
+    public string? BackdropImageUrl { get; set; }
     public DateTime AddedAt { get; set; }
     public double AverageRating { get; set; }
     public int ReviewCount { get; set; }

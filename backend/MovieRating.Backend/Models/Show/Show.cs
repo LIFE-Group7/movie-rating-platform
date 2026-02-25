@@ -18,10 +18,13 @@ public class Show
     public DateOnly? LastAirDate { get; set; }
 
     [MaxLength(150)]
-    public string? Creator { get; set; }
+    public string? Director { get; set; }
 
     [MaxLength(500)]
     public string? CoverImageUrl { get; set; }
+    
+    [MaxLength(500)]
+    public string? BackdropImageUrl { get; set; }
 
     public DateTime AddedAt { get; set; }
 
@@ -41,5 +44,6 @@ public class Show
         ReviewCount = reviewCount;
     }
 
+    public ICollection<ReviewShow> ShowReviews { get; set; } = new List<ReviewShow>();
     public ICollection<ShowGenre> ShowGenres { get; set; } = new List<ShowGenre>();
 }

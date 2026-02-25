@@ -17,10 +17,12 @@ function ReviewEditForm({ review, onSave, onCancel }) {
   const handleSave = async () => {
     if (rating === 0) return;
     setIsSaving(true);
-    // TODO: replace with real API call when backend is wired up
-    await new Promise((r) => setTimeout(r, 600));
-    onSave({ rating, comment });
-    setIsSaving(false);
+
+    try {
+      await onSave({ rating, comment });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -108,8 +110,8 @@ function MyReviews() {
    * Apply edited fields to a review and close the edit form.
    * ReviewContext.updateReview stamps an `updatedAt` timestamp automatically.
    */
-  const handleUpdate = (movieId, type, updatedFields) => {
-    updateReview(movieId, updatedFields, type);
+  const handleUpdate = async (movieId, type, updatedFields) => {
+    await updateReview(movieId, updatedFields, type);
     setEditingReviewKey(null);
   };
 

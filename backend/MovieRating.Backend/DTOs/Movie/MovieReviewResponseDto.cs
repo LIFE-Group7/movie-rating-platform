@@ -1,12 +1,17 @@
-﻿namespace MovieRating.Backend.DTOs.User;
+namespace MovieRating.Backend.DTOs.Movie;
 
-public class UserReviewResponseDto
+
+public class MovieReviewResponseDto
 {
     public int MovieId { get; set; }
-    public string MovieTitle { get; set; } = string.Empty;
-    public string? MovieCoverImageUrl { get; set; }
+    
+    public int UserId { get; set; }
+    
     public int Rating { get; set; }
+    
     public string? Comment { get; set; }
+    
     public DateTime CreatedAt { get; set; }
+    
     public DateTime? UpdatedAt { get; set; }
 }

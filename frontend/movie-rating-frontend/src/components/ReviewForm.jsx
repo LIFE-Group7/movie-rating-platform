@@ -30,19 +30,15 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
   const isFormValid =
     rating > 0 && reviewText.trim() !== "" && !isCharLimitExceeded;
 
+  const itemId = movie?.id ?? movie?.movieId;
   const movieType = movie?.type || "movie";
   const titleLabel = movieType === "show" ? "show" : "movie";
   const existingReview = getReviewForItem({
-    movieId: movie?.id,
+    movieId: itemId,
     type: movieType,
   });
   const isAlreadyReviewed = Boolean(existingReview);
-
-  /**
-   * Validate, simulate API submission, persist to ReviewContext, then notify parent.
-   * The 700 ms delay mimics a real network round-trip so the UI feedback feels
-   * natural — remove once the real backend endpoint is integrated.
-   */
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -59,39 +55,32 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
 
     setIsSubmitting(true);
     try {
-      // TODO: replace with real API call when backend is ready
-      await new Promise((resolve) => setTimeout(resolve, 700));
-
       const saved = await addReview({
-        movieId: movie.id,
+        movieId: itemId,
         movieTitle: movie.title,
         movieImageUrl: movie.imageUrl,
         rating,
         comment: reviewText.trim(),
         type: movieType,
       });
+      if (itemId == null) return setError("Missing content id; cannot submit review.");
+
 
       if (!saved) {
         setError("You already reviewed this title.");
-        setSuccess(false);
         return;
       }
 
       setSuccess(true);
-      // Brief success window before resetting the form and notifying the parent.
+      // Let the success UI show for a brief moment before clearing
       setTimeout(() => {
         setRating(0);
         setReviewText("");
         setSuccess(false);
-        onSubmitSuccess({
-          rating,
-          reviewText: reviewText.trim(),
-          movieId: movie.id,
-        });
+        onSubmitSuccess({ rating, reviewText: reviewText.trim(), movieId: movie.id });
       }, 900);
     } catch (err) {
-      setError(err?.message || "Failed to submit review. Please try again.");
-      setSuccess(false);
+      setError("Failed to submit review. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

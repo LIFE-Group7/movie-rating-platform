@@ -8,40 +8,27 @@ import {
 } from "react";
 import { useAuth } from "./AuthContext";
 import {
-  createReview as apiCreateReview,
-  fetchUserReviews,
+    createMovieReview,
+    updateMovieReview,
+    deleteMovieReview,
+    createShowReview,
+    updateShowReview, 
+    deleteShowReview, 
+    fetchUserReviews,
 } from "../api/reviewApi";
-
-// ── Storage helpers ───────────────────────────────────────────────────────────
-
-// localStorage key base — the full key is always scoped per user email to
-// prevent data leaking between accounts on the same browser.
-const USER_REVIEWS_KEY = "userReviews";
 
 const ReviewsContext = createContext();
 
-/**
- * Safely read and parse a JSON value from localStorage.
- * Returns the fallback value if the key is absent or the data is malformed.
- */
-const readFromStorage = (key, fallback) => {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-};
+/*const normalizeType = (type) => type ?? "movie";*/
 
-/**
- * Build a user-scoped localStorage key so each user's reviews
- * are isolated from other accounts on the same browser.
- */
-const buildScopedKey = (baseKey, email) => `${baseKey}:${email || "guest"}`;
-const normalizeType = (type) => type || "movie";
-const matchesReview = (review, movieId, type = "movie") =>
-  review.movieId === movieId &&
-  normalizeType(review.type) === normalizeType(type);
+const matchesReview = (review, movieId, type = "movie") => {
+    if (movieId == null) return false;
+    if (review?.movieId == null) return false;
+    return (
+        Number(review.movieId) === Number(movieId) &&
+        normalizeType(review.type) === normalizeType(type)
+    );
+};
 
 export const useReviews = () => {
   const context = useContext(ReviewsContext);
@@ -51,14 +38,11 @@ export const useReviews = () => {
   return context;
 };
 
-// ── Provider ──────────────────────────────────────────────────────────────────
-// Manages the current user's review list. All reads and writes go through
-// localStorage (keyed by email) until a real API is wired up.
 export function ReviewsProvider({ children }) {
   const { isAuthenticated, user } = useAuth();
   const [reviews, setReviews] = useState([]);
 
-  // Reload reviews from localStorage whenever the authenticated user changes
+  // Fetch from DB on mount or auth change
   useEffect(() => {
     if (!isAuthenticated || !user?.email) {
       setReviews([]);
@@ -68,44 +52,28 @@ export function ReviewsProvider({ children }) {
     const load = async () => {
       try {
         const apiReviews = await fetchUserReviews();
-        const normalized = Array.isArray(apiReviews) ? apiReviews : [];
-        setReviews(normalized);
-        // Keep localStorage in sync as an offline cache
-        const storageKey = buildScopedKey(USER_REVIEWS_KEY, user.email);
-        localStorage.setItem(storageKey, JSON.stringify(normalized));
-      } catch {
-        // API unavailable — fall back to local cache
-        const cached = readFromStorage(
-          buildScopedKey(USER_REVIEWS_KEY, user.email),
-          [],
+        setReviews(
+            Array.isArray(apiReviews)
+                ? apiReviews.map((review) => ({
+                    ...review,
+                    movieImageUrl:
+                        review.movieImageUrl ?? review.movieCoverImageUrl ?? null,
+                    type: normalizeType(review.type),
+                })) 
+                : [],
         );
-        setReviews(cached);
+      } catch (err) {
+          console.error("Failed to load reviews from API", err);
+          setReviews([]);
       }
     };
 
     load();
   }, [isAuthenticated, user?.email]);
-
-  /**
-   * Write the updated review list to the current user's scoped localStorage slot.
-   * Called after every mutation (add, update, delete).
-   */
-  const persistReviews = useCallback(
-    (updatedReviews) => {
-      if (!user?.email) return;
-      const storageKey = buildScopedKey(USER_REVIEWS_KEY, user.email);
-      localStorage.setItem(storageKey, JSON.stringify(updatedReviews));
-    },
-    [user?.email],
-  );
-
-  /**
-   * Persist a new review. Silently ignores duplicate submissions for the
-   * same movie — one review per user per movie, matching backend constraint.
-   */
+  
   const addReview = useCallback(
     async (reviewData) => {
-      if (!isAuthenticated || !user?.email) return false;
+        if (!isAuthenticated) return false;
 
       const { movieId, movieTitle, movieImageUrl, rating, comment, type } =
         reviewData;
@@ -117,72 +85,101 @@ export function ReviewsProvider({ children }) {
       );
       if (alreadyReviewed) return false;
 
-      // POST to the real backend
-      // NOTE: adjust the body fields below if your backend DTO uses different names
-      await apiCreateReview({ movieId, rating, comment });
+        try {
+            if (reviewType === "show") {
+                await createShowReview({
+                    showId: movieId,
+                    rating,
+                    comment,
+                });
+            } else {
+                await createMovieReview({
+                    movieId,
+                    rating,
+                    comment,
+                });
+            }
 
-      const newReview = {
-        movieId,
-        movieTitle,
-        movieImageUrl,
-        rating,
-        comment: comment || "",
-        type: reviewType,
-        createdAt: new Date().toISOString(),
-        updatedAt: null,
-      };
+            const newReview = {
+                movieId,
+                movieTitle,
+                movieImageUrl, // Backend returns 'movieCoverImageUrl', handle map if needed later
+                rating,
+                comment: comment || "",
+                type: reviewType,
+                createdAt: new Date().toISOString(),
+                updatedAt: null,
+            };
 
-      setReviews((previous) => {
-        const next = [newReview, ...previous];
-        persistReviews(next);
-        return next;
-      });
-
-      return true;
-    },
-    [isAuthenticated, user?.email, persistReviews, reviews],
+            setReviews((prev) => [newReview, ...prev]);
+            return true;
+        } catch (err) {
+            console.error("Failed to create review", err);
+            return false;
+        }
+    }, 
+      [isAuthenticated, reviews],
   );
-
-  /**
-   * Apply partial updates (rating and/or comment) to an existing review
-   * and stamp the updatedAt timestamp so the UI can surface "Edited on…".
-   */
+  
   const updateReview = useCallback(
-    (movieId, updatedFields, type = "movie") => {
-      if (!isAuthenticated || !user?.email) return false;
+      async (movieId, updatedFields, type = "movie") => {
+          if (!isAuthenticated) return false;
 
-      setReviews((previous) => {
-        const next = previous.map((review) => {
-          if (!matchesReview(review, movieId, type)) return review;
-          return {
-            ...review,
-            ...updatedFields,
-            updatedAt: new Date().toISOString(),
-          };
-        });
-        persistReviews(next);
-        return next;
-      });
+          try {
+              const normalizedType = normalizeType(type);
+              if (normalizedType === "show") {
+                  await updateShowReview({
+                      showId: movieId,
+                      rating: updatedFields.rating,
+                      comment: updatedFields.comment,
+                  });
+              } else {
+                  await updateMovieReview({
+                      movieId,
+                      rating: updatedFields.rating,
+                      comment: updatedFields.comment,
+                  });
+              }
 
-      return true;
-    },
-    [isAuthenticated, user?.email, persistReviews],
+              setReviews((prev) =>
+                  prev.map((review) => {
+                      if (!matchesReview(review, movieId, type)) return review;
+                      return {
+                          ...review,
+                          ...updatedFields,
+                          updatedAt: new Date().toISOString(),
+                      };
+                  }),
+              );
+              return true;
+          } catch (err) {
+              console.error("Failed to update review", err);
+              return false;
+          }
+    }, 
+      [isAuthenticated],
   );
 
   // Permanently remove a review by movieId
   const deleteReview = useCallback(
-    (movieId, type = "movie") => {
-      if (!isAuthenticated || !user?.email) return;
+      async (movieId, type = "movie") => {
+          if (!isAuthenticated) return;
 
-      setReviews((previous) => {
-        const next = previous.filter(
-          (review) => !matchesReview(review, movieId, type),
-        );
-        persistReviews(next);
-        return next;
-      });
-    },
-    [isAuthenticated, user?.email, persistReviews],
+          try {
+              if (normalizeType(type) === "show") {
+                  await deleteShowReview(movieId);
+              } else {
+                  await deleteMovieReview(movieId);
+              }
+
+              setReviews((prev) =>
+                  prev.filter((r) => !matchesReview(r, movieId, type)),
+              );
+          } catch (err) {
+              console.error("Failed to delete review", err);
+          }
+      },
+    [isAuthenticated],
   );
 
   // True if the user already has a review for the given movie

@@ -20,6 +20,8 @@ public class CreateMovieDto
     public int DurationMinutes { get; set; }
     
     public string? CoverImageUrl { get; set; }
+    
+    public string? BackdropImageUrl { get; set; }   
 
     public List<int> GenreIds { get; set; } = new List<int>();
 }

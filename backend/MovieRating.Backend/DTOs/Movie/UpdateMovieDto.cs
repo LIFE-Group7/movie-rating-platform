@@ -20,5 +20,7 @@ public class UpdateMovieDto
     
     public string? CoverImageUrl { get; set; }
     
+    public string? BackdropImageUrl { get; set; }
+    
     public List<int>?  GenreIds { get; set; }
 }

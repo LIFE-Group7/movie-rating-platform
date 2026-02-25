@@ -20,6 +20,8 @@ public class CreateShowDto
     public string? Creator { get; set; }
 
     public string? CoverImageUrl { get; set; }
+    
+    public string? BackdropImageUrl { get; set; }  
 
     public int Seasons { get; set; }
 
