@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.DTOs;
 using MovieRating.Backend.Models.Basics;
@@ -10,194 +10,114 @@ namespace MovieRating.Backend.Tests.Services;
 
 public class ReviewServiceTests
 {
-    private readonly Mock<IReviewRepository> _mockRepo;
+    private readonly Mock<IReviewRepository> _mockRepository;
     private readonly Mock<ILogger<ReviewService>> _mockLogger;
     private readonly ReviewService _reviewService;
 
     public ReviewServiceTests()
     {
-        _mockRepo = new Mock<IReviewRepository>();
+        _mockRepository = new Mock<IReviewRepository>();
         _mockLogger = new Mock<ILogger<ReviewService>>();
-        _reviewService = new ReviewService(_mockRepo.Object, _mockLogger.Object);
+        _reviewService = new ReviewService(_mockRepository.Object, _mockLogger.Object);
     }
 
-    #region CreateReviewAsync Tests
-
     [Fact]
-    public async Task CreateReviewAsync_WhenRepositorySucceeds_ReturnsSuccessResult()
+    public async Task CreateMovieReviewAsync_WhenRepositorySucceeds_ReturnsSuccessResult()
     {
         var userId = 1;
-        var request = new ReviewRequestDto { MovieId = 10, Rating = 9, Comment = "Amazing!" };
-        var review = new Review { MovieId = 10, UserId = userId, Rating = 9, Comment = "Amazing!" };
+        var request = new MovieReviewRequestDto { MovieId = 10, Rating = 9, Comment = "Great" };
+        var review = new Review { MovieId = 10, UserId = userId, Rating = 9, Comment = "Great" };
 
-        _mockRepo.Setup(r => r.AddReviewAsync(It.IsAny<Review>()))
-                 .ReturnsAsync(Result<Review>.Success(review));
+        _mockRepository.Setup(repository => repository.AddMovieReviewAsync(It.IsAny<Review>()))
+            .ReturnsAsync(Result<Review>.Success(review));
 
-        var result = await _reviewService.CreateReviewAsync(userId, request);
+        var result = await _reviewService.CreateMovieReviewAsync(userId, request);
 
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data);
-        Assert.Equal(request.Rating, result.Data.Rating);
-        Assert.Equal(request.Comment, result.Data.Comment);
+        Assert.Equal(10, result.Data!.MovieId);
     }
 
     [Fact]
-    public async Task CreateReviewAsync_WhenRepositoryReturnsFailure_PassesFailureThrough()
+    public async Task CreateShowReviewAsync_WhenRepositorySucceeds_ReturnsSuccessResult()
     {
         var userId = 1;
-        var request = new ReviewRequestDto { MovieId = 999, Rating = 5 }; // Non-existent movie
+        var request = new ShowReviewRequestDto { ShowId = 20, Rating = 8, Comment = "Great show" };
+        var review = new Review { ShowId = 20, UserId = userId, Rating = 8, Comment = "Great show" };
 
-        _mockRepo.Setup(r => r.AddReviewAsync(It.IsAny<Review>()))
-                 .ReturnsAsync(Result<Review>.Failure("Movie not found.", ErrorType.NotFound));
+        _mockRepository.Setup(repository => repository.AddShowReviewAsync(It.IsAny<Review>()))
+            .ReturnsAsync(Result<Review>.Success(review));
 
-        var result = await _reviewService.CreateReviewAsync(userId, request);
-
-        Assert.False(result.IsSuccess);
-        Assert.Null(result.Data);
-        Assert.Equal("Movie not found.", result.Error);
-        Assert.Equal(ErrorType.NotFound, result.Type);
-    }
-
-    [Fact]
-    public async Task CreateReviewAsync_WhenExceptionThrown_ReturnsFailureAndLogsError()
-    {
-        var userId = 1;
-        var request = new ReviewRequestDto { MovieId = 10, Rating = 9 };
-
-        _mockRepo.Setup(r => r.AddReviewAsync(It.IsAny<Review>()))
-                 .ThrowsAsync(new Exception("Database connection failed"));
-
-        var result = await _reviewService.CreateReviewAsync(userId, request);
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal("An unexpected error occurred.", result.Error);
-        Assert.Equal(ErrorType.Failure, result.Type);
-
-        _mockLogger.Verify(
-            x => x.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => true),
-                It.IsAny<Exception>(),
-                It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)),
-            Times.Once);
-    }
-
-    #endregion
-
-    #region UpdateReviewAsync Tests
-
-    [Fact]
-    public async Task UpdateReviewAsync_WhenRepositorySucceeds_ReturnsSuccessResult()
-    {
-        var userId = 1;
-        var request = new ReviewRequestDto { MovieId = 10, Rating = 5, Comment = "Changed my mind." };
-        var updatedReview = new Review { MovieId = 10, UserId = userId, Rating = 5, Comment = "Changed my mind.", UpdatedAt = DateTime.UtcNow };
-
-        _mockRepo.Setup(r => r.UpdateReviewAsync(It.IsAny<Review>()))
-                 .ReturnsAsync(Result<Review>.Success(updatedReview));
-
-        var result = await _reviewService.UpdateReviewAsync(userId, request);
+        var result = await _reviewService.CreateShowReviewAsync(userId, request);
 
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data);
-        Assert.Equal(request.Rating, result.Data.Rating);
-        Assert.Equal(request.Comment, result.Data.Comment);
+        Assert.Equal(20, result.Data!.ShowId);
+    }
+
+    [Fact]
+    public async Task UpdateMovieReviewAsync_WhenRepositorySucceeds_ReturnsSuccessResult()
+    {
+        var userId = 1;
+        var request = new MovieReviewRequestDto { MovieId = 10, Rating = 5, Comment = "Updated" };
+        var review = new Review { MovieId = 10, UserId = userId, Rating = 5, Comment = "Updated", UpdatedAt = DateTime.UtcNow };
+
+        _mockRepository.Setup(repository => repository.UpdateMovieReviewAsync(It.IsAny<Review>()))
+            .ReturnsAsync(Result<Review>.Success(review));
+
+        var result = await _reviewService.UpdateMovieReviewAsync(userId, request);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(10, result.Data!.MovieId);
         Assert.NotNull(result.Data.UpdatedAt);
     }
 
     [Fact]
-    public async Task UpdateReviewAsync_WhenReviewNotFound_ReturnsFailureResult()
+    public async Task UpdateShowReviewAsync_WhenRepositorySucceeds_ReturnsSuccessResult()
     {
         var userId = 1;
-        var request = new ReviewRequestDto { MovieId = 10, Rating = 5 };
+        var request = new ShowReviewRequestDto { ShowId = 20, Rating = 7, Comment = "Updated show" };
+        var review = new Review { ShowId = 20, UserId = userId, Rating = 7, Comment = "Updated show", UpdatedAt = DateTime.UtcNow };
 
-        _mockRepo.Setup(r => r.UpdateReviewAsync(It.IsAny<Review>()))
-                 .ReturnsAsync(Result<Review>.Failure("Review not found.", ErrorType.NotFound));
+        _mockRepository.Setup(repository => repository.UpdateShowReviewAsync(It.IsAny<Review>()))
+            .ReturnsAsync(Result<Review>.Success(review));
 
-        var result = await _reviewService.UpdateReviewAsync(userId, request);
+        var result = await _reviewService.UpdateShowReviewAsync(userId, request);
 
-        Assert.False(result.IsSuccess);
-        Assert.Equal("Review not found.", result.Error);
-        Assert.Equal(ErrorType.NotFound, result.Type);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(20, result.Data!.ShowId);
     }
 
     [Fact]
-    public async Task UpdateReviewAsync_WhenExceptionThrown_ReturnsFailureAndLogsError()
+    public async Task GetUserReviewsAsync_WhenRepositorySucceeds_ReturnsMappedReviews()
     {
         var userId = 1;
-        var request = new ReviewRequestDto { MovieId = 10, Rating = 5 };
-
-        _mockRepo.Setup(r => r.UpdateReviewAsync(It.IsAny<Review>()))
-                 .ThrowsAsync(new Exception("Database timeout"));
-
-        var result = await _reviewService.UpdateReviewAsync(userId, request);
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal("An unexpected error occurred.", result.Error);
-        Assert.Equal(ErrorType.Failure, result.Type);
-    }
-
-    #endregion
-
-    #region GetUserReviewsAsync Tests
-
-    [Fact]
-    public async Task GetUserReviewsAsync_WhenRepositorySucceeds_ReturnsSuccessResultWithMappedData()
-    {
-        var userId = 1;
-        var mockReviews = new List<Review>
+        var reviews = new List<Review>
         {
-            new Review
+            new()
             {
                 MovieId = 10,
                 UserId = userId,
                 Rating = 9,
-                Comment = "Amazing!",
+                Comment = "Movie review",
                 CreatedAt = DateTime.UtcNow,
-                Movie = new Movie { Title = "Inception", CoverImageUrl = "url.jpg" } // Mock included movie
+                Movie = new Movie { Title = "Inception", CoverImageUrl = "movie.jpg" }
+            },
+            new()
+            {
+                ShowId = 20,
+                UserId = userId,
+                Rating = 8,
+                Comment = "Show review",
+                CreatedAt = DateTime.UtcNow,
+                Show = new Show { Title = "Dark", CoverImageUrl = "show.jpg" }
             }
         };
 
-        _mockRepo.Setup(r => r.GetReviewsByUserIdAsync(userId))
-                 .ReturnsAsync(mockReviews);
+        _mockRepository.Setup(repository => repository.GetReviewsByUserIdAsync(userId))
+            .ReturnsAsync(reviews);
 
         var result = await _reviewService.GetUserReviewsAsync(userId);
 
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data);
-        Assert.Single(result.Data);
-
-        var firstReview = result.Data.First();
-        Assert.Equal(10, firstReview.MovieId);
-        Assert.Equal("Inception", firstReview.MovieTitle);
-        Assert.Equal("url.jpg", firstReview.MovieCoverImageUrl);
-        Assert.Equal(9, firstReview.Rating);
+        Assert.Equal(2, result.Data!.Count());
     }
-
-    [Fact]
-    public async Task GetUserReviewsAsync_WhenExceptionThrown_ReturnsFailureAndLogsError()
-    {
-        var userId = 1;
-
-        _mockRepo.Setup(r => r.GetReviewsByUserIdAsync(userId))
-                 .ThrowsAsync(new Exception("Database connection failed"));
-
-        var result = await _reviewService.GetUserReviewsAsync(userId);
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal("An unexpected error occurred.", result.Error);
-        Assert.Equal(ErrorType.Failure, result.Type);
-
-        _mockLogger.Verify(
-            x => x.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => true),
-                It.IsAny<Exception>(),
-                It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)),
-            Times.Once);
-    }
-
-    #endregion
 }

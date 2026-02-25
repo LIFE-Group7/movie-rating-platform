@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MovieRating.Backend.Data;
 
@@ -11,9 +12,11 @@ using MovieRating.Backend.Data;
 namespace MovieRating.Backend.Migrations
 {
     [DbContext(typeof(MovieDbContext))]
-    partial class MovieDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260224234129_AddBackdropImageUrlColumns")]
+    partial class AddBackdropImageUrlColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -112,11 +115,11 @@ namespace MovieRating.Backend.Migrations
 
             modelBuilder.Entity("MovieRating.Backend.Models.Basics.Review", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<int>("MovieId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(2000)
@@ -127,34 +130,15 @@ namespace MovieRating.Backend.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int?>("MovieId")
-                        .HasColumnType("int");
-
                     b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ShowId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
+                    b.HasKey("UserId", "MovieId");
 
                     b.HasIndex("MovieId");
-
-                    b.HasIndex("ShowId");
-
-                    b.HasIndex("UserId", "MovieId")
-                        .IsUnique()
-                        .HasFilter("[MovieId] IS NOT NULL");
-
-                    b.HasIndex("UserId", "ShowId")
-                        .IsUnique()
-                        .HasFilter("[ShowId] IS NOT NULL");
 
                     b.ToTable("Reviews");
                 });
@@ -381,12 +365,8 @@ namespace MovieRating.Backend.Migrations
                     b.HasOne("MovieRating.Backend.Models.Basics.Movie", "Movie")
                         .WithMany("Reviews")
                         .HasForeignKey("MovieId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("MovieRating.Backend.Models.Basics.Show", "Show")
-                        .WithMany("Reviews")
-                        .HasForeignKey("ShowId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("MovieRating.Backend.Models.Basics.User", "User")
                         .WithMany("Reviews")
@@ -395,8 +375,6 @@ namespace MovieRating.Backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Movie");
-
-                    b.Navigation("Show");
 
                     b.Navigation("User");
                 });
@@ -486,8 +464,6 @@ namespace MovieRating.Backend.Migrations
 
             modelBuilder.Entity("MovieRating.Backend.Models.Basics.Show", b =>
                 {
-                    b.Navigation("Reviews");
-
                     b.Navigation("ShowGenres");
                 });
 

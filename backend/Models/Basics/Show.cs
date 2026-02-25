@@ -22,6 +22,8 @@ public class Show
 
     public string? CoverImageUrl { get; set; }
 
+    public string? BackdropImageUrl { get; set; }
+
     public DateTime AddedAt { get; set; }
 
     public double AverageRating { get; private set; }
@@ -39,6 +41,8 @@ public class Show
         AverageRating = averageRating;
         ReviewCount = reviewCount;
     }
+
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     public ICollection<ShowGenre> ShowGenres { get; set; } = new List<ShowGenre>();
 }

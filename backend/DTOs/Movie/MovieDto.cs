@@ -9,8 +9,9 @@ public class MovieDto
     public string? Director { get; set; }
     public int DurationMinutes { get; set; }
     public string? CoverImageUrl { get; set; }
+    public string? BackdropImageUrl { get; set; }
     public DateTime AddedAt { get; set; }
     public double AverageRating { get; set; }
     public int ReviewCount { get; set; }
     public List<string> Genres { get; set; } = new List<string>();
-}    
+}

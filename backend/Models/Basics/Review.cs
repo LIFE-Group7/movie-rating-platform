@@ -4,19 +4,24 @@ namespace MovieRating.Backend.Models.Basics;
 
 public class Review
 {
+    public int Id { get; set; }
+
     public int UserId { get; set; }
     public User User { get; set; } = null!;
-    
-    public int MovieId { get; set; }
-    public Movie Movie { get; set; } = null!;
-    
+
+    public int? MovieId { get; set; }
+    public Movie? Movie { get; set; }
+
+    public int? ShowId { get; set; }
+    public Show? Show { get; set; }
+
     [Range(1, 10)]
     public int Rating { get; set; }
-    
+
     [MaxLength(2000)]
     public string? Comment { get; set; }
-    
+
     public DateTime CreatedAt { get; set; }
-    
+
     public DateTime? UpdatedAt { get; set; }
 }

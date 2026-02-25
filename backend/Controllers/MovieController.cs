@@ -33,7 +33,7 @@ public class MovieController : BaseApiController
     }
 
     
-    [Authorize(Roles = "Admin")]
+    // [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateMovieDto movieDto)
     {
@@ -43,7 +43,7 @@ public class MovieController : BaseApiController
     }
 
     
-    [Authorize(Roles = "Admin")]
+    // [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateMovieDto movieDto)
     {
@@ -53,7 +53,7 @@ public class MovieController : BaseApiController
     }
 
     
-    [Authorize(Roles = "Admin")]
+    // [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {

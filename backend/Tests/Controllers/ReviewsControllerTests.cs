@@ -38,63 +38,97 @@ public class ReviewsControllerTests
         };
     }
 
-    #region Create Tests
+    #region Create Movie Tests
 
     [Fact]
-    public async Task Create_WhenUserIdIsMissing_ReturnsUnauthorized()
+    public async Task CreateMovieReview_WhenUserIdIsMissing_ReturnsUnauthorized()
     {
         SetupUserClaims(null);
 
-        var result = await _controller.Create(new ReviewRequestDto());
+        var result = await _controller.CreateMovieReview(new MovieReviewRequestDto());
 
         Assert.IsType<UnauthorizedResult>(result);
     }
 
     [Fact]
-    public async Task Create_WhenSuccessful_ReturnsOkWithData()
+    public async Task CreateMovieReview_WhenSuccessful_ReturnsOkWithData()
     {
         SetupUserClaims("123");
-        var request = new ReviewRequestDto();
-        var responseDto = new ReviewResponseDto { MovieId = 1, UserId = 123 };
+        var request = new MovieReviewRequestDto { MovieId = 1, Rating = 9 };
+        var responseDto = new MovieReviewResponseDto { MovieId = 1, UserId = 123 };
 
-        _mockService.Setup(s => s.CreateReviewAsync(123, request))
-                    .ReturnsAsync(Result<ReviewResponseDto>.Success(responseDto));
+        _mockService.Setup(s => s.CreateMovieReviewAsync(123, request))
+                    .ReturnsAsync(Result<MovieReviewResponseDto>.Success(responseDto));
 
-        var result = await _controller.Create(request);
+        var result = await _controller.CreateMovieReview(request);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedData = Assert.IsType<ReviewResponseDto>(okResult.Value);
+        var returnedData = Assert.IsType<MovieReviewResponseDto>(okResult.Value);
+        Assert.Equal(123, returnedData.UserId);
+    }
+
+    [Fact]
+    public async Task CreateShowReview_WhenSuccessful_ReturnsOkWithData()
+    {
+        SetupUserClaims("123");
+        var request = new ShowReviewRequestDto { ShowId = 2, Rating = 8 };
+        var responseDto = new ShowReviewResponseDto { ShowId = 2, UserId = 123 };
+
+        _mockService.Setup(s => s.CreateShowReviewAsync(123, request))
+                    .ReturnsAsync(Result<ShowReviewResponseDto>.Success(responseDto));
+
+        var result = await _controller.CreateShowReview(request);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnedData = Assert.IsType<ShowReviewResponseDto>(okResult.Value);
         Assert.Equal(123, returnedData.UserId);
     }
 
     #endregion
 
-    #region Update Tests
+    #region Update Movie Tests
 
     [Fact]
-    public async Task Update_WhenUserIdIsMissing_ReturnsUnauthorized()
+    public async Task UpdateMovieReview_WhenUserIdIsMissing_ReturnsUnauthorized()
     {
         SetupUserClaims(null);
 
-        var result = await _controller.Update(new ReviewRequestDto());
+        var result = await _controller.UpdateMovieReview(new MovieReviewRequestDto());
 
         Assert.IsType<UnauthorizedResult>(result);
     }
 
     [Fact]
-    public async Task Update_WhenSuccessful_ReturnsOkWithData()
+    public async Task UpdateMovieReview_WhenSuccessful_ReturnsOkWithData()
     {
         SetupUserClaims("123");
-        var request = new ReviewRequestDto();
-        var responseDto = new ReviewResponseDto { MovieId = 1, UserId = 123 };
+        var request = new MovieReviewRequestDto { MovieId = 1, Rating = 9 };
+        var responseDto = new MovieReviewResponseDto { MovieId = 1, UserId = 123 };
 
-        _mockService.Setup(s => s.UpdateReviewAsync(123, request))
-                    .ReturnsAsync(Result<ReviewResponseDto>.Success(responseDto));
+        _mockService.Setup(s => s.UpdateMovieReviewAsync(123, request))
+                    .ReturnsAsync(Result<MovieReviewResponseDto>.Success(responseDto));
 
-        var result = await _controller.Update(request);
+        var result = await _controller.UpdateMovieReview(request);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedData = Assert.IsType<ReviewResponseDto>(okResult.Value);
+        var returnedData = Assert.IsType<MovieReviewResponseDto>(okResult.Value);
+        Assert.Equal(123, returnedData.UserId);
+    }
+
+    [Fact]
+    public async Task UpdateShowReview_WhenSuccessful_ReturnsOkWithData()
+    {
+        SetupUserClaims("123");
+        var request = new ShowReviewRequestDto { ShowId = 3, Rating = 9 };
+        var responseDto = new ShowReviewResponseDto { ShowId = 3, UserId = 123 };
+
+        _mockService.Setup(s => s.UpdateShowReviewAsync(123, request))
+                    .ReturnsAsync(Result<ShowReviewResponseDto>.Success(responseDto));
+
+        var result = await _controller.UpdateShowReview(request);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnedData = Assert.IsType<ShowReviewResponseDto>(okResult.Value);
         Assert.Equal(123, returnedData.UserId);
     }
 
@@ -107,7 +141,7 @@ public class ReviewsControllerTests
     {
         SetupUserClaims(null);
 
-        var result = await _controller.GetUserReviews(); 
+        var result = await _controller.GetUserReviews();
 
         Assert.IsType<UnauthorizedResult>(result);
     }

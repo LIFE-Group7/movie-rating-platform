@@ -17,21 +17,22 @@ public class MovieService : IMovieService
         _movieRepository = movieRepository;
         _logger = logger;
     }
-    
+
     public async Task<Result<IEnumerable<MovieDto>>> GetAllAsync()
     {
         var movies = await _movieRepository.GetAllAsync();
-        
+
         return Result<IEnumerable<MovieDto>>.Success(movies.Select(MapToDto));
     }
 
     public async Task<Result<MovieDto>> GetByIdAsync(int id)
     {
         var movie = await _movieRepository.GetByIdAsync(id);
-        if (movie is null) {
+        if (movie is null)
+        {
             return Result<MovieDto>.Failure("Movie not found", ErrorType.NotFound);
         }
-        
+
         return Result<MovieDto>.Success(MapToDto(movie));
     }
 
@@ -51,7 +52,7 @@ public class MovieService : IMovieService
                 GenreId = id
             }).ToList()
         };
-        
+
         var created = await _movieRepository.CreateAsync(movie);
         var completeMovie = await _movieRepository.GetByIdAsync(created.Id);
 
@@ -60,16 +61,16 @@ public class MovieService : IMovieService
 
     public async Task<Result<MovieDto>> UpdateAsync(int id, UpdateMovieDto movieDto)
     {
-        var movie =  await _movieRepository.GetByIdAsync(id);
-        if (movie is null) 
+        var movie = await _movieRepository.GetByIdAsync(id);
+        if (movie is null)
             return Result<MovieDto>.Failure("Movie not found", ErrorType.NotFound);
-        
+
         if (movieDto.Title is not null) movie.Title = movieDto.Title;
         if (movieDto.Description is not null) movie.Description = movieDto.Description;
         if (movieDto.ReleaseDate is not null) movie.ReleaseDate = movieDto.ReleaseDate.Value;
         if (movieDto.Director is not null) movie.Director = movieDto.Director;
         if (movieDto.DurationMinutes is not null) movie.DurationMinutes = movieDto.DurationMinutes.Value;
-        if(movieDto.CoverImageUrl is not null)  movie.CoverImageUrl = movieDto.CoverImageUrl;
+        if (movieDto.CoverImageUrl is not null) movie.CoverImageUrl = movieDto.CoverImageUrl;
 
         if (movieDto.GenreIds is not null)
         {
@@ -83,7 +84,7 @@ public class MovieService : IMovieService
                 });
             }
         }
-        
+
         var updated = await _movieRepository.UpdateAsync(movie);
 
         var completeMovie = await _movieRepository.GetByIdAsync(updated.Id);
@@ -94,7 +95,7 @@ public class MovieService : IMovieService
     public async Task<Result> DeleteAsync(int id)
     {
         var movie = await _movieRepository.GetByIdAsync(id);
-        if (movie is null) 
+        if (movie is null)
             return Result.Failure("Movie not found", ErrorType.NotFound);
 
         await _movieRepository.DeleteAsync(movie);
@@ -127,12 +128,13 @@ public class MovieService : IMovieService
             Director = movie.Director,
             DurationMinutes = movie.DurationMinutes,
             CoverImageUrl = movie.CoverImageUrl,
+            BackdropImageUrl = movie.BackdropImageUrl,
             AddedAt = movie.AddedAt,
             AverageRating = movie.AverageRating,
             ReviewCount = movie.ReviewCount,
             Genres = movie.MovieGenres.Select(mg => mg.Genre.Name).ToList()
         };
-        
+
         return movieDto;
     }
 }

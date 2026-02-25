@@ -30,10 +30,11 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
   const isFormValid =
     rating > 0 && reviewText.trim() !== "" && !isCharLimitExceeded;
 
+  const itemId = movie?.id ?? movie?.movieId;
   const movieType = movie?.type || "movie";
   const titleLabel = movieType === "show" ? "show" : "movie";
   const existingReview = getReviewForItem({
-    movieId: movie?.id,
+    movieId: itemId,
     type: movieType,
   });
   const isAlreadyReviewed = Boolean(existingReview);
@@ -43,59 +44,55 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
    * The 700 ms delay mimics a real network round-trip so the UI feedback feels
    * natural — remove once the real backend endpoint is integrated.
    */
+      // Inside ReviewForm.jsx
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+        e.preventDefault();
+        setError("");
 
-    if (!isAuthenticated) {
-      setError("You must be logged in to submit a review.");
-      setTimeout(() => navigate("/login"), 900);
-      return;
-    }
-    if (rating === 0) return setError("Please select a star rating.");
-    if (reviewText.trim() === "") return setError("Please write a review.");
-    if (isCharLimitExceeded)
-      return setError("Review exceeds maximum character limit.");
+        if (!isAuthenticated) {
+          setError("You must be logged in to submit a review.");
+          setTimeout(() => navigate("/login"), 900);
+          return;
+        }
+        if (rating === 0) return setError("Please select a star rating.");
+        if (reviewText.trim() === "") return setError("Please write a review.");
+        if (isCharLimitExceeded)
+          return setError("Review exceeds maximum character limit.");
 
-    setIsSubmitting(true);
-    try {
-      // TODO: replace with real API call when backend is ready
-      await new Promise((resolve) => setTimeout(resolve, 700));
+        setIsSubmitting(true);
+        try {
+            const saved = await addReview({
+                movieId: itemId,
+                movieTitle: movie.title,
+                movieImageUrl: movie.imageUrl,
+                rating,
+                comment: reviewText.trim(),
+                type: movieType,
+            });
+            if (itemId == null) return setError("Missing content id; cannot submit review.");
 
-      const saved = await addReview({
-        movieId: movie.id,
-        movieTitle: movie.title,
-        movieImageUrl: movie.imageUrl,
-        rating,
-        comment: reviewText.trim(),
-        type: movieType,
-      });
 
-      if (!saved) {
-        setError("You already reviewed this title.");
-        setSuccess(false);
-        return;
-      }
+            if (!saved) {
+            setError("You already reviewed this title.");
+            return;
+          }
 
-      setSuccess(true);
-      // Brief success window before resetting the form and notifying the parent.
-      setTimeout(() => {
-        setRating(0);
-        setReviewText("");
-        setSuccess(false);
-        onSubmitSuccess({
-          rating,
-          reviewText: reviewText.trim(),
-          movieId: movie.id,
-        });
-      }, 900);
-    } catch (err) {
-      setError(err?.message || "Failed to submit review. Please try again.");
-      setSuccess(false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+          setSuccess(true);
+          // Let the success UI show for a brief moment before clearing
+          setTimeout(() => {
+            setRating(0);
+            setReviewText("");
+            setSuccess(false);
+            onSubmitSuccess({ rating, reviewText: reviewText.trim(), movieId: movie.id });
+          }, 900);
+        } catch (err) {
+          setError("Failed to submit review. Please try again.");
+        } finally {
+          setIsSubmitting(false);
+        }
+      };
+
 
   // Show a login prompt instead of the form for unauthenticated visitors.
   if (!isAuthenticated) {

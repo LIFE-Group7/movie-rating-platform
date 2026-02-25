@@ -108,6 +108,7 @@ public class ShowService : IShowService
         LastAirDate = show.LastAirDate,
         Creator = show.Creator,
         CoverImageUrl = show.CoverImageUrl,
+        BackdropImageUrl = show.BackdropImageUrl,
         AddedAt = show.AddedAt,
         AverageRating = show.AverageRating,
         ReviewCount = show.ReviewCount,

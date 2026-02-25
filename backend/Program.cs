@@ -40,16 +40,6 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 
-// Allow the Vite dev server to call the API during development.
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("FrontendDev", policy =>
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials());
-});
-
 // 3. Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
@@ -101,6 +91,18 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
+// TMDB HTTP client — base address + Bearer token injected from config
+builder.Services.AddHttpClient("tmdb", (sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.DefaultRequestHeaders.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue(
+            "Bearer", config["Tmdb:AccessToken"]);
+});
+
+builder.Services.AddScoped<ITmdbImportService, TmdbImportService>();
+
 
 var app = builder.Build();
 

@@ -3,6 +3,7 @@
 public class UserReviewResponseDto
 {
     public int MovieId { get; set; }
+    public string Type { get; set; } = "movie";
     public string MovieTitle { get; set; } = string.Empty;
     public string? MovieCoverImageUrl { get; set; }
     public int Rating { get; set; }
