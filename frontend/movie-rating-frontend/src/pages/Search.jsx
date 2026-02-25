@@ -3,8 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import MovieCard from "../components/MovieCard";
 import ShowCard from "../components/ShowCard";
 import SearchBar from "../components/SearchBar";
-import { movies } from "../data/mockMovies";
-import { shows } from "../data/mockShows";
+import { fetchMovies, fetchShows } from "../api/contentApi";
 
 /**
  * Search / browse page.
@@ -24,12 +23,41 @@ function Search() {
     return "all";
   };
 
-  const [filteredResults, setFilteredResults] = useState([...movies, ...shows]);
+  const [allMovies, setAllMovies] = useState([]);
+  const [allShows, setAllShows] = useState([]);
+  const [filteredResults, setFilteredResults] = useState([]);
   const [currentQuery, setCurrentQuery] = useState("");
   const [currentGenre, setCurrentGenre] = useState("");
   const [currentType, setCurrentType] = useState("all");
+  const [loading, setLoading] = useState(true);
 
-  // Re-run filtering every time the URL params change (including browser back/forward).
+  // Fetch all movies and shows from the real API once on mount.
+  useEffect(() => {
+    let isMounted = true;
+    const load = async () => {
+      try {
+        const [moviesData, showsData] = await Promise.all([
+          fetchMovies(),
+          fetchShows(),
+        ]);
+        if (isMounted) {
+          setAllMovies(moviesData); // already normalized (type: "movie")
+          setAllShows(showsData); // already normalized (type: "show")
+        }
+      } catch (err) {
+        console.error("Search load error:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Re-run filtering every time the URL params or data change
+  // (including browser back/forward navigation).
   useEffect(() => {
     const queryFromUrl = searchParams.get("q") || "";
     const genreFromUrl = searchParams.get("genre") || "";
@@ -41,9 +69,9 @@ function Search() {
 
     // Start with the full dataset for the requested type, then narrow by genre/query.
     let results;
-    if (typeFromUrl === "movies") results = [...movies];
-    else if (typeFromUrl === "shows") results = [...shows];
-    else results = [...movies, ...shows];
+    if (typeFromUrl === "movies") results = [...allMovies];
+    else if (typeFromUrl === "shows") results = [...allShows];
+    else results = [...allMovies, ...allShows];
 
     if (genreFromUrl.trim() !== "") {
       results = results.filter((item) => {
@@ -60,7 +88,7 @@ function Search() {
     }
 
     setFilteredResults(results);
-  }, [searchParams]);
+  }, [searchParams, allMovies, allShows]);
 
   // Update the `type` param and let the effect above re-filter results.
   const handleTypeChange = (newType) => {
@@ -105,6 +133,17 @@ function Search() {
         : "bg-white/5 text-white/70 border-white/10 hover:border-white/25 hover:text-white hover:bg-white/7"
     }`;
 
+  // Show a loading screen while the API call is in-flight.
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
+        <div className="animate-pulse text-lg font-semibold text-white/50">
+          Loading results...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-screen-2xl mx-auto px-4 md:px-6 py-8">
@@ -125,7 +164,7 @@ function Search() {
                   {" "}
                   in{" "}
                   <span className="text-white/85 font-semibold">
-                    “{currentGenre}”
+                    "{currentGenre}"
                   </span>
                 </>
               ) : null}
@@ -134,7 +173,7 @@ function Search() {
                   {" "}
                   matching{" "}
                   <span className="text-white/85 font-semibold">
-                    “{currentQuery}”
+                    "{currentQuery}"
                   </span>
                 </>
               ) : null}
@@ -171,7 +210,7 @@ function Search() {
               aria-label="Clear genre filter"
               title="Clear genre filter"
             >
-              Genre: “{currentGenre}” ×
+              Genre: "{currentGenre}" ×
             </button>
           )}
         </div>
@@ -194,10 +233,8 @@ function Search() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {filteredResults.map((item) => {
-                const isShow = Object.prototype.hasOwnProperty.call(
-                  item,
-                  "seasons",
-                );
+                // contentApi always sets type: "movie" or type: "show" on normalized items
+                const isShow = item.type === "show";
                 return isShow ? (
                   <ShowCard key={`show-${item.id}`} show={item} />
                 ) : (

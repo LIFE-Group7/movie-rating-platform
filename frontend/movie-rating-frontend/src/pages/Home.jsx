@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import MovieCard from "../components/MovieCard";
 import ShowCard from "../components/ShowCard";
-import { movies } from "../data/mockMovies";
-import { shows } from "../data/mockShows";
 import { useAdmin } from "../contexts/AdminContext";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+import {
+  fetchMovies,
+  fetchShows,
+  fetchTopRatedMovies,
+  fetchTopRatedShows,
+} from "../api/contentApi";
 
 const heroPalettes = [
   { bg: "from-amber-950 via-stone-950 to-zinc-950", accent: "#d97706" },
@@ -36,7 +38,7 @@ const pickImage = (item, title) => {
 const coerceCardItem = (item, idx) => {
   const title = item.title ?? item.name ?? `Untitled ${idx + 1}`;
   return {
-    ...item, // ← add this
+    ...item,
     id: item.id ?? item.movieId ?? item.showId ?? `${title}-${idx}`,
     type: item.type ?? (item.seasons ? "show" : "movie"),
     title,
@@ -59,24 +61,6 @@ const coerceHeroEntry = (item, idx) => {
     accent: item.accent ?? palette.accent,
     image: item.image ?? item.backdropUrl ?? base.imageUrl,
   };
-};
-
-const extractList = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (payload?.data && Array.isArray(payload.data)) return payload.data;
-  if (payload?.items && Array.isArray(payload.items)) return payload.items;
-  if (payload?.results && Array.isArray(payload.results))
-    return payload.results;
-  return [];
-};
-
-const buildApiUrl = (path) => {
-  if (!API_BASE_URL) return null;
-  try {
-    return new URL(path, API_BASE_URL).toString();
-  } catch {
-    return null;
-  }
 };
 
 // ── Inline SVG icons — avoids external icon library dependency ───────────────
@@ -194,44 +178,6 @@ function CarouselSection({ title, items, renderItem, onViewAll }) {
   );
 }
 
-let allContentCache = null;
-
-const getAllContent = () => {
-  if (!allContentCache) {
-    allContentCache = [
-      ...movies.map((item, idx) => coerceCardItem(item, idx)),
-      ...shows.map((item, idx) => coerceCardItem(item, idx)),
-    ];
-  }
-  return allContentCache;
-};
-
-/**
- * Resolves a section's filterBy string into a list of content items.
- * Supports: "rating", "year", "genre:<Name>"
- */
-const resolveItems = (filterBy) => {
-  const allContent = getAllContent();
-
-  if (filterBy.startsWith("genre:")) {
-    const genre = filterBy.split(":")[1].toLowerCase();
-    return allContent
-      .filter((item) => item.genres.some((g) => g.toLowerCase() === genre))
-      .slice(0, 12);
-  }
-
-  switch (filterBy) {
-    case "rating":
-      return [...allContent].sort((a, b) => b.rating - a.rating).slice(0, 12);
-    case "year":
-      return [...allContent]
-        .sort((a, b) => (b.year || 0) - (a.year || 0))
-        .slice(0, 12);
-    default:
-      return allContent.slice(0, 12);
-  }
-};
-
 // ── Main Home component ───────────────────────────────────────────────────────
 function Home() {
   const navigate = useNavigate();
@@ -241,80 +187,85 @@ function Home() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   // Tracks the active genre pill — selecting one navigates to the search page.
   const [activeGenre, setActiveGenre] = useState(null);
-  const [trendingMovies, setTrendingMovies] = useState(() =>
-    movies.map(coerceCardItem).slice(0, 12),
-  );
-  const [topRatedMovies, setTopRatedMovies] = useState(() =>
-    [...movies].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 12),
-  );
-  const [popularShows, setPopularShows] = useState(() =>
-    shows.map(coerceCardItem).slice(0, 12),
-  );
+
+  const [allContent, setAllContent] = useState([]);
+  const [trendingMovies, setTrendingMovies] = useState([]);
+  const [topRatedMovies, setTopRatedMovies] = useState([]);
+  const [popularShows, setPopularShows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // ── Load all content from the real API ──────────────────────────────────
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      try {
+        const [moviesData, showsData, topMovies, topShows] = await Promise.all([
+          fetchMovies(),
+          fetchShows(),
+          fetchTopRatedMovies(),
+          fetchTopRatedShows(),
+        ]);
+
+        if (isMounted) {
+          setAllContent([...moviesData, ...showsData]);
+          setTrendingMovies(moviesData.slice(0, 12));
+          setTopRatedMovies(topMovies.slice(0, 12));
+          setPopularShows(topShows.slice(0, 12));
+        }
+      } catch (err) {
+        console.error("Failed to load Home data:", err);
+        console.error("Error details:", err.message, err.status);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  /**
+   * Resolves a section's filterBy string into a list of content items.
+   * Defined inside the component so it reads from live `allContent` state,
+   * not a stale module-level snapshot.
+   * Supports: "rating", "year", "genre:<Name>"
+   */
+  const resolveItems = (filterBy) => {
+    if (filterBy.startsWith("genre:")) {
+      const genre = filterBy.split(":")[1].toLowerCase();
+      return allContent
+        .filter((item) => item.genres.some((g) => g.toLowerCase() === genre))
+        .slice(0, 12);
+    }
+
+    switch (filterBy) {
+      case "rating":
+        return [...allContent].sort((a, b) => b.rating - a.rating).slice(0, 12);
+      case "year":
+        return [...allContent]
+          .sort((a, b) => (b.year || 0) - (a.year || 0))
+          .slice(0, 12);
+      default:
+        return allContent.slice(0, 12);
+    }
+  };
 
   const trendingHeroSource = [...trendingMovies, ...popularShows].slice(0, 6);
-  const fallbackHeroSource = getAllContent().slice(0, 6);
+  const fallbackHeroSource = allContent.slice(0, 6);
   const heroSlides = (
     trendingHeroSource.length ? trendingHeroSource : fallbackHeroSource
   ).map(coerceHeroEntry);
   const totalHeroes = heroSlides.length;
-  const currentHero = heroSlides[heroIndex % totalHeroes];
+  const currentHero =
+    totalHeroes > 0 ? heroSlides[heroIndex % totalHeroes] : null;
 
   const openHeroDetails = (entry) => {
     if (!entry?.id) return;
     navigate(`/${entry.type === "show" ? "show" : "movie"}/${entry.id}`);
   };
-
-  // Hydrate carousels from API when configured; fall back to mocks.
-  useEffect(() => {
-    if (!API_BASE_URL) return undefined;
-
-    const controller = new AbortController();
-
-    const fetchJson = async (path) => {
-      const url = buildApiUrl(path);
-      if (!url) throw new Error("Missing API base URL");
-      const res = await fetch(url, { signal: controller.signal });
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-      return res.json();
-    };
-
-    const requests = [
-      {
-        path: "/api/movies/trending",
-        apply: (payload) => {
-          const items = extractList(payload).map(coerceCardItem).slice(0, 12);
-          if (items.length) setTrendingMovies(items);
-        },
-      },
-      {
-        path: "/api/movies/top-rated",
-        apply: (payload) => {
-          const items = extractList(payload).map(coerceCardItem).slice(0, 12);
-          if (items.length) setTopRatedMovies(items);
-        },
-      },
-      {
-        path: "/api/shows/popular",
-        apply: (payload) => {
-          const items = extractList(payload).map(coerceCardItem).slice(0, 12);
-          if (items.length) setPopularShows(items);
-        },
-      },
-    ];
-
-    const load = async () => {
-      await Promise.allSettled(
-        requests.map(async ({ path, apply }) => {
-          const json = await fetchJson(path);
-          apply(json);
-        }),
-      );
-    };
-
-    load().catch(() => {});
-
-    return () => controller.abort();
-  }, []);
 
   // ── Hero auto-rotation ─────────────────────────────────────────────────────
   // Advances the spotlight every 5.5 s with a 350 ms crossfade.
@@ -353,6 +304,27 @@ function Home() {
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
+
+  // Show a loading screen while fetching content from the API.
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
+        <div className="animate-pulse text-lg font-semibold text-white/50">
+          Loading platform...
+        </div>
+      </div>
+    );
+  }
+
+  // Guard: if API returned nothing, render an empty state instead of crashing.
+  if (!currentHero) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
+        <div className="text-white/40 text-base">No content available.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       {/* ── 1. Hero Carousel ─────────────────────────────────────────────── */}
@@ -501,6 +473,7 @@ function Home() {
         </div>
       </div>
 
+      {/* ── 3. Dynamic Content Carousels ─────────────────────────────────── */}
       {sections
         .filter((section) => section.visible)
         .map((section) => (
