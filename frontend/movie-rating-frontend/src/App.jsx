@@ -17,6 +17,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLayout from "./layouts/AdminLayout";
+import GenreSpotlight from "./pages/GenreSpotlight";
 import ScrollToTop from "./components/ScrollToTop";
 import "./App.css";
 
@@ -51,6 +52,7 @@ function App() {
                   <Route path="/search" element={<Search />} />
                   <Route path="/watchlist" element={<Watchlist />} />
                   <Route path="/my-reviews" element={<MyReviews />} />
+                  <Route path="/genre/:genre" element={<GenreSpotlight />} />
                 </Route>
 
                 {/* ── Auth pages: no Navbar, no Footer ── */}

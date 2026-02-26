@@ -112,12 +112,36 @@ function Navbar() {
             </span>
           </NavLink>
 
-          {/* Center search */}
-          <div className="flex-1 hidden md:block">
+          {/* Center search + nav links */}
+          <div className="flex-1 hidden md:flex items-center gap-2">
             <SearchBar
               placeholder="Search movies or shows..."
               onSearch={(q) => navigate(`/search?q=${encodeURIComponent(q)}`)}
             />
+            <NavLink
+              to="/search?type=movie"
+              className={({ isActive }) =>
+                `flex-shrink-0 inline-flex items-center h-12 px-3 rounded-xl border text-sm font-semibold transition-colors whitespace-nowrap ${
+                  isActive
+                    ? "bg-white/15 border-white/20 text-white"
+                    : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white"
+                }`
+              }
+            >
+              Movies
+            </NavLink>
+            <NavLink
+              to="/search?type=show"
+              className={({ isActive }) =>
+                `flex-shrink-0 inline-flex items-center h-12 px-3 rounded-xl border text-sm font-semibold transition-colors whitespace-nowrap ${
+                  isActive
+                    ? "bg-white/15 border-white/20 text-white"
+                    : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white"
+                }`
+              }
+            >
+              Shows
+            </NavLink>
           </div>
 
           {/* Right actions */}
