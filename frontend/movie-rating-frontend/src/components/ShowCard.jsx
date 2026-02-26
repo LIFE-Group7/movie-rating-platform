@@ -21,7 +21,7 @@ function ShowCard({ show }) {
 
   const ratingText = useMemo(() => {
     const r = Number(show?.rating);
-    return Number.isFinite(r) ? r.toFixed(1) : "–";
+    return Number.isFinite(r) && r > 0 ? r.toFixed(1) : "NR";
   }, [show?.rating]);
 
   const openDetails = () => navigate(`/show/${show.id}`);

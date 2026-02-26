@@ -60,6 +60,11 @@ function Watchlist() {
   // "grid" renders MovieCard/ShowCard; "list" renders a compact row layout.
   const [viewMode, setViewMode] = useState("grid");
 
+  // Pagination state
+  const [watchlistPage, setWatchlistPage] = useState(1);
+  const [recentlyViewedPage, setRecentlyViewedPage] = useState(1);
+  const itemsPerPage = 10;
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-center p-6 text-white">
@@ -84,6 +89,62 @@ function Watchlist() {
       </div>
     );
   }
+
+  // Pagination helpers
+  const getPaginatedItems = (items, page) => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return items.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = (items) => Math.ceil(items.length / itemsPerPage);
+
+  const renderPagination = (items, currentPage, setPage) => {
+    const totalPages = getTotalPages(items);
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex justify-center items-center gap-2 mt-8">
+        <button
+          onClick={() => setPage(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+            currentPage === 1
+              ? "bg-white/5 text-white/30 cursor-not-allowed"
+              : "bg-white/10 text-white hover:bg-white/20"
+          }`}
+        >
+          Previous
+        </button>
+        <div className="flex gap-2">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setPage(page)}
+              className={`w-10 h-10 rounded-lg font-semibold text-sm transition-colors ${
+                page === currentPage
+                  ? "bg-blue-600 text-white"
+                  : "bg-white/10 text-white hover:bg-white/20"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+            currentPage === totalPages
+              ? "bg-white/5 text-white/30 cursor-not-allowed"
+              : "bg-white/10 text-white hover:bg-white/20"
+          }`}
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
 
   /**
    * Render the items array in the currently selected view mode.
@@ -245,7 +306,10 @@ function Watchlist() {
               </Link>
             </div>
           ) : (
-            renderContent(watchlist)
+            <>
+              {renderContent(getPaginatedItems(watchlist, watchlistPage))}
+              {renderPagination(watchlist, watchlistPage, setWatchlistPage)}
+            </>
           )}
         </section>
 
@@ -256,7 +320,7 @@ function Watchlist() {
               Recently Viewed
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 opacity-75 hover:opacity-100 transition-opacity duration-300">
-              {recentlyViewed.map((item) => {
+              {getPaginatedItems(recentlyViewed, recentlyViewedPage).map((item) => {
                 const isShow = Object.prototype.hasOwnProperty.call(
                   item,
                   "seasons",
@@ -268,6 +332,7 @@ function Watchlist() {
                 );
               })}
             </div>
+            {renderPagination(recentlyViewed, recentlyViewedPage, setRecentlyViewedPage)}
           </section>
         )}
       </div>

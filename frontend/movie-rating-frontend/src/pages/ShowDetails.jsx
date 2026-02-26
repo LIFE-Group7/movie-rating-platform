@@ -139,7 +139,7 @@ function ShowDetails() {
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-6 text-sm font-medium text-white/80">
               <span className="bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded border border-yellow-500/30">
-                ★ {showData.rating?.toFixed(1) || "N/A"}
+                {showData.rating && showData.rating > 0 ? `★ ${showData.rating.toFixed(1)}` : "Not rated"}
               </span>
               <span>•</span>
               <span>{showData.seasons} Seasons</span>
@@ -204,21 +204,21 @@ function ShowDetails() {
             </div>
 
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Synopsis</h3>
-                <p className="text-white/70 leading-relaxed max-w-3xl mx-auto md:mx-0">
-                  {showData.description || "No synopsis available."}
-                </p>
-              </div>
-
-              {showData.creator && (
+              {showData.director && (
                 <div>
                   <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider mb-1">
-                    Creator
+                    Director
                   </h3>
-                  <p className="text-white font-medium">{showData.creator}</p>
+                  <p className="text-white font-medium">{showData.director}</p>
                 </div>
               )}
+
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">Overview</h3>
+                <p className="text-white/70 leading-relaxed max-w-3xl mx-auto md:mx-0">
+                  {showData.description || "No overview available."}
+                </p>
+              </div>
             </div>
           </div>
         </div>

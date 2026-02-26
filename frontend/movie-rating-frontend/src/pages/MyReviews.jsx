@@ -97,6 +97,10 @@ function MyReviews() {
   // Uses movieId as the identifier because review objects have no `id` field.
   const [editingReviewKey, setEditingReviewKey] = useState(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   // Redirect unauthenticated users rather than showing an empty page.
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
@@ -106,6 +110,12 @@ function MyReviews() {
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
   );
 
+  // Pagination helpers
+  const totalPages = Math.ceil(sortedReviews.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedReviews = sortedReviews.slice(startIndex, endIndex);
+
   /**
    * Apply edited fields to a review and close the edit form.
    * ReviewContext.updateReview stamps an `updatedAt` timestamp automatically.
@@ -113,6 +123,52 @@ function MyReviews() {
   const handleUpdate = async (movieId, type, updatedFields) => {
     await updateReview(movieId, updatedFields, type);
     setEditingReviewKey(null);
+  };
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex justify-center items-center gap-2 mt-10">
+        <button
+          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+            currentPage === 1
+              ? "bg-white/5 text-white/30 cursor-not-allowed"
+              : "bg-white/10 text-white hover:bg-white/20"
+          }`}
+        >
+          Previous
+        </button>
+        <div className="flex gap-2">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`w-10 h-10 rounded-lg font-semibold text-sm transition-colors ${
+                page === currentPage
+                  ? "bg-blue-600 text-white"
+                  : "bg-white/10 text-white hover:bg-white/20"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+            currentPage === totalPages
+              ? "bg-white/5 text-white/30 cursor-not-allowed"
+              : "bg-white/10 text-white hover:bg-white/20"
+          }`}
+        >
+          Next
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -144,8 +200,9 @@ function MyReviews() {
           </div>
         ) : (
           /* ── Review list ── */
-          <div className="space-y-6">
-            {sortedReviews.map((review) => (
+          <>
+            <div className="space-y-6">
+              {paginatedReviews.map((review) => (
               // BUG FIX: was `review.id` (undefined) — movieId is the unique key.
               <div
                 key={buildReviewKey(review.movieId, review.type)}
@@ -247,7 +304,9 @@ function MyReviews() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+            {renderPagination()}
+          </>
         )}
       </div>
     </div>

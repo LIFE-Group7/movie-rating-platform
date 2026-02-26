@@ -481,7 +481,7 @@ function Home() {
             key={section.id}
             title={section.title}
             items={resolveItems(section.filterBy)}
-            onViewAll={() => navigate("/search")}
+            onViewAll={() => navigate(`/search?category=${encodeURIComponent(section.filterBy)}`)}
             renderItem={(item) => (
               <div
                 key={item.id}

@@ -19,7 +19,7 @@ import {
 
 const ReviewsContext = createContext();
 
-/*const normalizeType = (type) => type ?? "movie";*/
+const normalizeType = (type) => type ?? "movie";
 
 const matchesReview = (review, movieId, type = "movie") => {
     if (movieId == null) return false;

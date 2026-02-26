@@ -28,6 +28,7 @@ function Search() {
   const [filteredResults, setFilteredResults] = useState([]);
   const [currentQuery, setCurrentQuery] = useState("");
   const [currentGenre, setCurrentGenre] = useState("");
+  const [currentCategory, setCurrentCategory] = useState("");
   const [currentType, setCurrentType] = useState("all");
   const [loading, setLoading] = useState(true);
 
@@ -61,10 +62,12 @@ function Search() {
   useEffect(() => {
     const queryFromUrl = searchParams.get("q") || "";
     const genreFromUrl = searchParams.get("genre") || "";
+    const categoryFromUrl = searchParams.get("category") || "";
     const typeFromUrl = normalizeTypeParam(searchParams.get("type"));
 
     setCurrentQuery(queryFromUrl);
     setCurrentGenre(genreFromUrl);
+    setCurrentCategory(categoryFromUrl);
     setCurrentType(typeFromUrl);
 
     // Start with the full dataset for the requested type, then narrow by genre/query.
@@ -72,6 +75,21 @@ function Search() {
     if (typeFromUrl === "movies") results = [...allMovies];
     else if (typeFromUrl === "shows") results = [...allShows];
     else results = [...allMovies, ...allShows];
+
+    // Apply category filtering/sorting (from View All button)
+    if (categoryFromUrl.trim() !== "") {
+      if (categoryFromUrl.startsWith("genre:")) {
+        const genre = categoryFromUrl.split(":")[1].toLowerCase();
+        results = results.filter((item) => {
+          const itemGenres = item.genres || (item.genre ? [item.genre] : []);
+          return itemGenres.some((g) => g.toLowerCase() === genre);
+        });
+      } else if (categoryFromUrl === "rating") {
+        results = results.sort((a, b) => b.rating - a.rating);
+      } else if (categoryFromUrl === "year") {
+        results = results.sort((a, b) => (b.year || 0) - (a.year || 0));
+      }
+    }
 
     if (genreFromUrl.trim() !== "") {
       results = results.filter((item) => {
@@ -112,6 +130,26 @@ function Search() {
     const next = new URLSearchParams(searchParams);
     next.delete("genre");
     setSearchParams(next);
+  };
+
+  // Remove the category filter without clearing other params.
+  const clearCategory = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("category");
+    setSearchParams(next);
+  };
+
+  // Format category display name
+  const getCategoryDisplayName = (category) => {
+    if (category.startsWith("genre:")) {
+      const genre = category.split(":")[1];
+      return `Genre: ${genre}`;
+    } else if (category === "rating") {
+      return "Top Rated";
+    } else if (category === "year") {
+      return "Recent Releases";
+    }
+    return category;
   };
 
   // Derive the correct singular/plural label for the result count line.
@@ -202,6 +240,17 @@ function Search() {
           >
             TV Shows
           </button>
+
+          {currentCategory && (
+            <button
+              onClick={clearCategory}
+              className="ml-0 md:ml-2 px-3 py-2 rounded-full text-sm font-semibold border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 hover:text-blue-200 transition-colors"
+              aria-label="Clear category filter"
+              title="Clear category filter"
+            >
+              {getCategoryDisplayName(currentCategory)} ×
+            </button>
+          )}
 
           {currentGenre && (
             <button
