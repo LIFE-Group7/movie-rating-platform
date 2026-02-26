@@ -15,8 +15,7 @@ export const createMovieReview = (reviewData) =>
 /**
  * PUT /api/Reviews/movies
  */
-export const updateMovieReview = (reviewData) =>
-  put("/api/Reviews/movies", reviewData);
+export const updateMovieReview = (reviewData) => put("/api/Reviews/movies", reviewData);
 
 /**
  * DEL /api/Reviews/movies/{movieId}
