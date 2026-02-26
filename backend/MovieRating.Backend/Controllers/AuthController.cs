@@ -33,4 +33,23 @@ public class AuthController(IAuthService authService) : BaseApiController
 
         return HandleError(result);
     }
+    
+    // DEVELOPMENT ONLY - Create an admin user (not exposed in production)
+    [HttpPost("create-admin")]
+    public async Task<IActionResult> CreateAdmin(RegisterDto request)
+    {
+        var result = await authService.CreateAdminAsync(request);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new 
+            { 
+                Message = "Admin user created successfully",
+                Username = result.Data!.Username,
+                Email = result.Data.Email
+            });
+        }
+
+        return HandleError(result);
+    }
 }

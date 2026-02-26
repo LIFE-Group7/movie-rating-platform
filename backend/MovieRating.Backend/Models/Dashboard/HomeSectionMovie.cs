@@ -7,6 +7,4 @@ public class HomeSectionMovie
     
     public int MovieId { get; set; }
     public Movie.Movie Movie { get; set; } = null!;
-    
-    public int DisplayOrder { get; set; }
 }
