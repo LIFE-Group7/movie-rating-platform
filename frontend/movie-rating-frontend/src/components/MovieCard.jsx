@@ -40,7 +40,7 @@ function MovieCard({ movie }) {
 
   const ratingText = useMemo(() => {
     const r = Number(movie?.rating);
-    return Number.isFinite(r) ? r.toFixed(1) : "–";
+    return Number.isFinite(r) && r > 0 ? r.toFixed(1) : "NR";
   }, [movie?.rating]);
 
   const openDetails = () => navigate(`/movie/${movie.id}`);

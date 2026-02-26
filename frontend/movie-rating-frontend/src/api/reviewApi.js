@@ -9,28 +9,32 @@ export const fetchUserReviews = () => get("/api/Reviews/user");
 /**
  * POST /api/Reviews/movies
  */
-export const createMovieReview = (reviewData) => post("/api/Reviews/movies", reviewData);
+export const createMovieReview = (reviewData) =>
+  post("/api/Reviews/movies", reviewData);
 
 /**
  * PUT /api/Reviews/movies
  */
-export const updatMovieeReview = (reviewData) => put("/api/Reviews/movies", reviewData);
+export const updateMovieReview = (reviewData) =>
+  put("/api/Reviews/movies", reviewData);
 
 /**
-* DEL /api/Reviews/movies/{movieId}
-*/
-export const deleteMovieReview = (movieId) => del(`/api/Reviews/movies/${movieId}`);
+ * DEL /api/Reviews/movies/{movieId}
+ */
+export const deleteMovieReview = (movieId) =>
+  del(`/api/Reviews/movies/${movieId}`);
 
 /**
  * POST /api/Reviews/shows
  */
-export const createShowReview = (reviewData) => post("/api/Reviews/shows", reviewData);
+export const createShowReview = (reviewData) =>
+  post("/api/Reviews/shows", reviewData);
 
 /**
  * PUT /api/Reviews/shows
  */
 export const updateShowReview = (reviewData) =>
-    put("/api/Reviews/shows", reviewData);
+  put("/api/Reviews/shows", reviewData);
 
 /**
  * DEL /api/Reviews/shows/{showId}

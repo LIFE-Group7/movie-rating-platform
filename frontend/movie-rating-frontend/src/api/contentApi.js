@@ -19,6 +19,19 @@ const coerceGenres = (input) => {
   return [];
 };
 
+// Extract year from date string (YYYY-MM-DD or DateOnly)
+const extractYear = (dateString) => {
+  if (!dateString) return null;
+  const year = String(dateString).split('-')[0];
+  return year && !isNaN(year) ? parseInt(year, 10) : null;
+};
+
+// Format duration from minutes to human-readable string
+const formatDuration = (minutes) => {
+  if (!minutes || isNaN(minutes)) return null;
+  return `${minutes} min`;
+};
+
 // Normalizes a raw Movie DTO from the backend into the shape the UI expects
 const normalizeMovie = (item, idx = 0) => {
   const title = item.title ?? item.name ?? `Untitled ${idx + 1}`;
@@ -51,6 +64,9 @@ const normalizeMovie = (item, idx = 0) => {
     backdropUrl,
     imageUrl,
     description: item.description ?? item.overview ?? "",
+    year: extractYear(item.releaseDate ?? item.ReleaseDate ?? item.release_date),
+    director: item.director ?? item.Director ?? null,
+    duration: formatDuration(item.durationMinutes ?? item.DurationMinutes ?? item.runtime),
   };
 };
 
@@ -84,6 +100,8 @@ const normalizeShow = (item, idx = 0) => {
     backdropUrl,
     imageUrl,
     description: item.description ?? item.overview ?? "",
+    year: extractYear(item.firstAirDate ?? item.FirstAirDate ?? item.first_air_date),
+    director: item.director ?? item.Director ?? item.creator ?? null,
   };
 };
 

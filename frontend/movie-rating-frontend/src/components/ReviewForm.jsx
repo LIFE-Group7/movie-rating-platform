@@ -53,6 +53,11 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
     if (isCharLimitExceeded)
       return setError("Review exceeds maximum character limit.");
 
+    if (itemId == null) {
+      setError("Missing content id; cannot submit review.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const saved = await addReview({
@@ -63,7 +68,6 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
         comment: reviewText.trim(),
         type: movieType,
       });
-      if (itemId == null) return setError("Missing content id; cannot submit review.");
 
 
       if (!saved) {

@@ -147,12 +147,20 @@ function MovieDetails() {
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-6 text-sm font-medium text-white/80">
               <span className="bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded border border-yellow-500/30">
-                ★ {movieData.rating?.toFixed(1) || "N/A"}
+                {movieData.rating && movieData.rating > 0 ? `★ ${movieData.rating.toFixed(1)}` : "Not rated"}
               </span>
-              <span>•</span>
-              <span>{movieData.year || "2024"}</span>
-              <span>•</span>
-              <span>{movieData.duration || "120 min"}</span>
+              {movieData.year && (
+                <>
+                  <span>•</span>
+                  <span>{movieData.year}</span>
+                </>
+              )}
+              {movieData.duration && (
+                <>
+                  <span>•</span>
+                  <span>{movieData.duration}</span>
+                </>
+              )}
             </div>
 
             <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-8">
@@ -205,13 +213,6 @@ function MovieDetails() {
             </div>
 
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Synopsis</h3>
-                <p className="text-white/70 leading-relaxed max-w-3xl mx-auto md:mx-0">
-                  {movieData.description || "No synopsis available."}
-                </p>
-              </div>
-
               {movieData.director && (
                 <div>
                   <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider mb-1">
@@ -220,6 +221,13 @@ function MovieDetails() {
                   <p className="text-white font-medium">{movieData.director}</p>
                 </div>
               )}
+
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">Overview</h3>
+                <p className="text-white/70 leading-relaxed max-w-3xl mx-auto md:mx-0">
+                  {movieData.description || "No overview available."}
+                </p>
+              </div>
 
               {movieData.cast && (
                 <div>
