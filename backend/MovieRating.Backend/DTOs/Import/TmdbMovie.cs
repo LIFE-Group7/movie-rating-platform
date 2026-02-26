@@ -1,6 +1,7 @@
 namespace MovieRating.Backend.DTOs.Import;
 
 public record TmdbMovie(
+    int Id,
     string Title,
     string? Overview,
     string? ReleaseDate,
@@ -8,3 +9,4 @@ public record TmdbMovie(
     string? BackdropPath,
     List<int> GenreIds
 );
+
