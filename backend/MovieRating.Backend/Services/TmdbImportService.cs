@@ -58,12 +58,16 @@ public class TmdbImportService : ITmdbImportService
                     continue;
                 }
 
+                var details = await FetchMovieDetailsAsync(item.Id);
+                var directorName = details?.Credits?.Crew?.FirstOrDefault(c => c.Job == "Director")?.Name;
+
                 var movie = new Movie
                 {
                     Title = item.Title,
                     Description = item.Overview,
                     ReleaseDate = ParseDate(item.ReleaseDate),
-                    DurationMinutes = 0, // list endpoint doesn't include runtime
+                    DurationMinutes = details?.Runtime ?? 0, // Now mapped dynamically!
+                    Director = directorName,                 // Now mapped dynamically!
                     CoverImageUrl = item.PosterPath != null ? $"{_imageBase}{item.PosterPath}" : null,
                     BackdropImageUrl = item.BackdropPath != null ? BuildBackdropUrl(item.BackdropPath) : null,
                     AddedAt = DateTime.UtcNow,
@@ -102,6 +106,7 @@ public class TmdbImportService : ITmdbImportService
 
                 // Fetch full details to get seasons/episodes counts
                 var details = await FetchShowDetailsAsync(item.Id);
+                var creatorName = details?.CreatedBy?.FirstOrDefault()?.Name;
 
                 var show = new Show
                 {
@@ -113,6 +118,7 @@ public class TmdbImportService : ITmdbImportService
                     Seasons = details?.NumberOfSeasons ?? 1,
                     Episodes = details?.NumberOfEpisodes ?? 0,
                     Status = details?.Status == "Ended" ? ShowStatus.Ended : ShowStatus.Ongoing,
+                    Director = creatorName, // Now mapped dynamically!
                     AddedAt = DateTime.UtcNow,
                 };
 
@@ -223,4 +229,19 @@ public class TmdbImportService : ITmdbImportService
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,  // ← handles genre_ids, release_date, etc.
     };
+
+    private async Task<TmdbMovieDetails?> FetchMovieDetailsAsync(int tmdbId)
+    {
+        try
+        {
+            // append_to_response=credits brings in the cast & crew in the same call
+            var json = await _http.GetStringAsync($"{_baseUrl}/movie/{tmdbId}?append_to_response=credits");
+            return JsonSerializer.Deserialize<TmdbMovieDetails>(json, JsonOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
 }
