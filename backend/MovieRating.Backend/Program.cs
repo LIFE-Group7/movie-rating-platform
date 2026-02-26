@@ -28,6 +28,9 @@ builder.Services.AddScoped<IShowService, ShowService>();
 
 builder.Services.AddScoped<ISearchService, SearchService>();
 
+builder.Services.AddScoped<IWatchlistRepository, WatchlistRepository>();
+builder.Services.AddScoped<IWatchlistService, WatchlistService>();
+
 builder.Services.AddControllers();
 
 // Allow the Vite dev server to call the API during development.

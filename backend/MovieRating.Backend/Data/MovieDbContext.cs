@@ -117,10 +117,10 @@ public class MovieDbContext : DbContext
             
               entity.HasQueryFilter(r => !r.User.IsDeleted);
         });
-        
+
         modelBuilder.Entity<Watchlist>(entity =>
         {
-            entity.HasKey(w => new { w.UserId, w.MovieId });
+            entity.HasKey(w => w.Id); 
 
             entity.HasOne(w => w.User)
                   .WithMany(u => u.Watchlist)
@@ -132,12 +132,20 @@ public class MovieDbContext : DbContext
                   .HasForeignKey(w => w.MovieId)
                   .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasOne(w => w.Show)
+                  .WithMany() 
+                  .HasForeignKey(w => w.ShowId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
             entity.Property(w => w.AddedAt)
                   .HasDefaultValueSql("GETUTCDATE()");
-            
+
             entity.HasQueryFilter(w => !w.User.IsDeleted);
+
+            entity.HasIndex(w => new { w.UserId, w.MovieId }).IsUnique().HasFilter("[MovieId] IS NOT NULL");
+            entity.HasIndex(w => new { w.UserId, w.ShowId }).IsUnique().HasFilter("[ShowId] IS NOT NULL");
         });
-        
+
         modelBuilder.Entity<HomeSection>(entity =>
         {
             entity.HasKey(hs => hs.Id);
