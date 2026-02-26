@@ -57,7 +57,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("HomeSections");
+                    b.ToTable("HomeSections", (string)null);
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Dashboard.HomeSectionMovie", b =>
@@ -75,7 +75,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("HomeSectionMovies");
+                    b.ToTable("HomeSectionMovies", (string)null);
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Generic.Genre", b =>
@@ -96,7 +96,7 @@ namespace MovieRating.Backend.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Genres");
+                    b.ToTable("Genres", (string)null);
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Movie.Movie", b =>
@@ -148,7 +148,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Movies");
+                    b.ToTable("Movies", (string)null);
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Movie.MovieGenre", b =>
@@ -163,7 +163,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("MovieGenres");
+                    b.ToTable("MovieGenres", (string)null);
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Movie.ReviewMovie", b =>
@@ -193,7 +193,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("ReviewMovies");
+                    b.ToTable("ReviewMovies", (string)null);
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Show.ReviewShow", b =>
@@ -223,7 +223,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("ShowId");
 
-                    b.ToTable("ReviewShows");
+                    b.ToTable("ReviewShows", (string)null);
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Show.Show", b =>
@@ -285,7 +285,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Shows");
+                    b.ToTable("Shows", (string)null);
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Show.ShowGenre", b =>
@@ -300,7 +300,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("ShowGenres");
+                    b.ToTable("ShowGenres", (string)null);
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.User.User", b =>
@@ -347,7 +347,7 @@ namespace MovieRating.Backend.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.User.Watchlist", b =>
@@ -367,7 +367,7 @@ namespace MovieRating.Backend.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("Watchlist");
+                    b.ToTable("Watchlist", (string)null);
                 });
 
             modelBuilder.Entity("MovieRating.Backend.Models.Dashboard.HomeSection", b =>
