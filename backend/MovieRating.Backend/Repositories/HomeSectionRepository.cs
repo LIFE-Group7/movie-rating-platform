@@ -17,7 +17,6 @@ public class HomeSectionRepository : IHomeSectionRepository
     public async Task<IEnumerable<HomeSection>> GetAllAsync()
     {
         return await _context.HomeSections
-            .Include(hs => hs.Genre)
             .OrderByDescending(hs => hs.CreatedAt)
             .ToListAsync();
     }
@@ -25,7 +24,6 @@ public class HomeSectionRepository : IHomeSectionRepository
     public async Task<HomeSection?> GetByIdAsync(int id)
     {
         return await _context.HomeSections
-            .Include(hs => hs.Genre)
             .FirstOrDefaultAsync(hs => hs.Id == id);
     }
 
@@ -58,7 +56,6 @@ public class HomeSectionRepository : IHomeSectionRepository
     public async Task<IEnumerable<HomeSection>> GetActiveSectionsAsync()
     {
         return await _context.HomeSections
-            .Include(hs => hs.Genre)
             .Where(hs => hs.IsActive)
             .OrderByDescending(hs => hs.CreatedAt)
             .ToListAsync();

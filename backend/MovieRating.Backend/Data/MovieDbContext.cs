@@ -154,12 +154,6 @@ public class MovieDbContext : DbContext
 
             entity.Property(hs => hs.CreatedAt)
                   .HasDefaultValueSql("GETUTCDATE()");
-
-            entity.HasOne(hs => hs.Genre)
-                  .WithMany()
-                  .HasForeignKey(hs => hs.GenreId)
-                  .OnDelete(DeleteBehavior.SetNull)
-                  .IsRequired(false);
         });
         
         modelBuilder.Entity<HomeSectionMovie>(entity =>

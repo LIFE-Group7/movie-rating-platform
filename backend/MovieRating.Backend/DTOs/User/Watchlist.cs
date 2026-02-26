@@ -1,4 +1,4 @@
-﻿namespace MovieRating.Backend.DTOs.User.Watchlist;
+﻿namespace MovieRating.Backend.DTOs.User;
 
 public class WatchlistItemDto
 {
@@ -6,9 +6,9 @@ public class WatchlistItemDto
     public int Position { get; set; }
     public DateTime AddedAt { get; set; }
 
-    public string MediaType { get; set; } // "Movie" or "Show"
+    public required string MediaType { get; set; } // "Movie" or "Show"
     public int MediaId { get; set; }
-    public string Title { get; set; }
+    public required string Title { get; set; }
     public string? CoverImageUrl { get; set; }
     public double AverageRating { get; set; }
 }
@@ -16,5 +16,5 @@ public class WatchlistItemDto
 public class AddToWatchlistDto
 {
     public int MediaId { get; set; }
-    public string MediaType { get; set; } // "Movie" or "Show"
+    public required string MediaType { get; set; } // "Movie" or "Show"
 }
