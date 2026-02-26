@@ -84,6 +84,45 @@ public class AuthService(MovieDbContext context, IConfiguration configuration, I
         }
     }
 
+    public async Task<Result<User>> CreateAdminAsync(RegisterDto request)
+    {
+        try
+        {
+            if (await context.Users.AnyAsync(u => u.Email == request.Email))
+            {
+                logger.LogWarning("Admin creation failed: Email '{Email}' already exists.", request.Email);
+                return Result<User>.Failure($"Email '{request.Email}' is already registered.", ErrorType.Conflict);
+            }
+
+            if (await context.Users.AnyAsync(u => u.Username == request.Username))
+            {
+                logger.LogWarning("Admin creation failed: Username '{Username}' taken.", request.Username);
+                return Result<User>.Failure($"Username '{request.Username}' is already taken.", ErrorType.Conflict);
+            }
+
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+            var admin = new User
+            {
+                Username = request.Username,
+                Email = request.Email,
+                PasswordHash = passwordHash,
+                Role = UserRole.Admin
+            };
+
+            context.Users.Add(admin);
+            await context.SaveChangesAsync();
+
+            logger.LogInformation("Admin user created: {Username}", admin.Username);
+            return Result<User>.Success(admin);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "System error during admin creation for {Username}", request.Username);
+            return Result<User>.Failure("An unexpected error occurred.", ErrorType.Failure);
+        }
+    }
+
     private string GenerateJwtToken(User user)
     {
         var keyVal = configuration["JwtSettings:Key"];
