@@ -18,9 +18,6 @@ public class ReviewsController : BaseApiController
         this._service = service;
     }
     
-    /// <summary>
-    /// Creates a review for a movie.
-    /// </summary>
     [HttpPost("movies")]
     public async Task<IActionResult> CreateMovieReview([FromBody] MovieReviewRequestDto request)
     {
@@ -31,9 +28,7 @@ public class ReviewsController : BaseApiController
         return result.IsSuccess ? Ok(result.Data) : HandleError(result);
     }
 
-    /// <summary>
-    /// Updates a review for a movie.
-    /// </summary>
+
     [HttpPut("movies")]
     public async Task<IActionResult> UpdateMovieReview([FromBody] MovieReviewRequestDto request)
     {
@@ -44,9 +39,7 @@ public class ReviewsController : BaseApiController
         return result.IsSuccess ? Ok(result.Data) : HandleError(result);
     }
     
-    /// <summary>
-    /// Creates a review for a show.
-    /// </summary>
+
     [HttpPost("shows")]
     public async Task<IActionResult> CreateShowReview([FromBody] ShowReviewRequestDto request)
     {
@@ -57,9 +50,7 @@ public class ReviewsController : BaseApiController
         return result.IsSuccess ? Ok(result.Data) : HandleError(result);
     }
     
-    /// <summary>
-    /// Updates a review for a show.
-    /// </summary>
+
     [HttpPut("shows")]
     public async Task<IActionResult> UpdateShowReview([FromBody] ShowReviewRequestDto request)
     {
@@ -70,9 +61,7 @@ public class ReviewsController : BaseApiController
         return result.IsSuccess ? Ok(result.Data) : HandleError(result);
     }
 
-    /// <summary>
-    /// Updates a review for a show.
-    /// </summary>
+
     [HttpGet("user")]
     public async Task<IActionResult> GetUserReviews()
     {
@@ -91,10 +80,7 @@ public class ReviewsController : BaseApiController
             ShowReviews = showReviewsResult.Data
         });
     }
-    
-    /// <summary>
-    /// Deletes a review for a movie.
-    /// </summary>
+
     [HttpDelete("movies/{movieId}")]
     public async Task<IActionResult> DeleteMovieReview(int movieId)
     {
@@ -105,9 +91,7 @@ public class ReviewsController : BaseApiController
         return result.IsSuccess ? NoContent() : HandleError(result);
     }
     
-    /// <summary>
-    /// Deletes a review for a show.
-    /// </summary>
+
     [HttpDelete("shows/{showId}")]
     public async Task<IActionResult> DeleteShowReview(int showId)
     {

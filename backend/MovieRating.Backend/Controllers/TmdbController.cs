@@ -12,10 +12,6 @@ public class TmdbController : BaseApiController
 
     public TmdbController(ITmdbImportService tmdb) => _tmdb = tmdb;
 
-    /// <summary>
-    /// Triggers a TMDB import. Skips titles that already exist in the database.
-    /// Query params: moviePages (default 3 = 60 movies), showPages (default 2 = 40 shows).
-    /// </summary>
     [HttpPost("import")]
     [Authorize(Roles = "User, Admin")]    
     public async Task<IActionResult> Import(
