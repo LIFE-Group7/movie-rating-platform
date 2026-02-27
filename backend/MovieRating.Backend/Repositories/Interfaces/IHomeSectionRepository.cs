@@ -2,7 +2,7 @@ using MovieRating.Backend.Models.Dashboard;
 
 namespace MovieRating.Backend.Repositories.Interfaces;
 
-public interface IDashboardRepository
+public interface IHomeSectionRepository
 {
     Task<IEnumerable<HomeSection>> GetAllAsync();
     
@@ -16,5 +16,5 @@ public interface IDashboardRepository
     
     Task<bool> ExistsAsync(int id);
     
-    Task<IEnumerable<HomeSection>> GetActiveSectionsAsync();
+    Task<IEnumerable<HomeSection>> GetActiveSectionsWithMediaAsync();
 }

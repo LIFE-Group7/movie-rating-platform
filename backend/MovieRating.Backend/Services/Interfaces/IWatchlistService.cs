@@ -1,5 +1,5 @@
 ﻿using MovieRating.Backend.Common;
-using MovieRating.Backend.DTOs.User.Watchlist;
+using MovieRating.Backend.DTOs.User;
 
 namespace MovieRating.Backend.Services.Interfaces;
 

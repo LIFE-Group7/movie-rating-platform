@@ -11,16 +11,17 @@ public class HomeSection
     [MaxLength(100)]
     public required string Title { get; set; }
     
-    public SectionType Type { get; set; }
+    public bool IsHidden { get; set; } = true;
     
-    public int? GenreId { get; set; }
-    public Genre? Genre { get; set; }
+    public bool IncludeMovies { get; set; } = true;
+    public bool IncludeShows { get; set; } = true;
     
-    public int DisplayOrder { get; set; }
-
-    public bool IsActive { get; set; } = true;
+    [Range(1, 100)]
+    public int MediaLimit { get; set; } = 10;
     
+    public HomeSectionSortBy SortBy { get; set; } = HomeSectionSortBy.Year;
     public DateTime CreatedAt { get; set; }
 
     public ICollection<HomeSectionMovie> Movies { get; set; } = new List<HomeSectionMovie>();
+    public ICollection<HomeSectionShow> Shows { get; set; } = new List<HomeSectionShow>();
 }

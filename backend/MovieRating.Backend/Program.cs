@@ -31,6 +31,14 @@ builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IWatchlistRepository, WatchlistRepository>();
 builder.Services.AddScoped<IWatchlistService, WatchlistService>();
 
+// Dashboard Services
+builder.Services.AddScoped<IHomeSectionRepository, HomeSectionRepository>();
+builder.Services.AddScoped<IHomeSectionService, HomeSectionService>();
+
+// Genre Services  
+builder.Services.AddScoped<IGenreRepository, GenreRepository>();
+builder.Services.AddScoped<IGenreService, GenreService>();
+
 builder.Services.AddControllers();
 
 // Allow the Vite dev server to call the API during development.

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.Data;
-using MovieRating.Backend.DTOs.User.Watchlist;
+using MovieRating.Backend.DTOs.User;
 using MovieRating.Backend.Models.User;
 using MovieRating.Backend.Repositories.Interfaces;
 using MovieRating.Backend.Services.Interfaces;
