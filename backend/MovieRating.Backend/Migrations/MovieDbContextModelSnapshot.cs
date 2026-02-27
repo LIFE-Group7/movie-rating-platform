@@ -68,6 +68,9 @@ namespace MovieRating.Backend.Migrations
                     b.Property<int>("MovieId")
                         .HasColumnType("int");
 
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
                     b.HasKey("HomeSectionId", "MovieId");
 
                     b.HasIndex("MovieId");

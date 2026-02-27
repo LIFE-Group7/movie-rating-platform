@@ -113,7 +113,7 @@ function ChevronRightIcon() {
  * `renderItem` is a render-prop so callers can inject any card type (MovieCard,
  * ShowCard, etc.) without coupling the carousel logic to a specific data shape.
  */
-function CarouselSection({ title, items, renderItem, onViewAll, viewAllLabel }) {
+function CarouselSection({ title, items, renderItem, onViewAll }) {
   const scrollRef = useRef(null);
 
   // Scroll by a fixed pixel amount in the requested direction.
@@ -136,7 +136,7 @@ function CarouselSection({ title, items, renderItem, onViewAll, viewAllLabel }) 
             onClick={onViewAll}
             className="text-sm text-blue-400 hover:text-blue-300 transition-colors font-medium"
           >
-            {viewAllLabel || "View All →"}
+            View All →
           </button>
         )}
       </div>
@@ -181,10 +181,13 @@ function CarouselSection({ title, items, renderItem, onViewAll, viewAllLabel }) 
 // ── Main Home component ───────────────────────────────────────────────────────
 function Home() {
   const navigate = useNavigate();
-  const { sections } = useAdmin();
+  const { categories, sections } = useAdmin();
   const [heroIndex, setHeroIndex] = useState(0);
   // Used to trigger a fade-out/fade-in transition when the spotlight changes.
   const [isTransitioning, setIsTransitioning] = useState(false);
+  // Tracks the active genre pill — selecting one navigates to the search page.
+  const [activeGenre, setActiveGenre] = useState(null);
+
   const [allContent, setAllContent] = useState([]);
   const [trendingMovies, setTrendingMovies] = useState([]);
   const [topRatedMovies, setTopRatedMovies] = useState([]);
@@ -293,6 +296,11 @@ function Home() {
       setHeroIndex(newIndex % totalHeroes);
       setIsTransitioning(false);
     }, 350);
+  };
+
+  // Navigate to the search page pre-filtered by the chosen genre.
+  const handleGenreClick = (genre) => {
+    navigate(`/search?genre=${encodeURIComponent(genre)}`);
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -430,7 +438,42 @@ function Home() {
         </button>
       </section>
 
-      {/* ── 2. Dynamic Content Carousels ─────────────────────────────────── */}
+      {/* ── 2. Sticky Genre Filter Pills ─────────────────────────────────── */}
+      <div className="sticky top-0 z-20 bg-zinc-950/90 backdrop-blur-md border-b border-white/5">
+        <div
+          className="flex gap-2 overflow-x-auto px-6 py-3 max-w-screen-2xl mx-auto"
+          style={{ scrollbarWidth: "none" }}
+        >
+          <button
+            onClick={() => setActiveGenre(null)}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border flex-shrink-0 ${
+              !activeGenre
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-transparent text-white/55 border-white/15 hover:border-white/35 hover:text-white/80"
+            }`}
+          >
+            All
+          </button>
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => {
+                setActiveGenre(category.name);
+                handleGenreClick(category.name);
+              }}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border flex-shrink-0 ${
+                activeGenre === category.name
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-transparent text-white/55 border-white/15 hover:border-white/35 hover:text-white/80"
+              }`}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 3. Dynamic Content Carousels ─────────────────────────────────── */}
       {sections
         .filter((section) => section.visible)
         .map((section) => (
@@ -453,54 +496,8 @@ function Home() {
             )}
           />
         ))}
-
-      {/* ── 3. Genre Spotlight Sections ────────────────────────────────────── */}
-      <GenreSpotlightSections allContent={allContent} navigate={navigate} />
     </div>
   );
 }
 
 export default Home;
-
-// ── Genre spotlight data ─────────────────────────────────────────────────────
-const GENRE_SPOTLIGHTS = [
-  { genre: "Action",    label: "Action" },
-  { genre: "Drama",     label: "Drama" },
-  { genre: "Thriller",  label: "Thriller" },
-  { genre: "Science Fiction", label: "Sci-Fi" },
-];
-
-function GenreSpotlightSections({ allContent, navigate }) {
-  if (!allContent || allContent.length === 0) return null;
-
-  return (
-    <>
-      {GENRE_SPOTLIGHTS.map(({ genre, label }) => {
-        const items = allContent
-          .filter((item) =>
-            item.genres.some((g) => g.toLowerCase() === genre.toLowerCase())
-          )
-          .slice(0, 15);
-        if (items.length === 0) return null;
-        return (
-          <CarouselSection
-            key={genre}
-            title={label}
-            items={items}
-            viewAllLabel="View More →"
-            onViewAll={() => navigate(`/genre/${encodeURIComponent(genre)}`)}
-            renderItem={(item) => (
-              <div key={item.id} className="flex-shrink-0 snap-start w-44 md:w-48">
-                {item.type === "show" ? (
-                  <ShowCard show={item} />
-                ) : (
-                  <MovieCard movie={item} />
-                )}
-              </div>
-            )}
-          />
-        );
-      })}
-    </>
-  );
-}
