@@ -369,13 +369,27 @@ function Home() {
             {currentHero.title}
           </h1>
 
-          {/* Rating */}
-          <div className="flex items-center gap-1.5 mb-4">
-            <StarIcon />
-            <span className="text-yellow-400 font-bold text-lg">
-              {currentHero.rating}
-            </span>
+          {/* Rating & Metadata */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-1.5">
+              <StarIcon />
+              <span className="text-yellow-400 font-bold text-lg">
+                {currentHero.rating}
+              </span>
+            </div>
             <span className="text-white/40 text-sm">/10 · IMDb</span>
+            
+            {/* Dot separator */}
+            <span className="text-white/30 text-xs px-1">•</span>
+            
+            {/* Type & Year */}
+            <span className="text-white/60 text-sm font-medium uppercase tracking-wider">
+              {currentHero.type === "show" ? "Series" : "Movie"} 
+              {/* Fallback to checking TMDB date formats if .year isn't explicitly set */}
+              {(currentHero.year || currentHero.release_date?.substring(0,4) || currentHero.first_air_date?.substring(0,4)) 
+                ? ` · ${currentHero.year || currentHero.release_date?.substring(0,4) || currentHero.first_air_date?.substring(0,4)}` 
+                : ""}
+            </span>
           </div>
 
           {/* Description */}
