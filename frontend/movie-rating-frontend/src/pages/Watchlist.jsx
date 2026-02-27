@@ -55,7 +55,7 @@ function ListIcon() {
 function Watchlist() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { watchlist, recentlyViewed } = useWatchlist();
+  const { watchlist, recentlyViewed, removeFromWatchlist } = useWatchlist();
 
   // "grid" renders MovieCard/ShowCard; "list" renders a compact row layout.
   const [viewMode, setViewMode] = useState("grid");
@@ -172,7 +172,7 @@ function Watchlist() {
 
     // List view
     return (
-      <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map((item) => {
           const isShow = Object.prototype.hasOwnProperty.call(item, "seasons");
           const genres = item.genres || (item.genre ? [item.genre] : []);
@@ -190,7 +190,7 @@ function Watchlist() {
                   navigate(isShow ? `/show/${item.id}` : `/movie/${item.id}`);
                 }
               }}
-              className="flex gap-4 p-4 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+              className="relative flex gap-4 p-4 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
             >
               {/* Thumbnail */}
               <div className="w-20 md:w-28 flex-shrink-0 rounded-lg overflow-hidden bg-zinc-900">
@@ -236,6 +236,10 @@ function Watchlist() {
                   ))}
                 </div>
               </div>
+              <button onClick={(e) => { e.stopPropagation(); removeFromWatchlist(item.id);}}
+                className="absolute bottom-3 right-3 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600/90 hover:bg-red-500 transition-colors">
+              Remove
+              </button>
             </div>
           );
         })}
