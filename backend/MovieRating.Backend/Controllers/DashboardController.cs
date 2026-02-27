@@ -62,14 +62,6 @@ public class DashboardController : BaseApiController
         return Ok(result.Data);
     }
     
-    [HttpGet("sections/active")]
-    public async Task<IActionResult> GetActiveSections()
-    {
-        var result = await _homeSectionService.GetActiveSectionsAsync();
-        if (!result.IsSuccess) return HandleError(result);
-        return Ok(result.Data);
-    }
-    
 
     [HttpPost("sections")]
     public async Task<IActionResult> CreateSection([FromBody] CreateHomeSectionDto dto)

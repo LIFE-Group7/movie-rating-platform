@@ -16,5 +16,5 @@ public interface IHomeSectionRepository
     
     Task<bool> ExistsAsync(int id);
     
-    Task<IEnumerable<HomeSection>> GetActiveSectionsAsync();
+    Task<IEnumerable<HomeSection>> GetActiveSectionsWithMediaAsync();
 }
