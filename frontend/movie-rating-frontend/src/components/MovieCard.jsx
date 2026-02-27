@@ -118,12 +118,30 @@ function MovieCard({ movie }) {
 
       {/* Info Area */}
       <div className="p-3 flex flex-col justify-between flex-1 min-h-[104px]">
-        <h3
-          className="text-[13px] font-bold text-white leading-tight line-clamp-2"
-          title={movie.title}
-        >
-          {movie.title}
-        </h3>
+        <div>
+          <h3
+            className="text-[13px] font-bold text-white leading-tight line-clamp-2"
+            title={movie.title}
+          >
+            {movie.title}
+          </h3>
+
+          {(movie?.year || movie?.duration) && (
+            <div className="mt-1 flex items-center gap-2 text-[11px] text-white/55">
+              {movie?.year && (
+                <span className="font-semibold whitespace-nowrap">
+                  {movie.year}
+                </span>
+              )}
+              {movie?.year && movie?.duration && <span>•</span>}
+              {movie?.duration && (
+                <span className="font-semibold whitespace-nowrap">
+                  {movie.duration}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Genres — scrolls left on hover if pills overflow the container */}
         <div
