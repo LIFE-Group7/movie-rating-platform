@@ -65,6 +65,12 @@ function Watchlist() {
   const [recentlyViewedPage, setRecentlyViewedPage] = useState(1);
   const itemsPerPage = 10;
 
+  const isShowItem = (item) => {
+    if (item?.mediaType) return String(item.mediaType).toLowerCase() === "show";
+    if (item?.type) return String(item.type).toLowerCase() === "show";
+    return Object.prototype.hasOwnProperty.call(item, "seasons");
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-center p-6 text-white">
@@ -156,10 +162,7 @@ function Watchlist() {
       return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
           {items.map((item) => {
-            const isShow = Object.prototype.hasOwnProperty.call(
-              item,
-              "seasons",
-            );
+            const isShow = isShowItem(item);
             return isShow ? (
               <ShowCard key={`w-${item.id}`} show={item} />
             ) : (
@@ -174,7 +177,7 @@ function Watchlist() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map((item) => {
-          const isShow = Object.prototype.hasOwnProperty.call(item, "seasons");
+          const isShow = isShowItem(item);
           const genres = item.genres || (item.genre ? [item.genre] : []);
           return (
             <div
@@ -218,12 +221,34 @@ function Watchlist() {
                   <span className="text-yellow-400">
                     ★ {item.rating?.toFixed(1) || "N/A"}
                   </span>
-                  {isShow ? (
-                    <span>{item.seasons} Seasons</span>
-                  ) : (
-                    <span>{item.year || "N/A"}</span>
-                  )}
+                  {isShow ? <span>{item.seasons || "N/A"} Seasons</span> : null}
+                  {isShow && item.status ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          item.status === "Ongoing"
+                            ? "bg-emerald-400"
+                            : "bg-white/40"
+                        }`}
+                      />
+                      {item.status}
+                    </span>
+                  ) : null}
+                  {!isShow ? <span>{item.year || "N/A"}</span> : null}
                 </div>
+
+                {item.director ? (
+                  <p className="text-xs text-white/70 mb-2 line-clamp-1">
+                    <span className="font-semibold text-white/80">
+                      Director:
+                    </span>{" "}
+                    {item.director}
+                  </p>
+                ) : null}
+
+                <p className="text-xs text-white/55 mb-2 line-clamp-2">
+                  {item.description || "No overview available."}
+                </p>
 
                 <div className="flex flex-wrap gap-1.5 mt-auto">
                   {genres.slice(0, 3).map((g) => (
@@ -236,9 +261,14 @@ function Watchlist() {
                   ))}
                 </div>
               </div>
-              <button onClick={(e) => { e.stopPropagation(); removeFromWatchlist(item.id);}}
-                className="absolute bottom-3 right-3 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600/90 hover:bg-red-500 transition-colors">
-              Remove
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeFromWatchlist(item.id);
+                }}
+                className="absolute bottom-3 right-3 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600/90 hover:bg-red-500 transition-colors"
+              >
+                Remove
               </button>
             </div>
           );
@@ -324,19 +354,22 @@ function Watchlist() {
               Recently Viewed
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 opacity-75 hover:opacity-100 transition-opacity duration-300">
-              {getPaginatedItems(recentlyViewed, recentlyViewedPage).map((item) => {
-                const isShow = Object.prototype.hasOwnProperty.call(
-                  item,
-                  "seasons",
-                );
-                return isShow ? (
-                  <ShowCard key={`h-${item.id}`} show={item} />
-                ) : (
-                  <MovieCard key={`h-${item.id}`} movie={item} />
-                );
-              })}
+              {getPaginatedItems(recentlyViewed, recentlyViewedPage).map(
+                (item) => {
+                  const isShow = isShowItem(item);
+                  return isShow ? (
+                    <ShowCard key={`h-${item.id}`} show={item} />
+                  ) : (
+                    <MovieCard key={`h-${item.id}`} movie={item} />
+                  );
+                },
+              )}
             </div>
-            {renderPagination(recentlyViewed, recentlyViewedPage, setRecentlyViewedPage)}
+            {renderPagination(
+              recentlyViewed,
+              recentlyViewedPage,
+              setRecentlyViewedPage,
+            )}
           </section>
         )}
       </div>
