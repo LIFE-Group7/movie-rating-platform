@@ -356,10 +356,7 @@ function Watchlist() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 opacity-75 hover:opacity-100 transition-opacity duration-300">
               {getPaginatedItems(recentlyViewed, recentlyViewedPage).map(
                 (item) => {
-                  const isShow = Object.prototype.hasOwnProperty.call(
-                    item,
-                    "seasons",
-                  );
+                  const isShow = isShowItem(item);
                   return isShow ? (
                     <ShowCard key={`h-${item.id}`} show={item} />
                   ) : (
