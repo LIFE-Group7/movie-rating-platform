@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.Controllers;
-using MovieRating.Backend.DTOs.User.Watchlist;
 using MovieRating.Backend.Services.Interfaces;
 using System.Security.Claims;
+using MovieRating.Backend.DTOs.User;
 using Xunit;
 
 namespace MovieRating.Backend.Tests.Controllers;
