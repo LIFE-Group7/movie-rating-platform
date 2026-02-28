@@ -127,6 +127,20 @@ app.UseSwaggerUI();
 // Health-check endpoint for Kubernetes liveness / readiness probes.
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
+// DB connectivity test – runs SELECT 1 to verify the connection.
+app.MapGet("/health/db", async (MovieDbContext db) =>
+{
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync("SELECT 1");
+        return Results.Ok(new { status = "connected", database = "MovieRatingDb" });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { status = "failed", error = ex.Message }, statusCode: 500);
+    }
+});
+
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
