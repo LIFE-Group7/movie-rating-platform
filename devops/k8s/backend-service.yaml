@@ -6,6 +6,7 @@ metadata:
     service.beta.kubernetes.io/azure-load-balancer-resource-group: "MC_Movie-Rating_aks-movie-rating_austriaeast"
 spec:
   type: LoadBalancer
+  loadBalancerIP: 68.210.96.73
   selector:
     app: backend
   ports:
