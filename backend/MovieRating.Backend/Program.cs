@@ -41,14 +41,19 @@ builder.Services.AddScoped<IGenreService, GenreService>();
 
 builder.Services.AddControllers();
 
-// Allow the Vite dev server to call the API during development.
+// CORS – allow the Vite dev server and any deployed frontend origin.
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("FrontendDev", policy =>
-        policy.WithOrigins("http://localhost:5173")
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                      ?? ["http://localhost:5173"];
+
+        policy.WithOrigins(origins)
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials());
+              .AllowCredentials();
+    });
 });
 
 // 3. Configure JWT Authentication
@@ -115,15 +120,14 @@ builder.Services.AddScoped<ITmdbImportService, TmdbImportService>();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Swagger is available in all environments so the deployed API can be tested.
+app.UseSwagger();
+app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+// Health-check endpoint for Kubernetes liveness / readiness probes.
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
-app.UseCors("FrontendDev");
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

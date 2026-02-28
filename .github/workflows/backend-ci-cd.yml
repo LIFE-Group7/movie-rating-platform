@@ -1,0 +1,66 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "devops/k8s/backend-*"
+      - ".github/workflows/backend-ci-cd.yml"
+  workflow_dispatch: # allow manual trigger
+
+env:
+  ACR_NAME: movieratingacr
+  IMAGE_NAME: backend
+  RESOURCE_GROUP: Movie-Rating
+  CLUSTER_NAME: aks-movie-rating
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout code ─────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Login to Azure ────────────────────────────────────
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # ── 3. Login to ACR ──────────────────────────────────────
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      # ── 4. Build and push Docker image ───────────────────────
+      - name: Build and push image
+        run: |
+          IMAGE_TAG=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          IMAGE_LATEST=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+          docker build -t $IMAGE_TAG -t $IMAGE_LATEST -f backend/Dockerfile backend/
+          docker push $IMAGE_TAG
+          docker push $IMAGE_LATEST
+
+      # ── 5. Set AKS context ──────────────────────────────────
+      - name: Set AKS context
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+
+      # ── 6. Deploy to AKS ────────────────────────────────────
+      - name: Deploy manifests
+        run: |
+          kubectl apply -f devops/k8s/backend-deployment.yaml
+          kubectl apply -f devops/k8s/backend-service.yaml
+
+      - name: Update image to new tag
+        run: |
+          kubectl set image deployment/backend-deployment \
+            backend=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      # ── 7. Verify rollout ────────────────────────────────────
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/backend-deployment --timeout=180s
