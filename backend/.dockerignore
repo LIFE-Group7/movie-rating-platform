@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/out/
+**/.vs/
+**/.vscode/
+**/node_modules/
+**/*.user
+**/*.suo
+**/Thumbs.db
+**/.DS_Store
+**/TestResults/
+MovieRating.Backend.Tests/
