@@ -1,10 +1,6 @@
 import { Outlet, NavLink } from "react-router-dom";
 import ClapperboardIcon from "../components/icons/ClapperboardIcon";
 
-/**
- * Minimal wrapper for authentication pages (Login, Register, ForgotPassword).
- * Shows only the logo so users can navigate back home without signing in.
- */
 function AuthLayout() {
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col">

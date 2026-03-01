@@ -1,14 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
-/**
- * Guard component for admin-only routes.
- *
- * Three outcomes:
- *  1. Session still loading  → spinner (prevents flash-redirect on refresh)
- *  2. Not authenticated      → redirect to /login
- *  3. Authenticated, no role → redirect to / (403-equivalent)
- */
 function AdminRoute({ children }) {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
 

@@ -22,6 +22,7 @@ const ReviewsContext = createContext();
 
 const normalizeType = (type) => type ?? "movie";
 
+/** Normalizes mixed backend casing/field variants into one frontend shape. */
 const normalizeUserReviewsResponse = (payload) => {
   if (!payload) return [];
 
@@ -89,7 +90,6 @@ export function ReviewsProvider({ children }) {
   const [reviews, setReviews] = useState([]);
   const hasAuthSession = isAuthenticated && Boolean(user?.email);
 
-  // Fetch from DB on mount or auth change
   useEffect(() => {
     if (!hasAuthSession) return;
 
@@ -119,7 +119,7 @@ export function ReviewsProvider({ children }) {
         reviewData;
       const reviewType = normalizeType(type);
 
-      // Fast duplicate check against local state before hitting the network
+      // Prevent duplicate submissions for the same media + type pair.
       const alreadyReviewed = visibleReviews.some((r) =>
         matchesReview(r, movieId, reviewType),
       );
@@ -143,7 +143,7 @@ export function ReviewsProvider({ children }) {
         const newReview = {
           movieId,
           movieTitle,
-          movieImageUrl, // Backend returns 'movieCoverImageUrl', handle map if needed later
+          movieImageUrl,
           rating,
           comment: comment || "",
           type: reviewType,
@@ -200,7 +200,6 @@ export function ReviewsProvider({ children }) {
     [isAuthenticated],
   );
 
-  // Permanently remove a review by movieId
   const deleteReview = useCallback(
     async (movieId, type = "movie") => {
       if (!isAuthenticated) return;
@@ -222,14 +221,12 @@ export function ReviewsProvider({ children }) {
     [isAuthenticated],
   );
 
-  // True if the user already has a review for the given movie
   const hasReviewedMovie = useCallback(
     (movieId, type = "movie") =>
       visibleReviews.some((review) => matchesReview(review, movieId, type)),
     [visibleReviews],
   );
 
-  // Return the user's review object for a movie, or null if none exists
   const getReviewForMovie = useCallback(
     (movieId, type = "movie") =>
       visibleReviews.find((review) => matchesReview(review, movieId, type)) ??
@@ -237,7 +234,6 @@ export function ReviewsProvider({ children }) {
     [visibleReviews],
   );
 
-  // Content-type-aware aliases for detail pages and new callers.
   const hasReviewedItem = useCallback(
     ({ movieId, type = "movie" }) => hasReviewedMovie(movieId, type),
     [hasReviewedMovie],

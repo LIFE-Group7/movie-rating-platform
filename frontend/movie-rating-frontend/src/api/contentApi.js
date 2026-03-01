@@ -1,7 +1,7 @@
 import { get } from "./apiClient";
 import { buildPlaceholderPoster } from "../utils/media";
 
-// Handles both array responses and paginated wrappers { data: [], items: [], results: [] }
+// Accepts both plain arrays and common paginated wrappers.
 const extractList = (payload) => {
   if (Array.isArray(payload)) return payload;
   if (payload?.data && Array.isArray(payload.data)) return payload.data;
@@ -17,20 +17,17 @@ const coerceGenres = (input) => {
   return [];
 };
 
-// Extract year from date string (YYYY-MM-DD or DateOnly)
 const extractYear = (dateString) => {
   if (!dateString) return null;
   const year = String(dateString).split("-")[0];
   return year && !isNaN(year) ? parseInt(year, 10) : null;
 };
 
-// Format duration from minutes to human-readable string
 const formatDuration = (minutes) => {
   if (!minutes || isNaN(minutes)) return null;
   return `${minutes} min`;
 };
 
-// Normalizes a raw Movie DTO from the backend into the shape the UI expects
 const normalizeMovie = (item, idx = 0) => {
   const title = item.title ?? item.name ?? `Untitled ${idx + 1}`;
   const backdropUrl =
@@ -72,7 +69,6 @@ const normalizeMovie = (item, idx = 0) => {
   };
 };
 
-// Normalizes a raw Show DTO from the backend into the shape the UI expects
 const normalizeShow = (item, idx = 0) => {
   const title = item.title ?? item.name ?? `Untitled ${idx + 1}`;
   const backdropUrl =

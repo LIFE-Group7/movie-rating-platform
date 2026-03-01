@@ -5,18 +5,10 @@ import ShowCard from "../components/ShowCard";
 import SearchBar from "../components/SearchBar";
 import { fetchMovies, fetchShows } from "../api/contentApi";
 
-/**
- * Search / browse page.
- *
- * All filter state (query, genre, type) lives in the URL search params so the
- * results page is bookmarkable and back-navigable without extra state management.
- * The Navbar's SearchBar and the genre pill buttons in Home both deep-link here.
- */
 function Search() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Accept both singular/plural type params so deep-links remain compatible.
   const normalizeTypeParam = (type) => {
     if (type === "movie" || type === "movies") return "movies";
     if (type === "show" || type === "shows") return "shows";
@@ -32,7 +24,6 @@ function Search() {
   const [currentType, setCurrentType] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  // Fetch all movies and shows from the real API once on mount.
   useEffect(() => {
     let isMounted = true;
     const load = async () => {
@@ -42,8 +33,8 @@ function Search() {
           fetchShows(),
         ]);
         if (isMounted) {
-          setAllMovies(moviesData); // already normalized (type: "movie")
-          setAllShows(showsData); // already normalized (type: "show")
+          setAllMovies(moviesData);
+          setAllShows(showsData);
         }
       } catch (err) {
         console.error("Search load error:", err);
@@ -57,9 +48,8 @@ function Search() {
     };
   }, []);
 
-  // Re-run filtering every time the URL params or data change
-  // (including browser back/forward navigation).
   useEffect(() => {
+    // URL params are the single source of truth for filter state.
     const queryFromUrl = searchParams.get("q") || "";
     const genreFromUrl = searchParams.get("genre") || "";
     const categoryFromUrl = searchParams.get("category") || "";
@@ -70,13 +60,11 @@ function Search() {
     setCurrentCategory(categoryFromUrl);
     setCurrentType(typeFromUrl);
 
-    // Start with the full dataset for the requested type, then narrow by genre/query.
     let results;
     if (typeFromUrl === "movies") results = [...allMovies];
     else if (typeFromUrl === "shows") results = [...allShows];
     else results = [...allMovies, ...allShows];
 
-    // Apply category filtering/sorting (from View All button)
     if (categoryFromUrl.trim() !== "") {
       if (categoryFromUrl.startsWith("genre:")) {
         const genre = categoryFromUrl.split(":")[1].toLowerCase();
@@ -108,7 +96,6 @@ function Search() {
     setFilteredResults(results);
   }, [searchParams, allMovies, allShows]);
 
-  // Update the `type` param and let the effect above re-filter results.
   const handleTypeChange = (newType) => {
     const next = new URLSearchParams(searchParams);
     if (newType === "all") next.delete("type");
@@ -116,21 +103,18 @@ function Search() {
     setSearchParams(next);
   };
 
-  // Remove the genre filter without clearing other params.
   const clearGenre = () => {
     const next = new URLSearchParams(searchParams);
     next.delete("genre");
     setSearchParams(next);
   };
 
-  // Remove the category filter without clearing other params.
   const clearCategory = () => {
     const next = new URLSearchParams(searchParams);
     next.delete("category");
     setSearchParams(next);
   };
 
-  // Format category display name
   const getCategoryDisplayName = (category) => {
     if (category.startsWith("genre:")) {
       const genre = category.split(":")[1];
@@ -143,7 +127,6 @@ function Search() {
     return category;
   };
 
-  // Derive the correct singular/plural label for the result count line.
   const resultsLabel = useMemo(() => {
     if (currentType === "movies")
       return filteredResults.length === 1 ? "movie" : "movies";
@@ -152,7 +135,6 @@ function Search() {
     return filteredResults.length === 1 ? "result" : "results";
   }, [currentType, filteredResults.length]);
 
-  // Base and active/inactive class factory for the type filter pills.
   const pillBase =
     "px-4 py-2 rounded-full text-sm font-semibold border transition-all";
   const pill = (type) =>
@@ -162,7 +144,6 @@ function Search() {
         : "bg-white/5 text-white/70 border-white/10 hover:border-white/25 hover:text-white hover:bg-white/7"
     }`;
 
-  // Show a loading screen while the API call is in-flight.
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
@@ -176,7 +157,6 @@ function Search() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-screen-2xl mx-auto px-4 md:px-6 py-8">
-        {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
@@ -211,7 +191,6 @@ function Search() {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <button
             onClick={() => handleTypeChange("all")}
@@ -255,7 +234,6 @@ function Search() {
           )}
         </div>
 
-        {/* Results */}
         <div className="mt-8">
           {(currentQuery || currentGenre) && filteredResults.length === 0 ? (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
@@ -273,7 +251,6 @@ function Search() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {filteredResults.map((item) => {
-                // contentApi always sets type: "movie" or type: "show" on normalized items
                 const isShow = item.type === "show";
                 return isShow ? (
                   <ShowCard key={`show-${item.id}`} show={item} />

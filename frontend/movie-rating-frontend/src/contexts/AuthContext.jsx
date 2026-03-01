@@ -17,11 +17,8 @@ export const useAuth = () => {
 };
 
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+const LOCKOUT_TIME = 15 * 60 * 1000;
 
-// ── JWT helpers ───────────────────────────────────────────────────────────────
-
-// .NET ClaimTypes serialise to verbose URI keys inside the JWT payload.
 const CLAIM_ID =
   "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
 const CLAIM_NAME = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name";
@@ -30,7 +27,6 @@ const CLAIM_EMAIL =
 const CLAIM_ROLE =
   "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
 
-/** Decodes the payload section of a JWT without an external library. */
 const decodeJwtPayload = (token) => {
   try {
     const [, payloadB64] = token.split(".");
@@ -41,7 +37,6 @@ const decodeJwtPayload = (token) => {
   }
 };
 
-/** Maps .NET ClaimType URIs → application user shape. */
 const extractUser = (payload) => ({
   id: payload[CLAIM_ID] ?? null,
   username: payload[CLAIM_NAME] ?? "",
@@ -49,17 +44,12 @@ const extractUser = (payload) => ({
   role: payload[CLAIM_ROLE] ?? "User",
 });
 
-/**
- * Returns true when the token is absent, malformed, or past its exp claim.
- * exp is in seconds; Date.now() is in milliseconds.
- */
+// exp is seconds while Date.now() is milliseconds.
 const isTokenExpired = (token) => {
   const payload = decodeJwtPayload(token);
   if (!payload?.exp) return true;
   return Date.now() >= payload.exp * 1000;
 };
-
-// ── Provider ──────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -68,7 +58,6 @@ export function AuthProvider({ children }) {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockoutTime, setLockoutTime] = useState(null);
 
-  /** Clears all auth state and persisted token. */
   const logout = useCallback(() => {
     localStorage.removeItem("authToken");
     setUser(null);
@@ -77,7 +66,6 @@ export function AuthProvider({ children }) {
     setLockoutTime(null);
   }, []);
 
-  // ── Session restoration on startup ────────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("authToken");
 
@@ -88,17 +76,16 @@ export function AuthProvider({ children }) {
           setUser(extractUser(payload));
           setIsAuthenticated(true);
         } else {
-          localStorage.removeItem("authToken"); // malformed — clear silently
+          localStorage.removeItem("authToken");
         }
       } else {
-        localStorage.removeItem("authToken"); // expired — clear silently (FE-05)
+        localStorage.removeItem("authToken");
       }
     }
 
     setIsLoading(false);
   }, []);
 
-  // ── 401 auto-logout (FE-05) ───────────────────────────────────────────────
   useEffect(() => {
     setUnauthorizedHandler(() => {
       logout();
@@ -106,7 +93,6 @@ export function AuthProvider({ children }) {
     });
   }, [logout]);
 
-  // ── Login ─────────────────────────────────────────────────────────────────
   const login = async (username, password) => {
     if (lockoutTime && Date.now() < lockoutTime) {
       const remaining = Math.ceil((lockoutTime - Date.now()) / 1000 / 60);
@@ -123,7 +109,6 @@ export function AuthProvider({ children }) {
     try {
       const data = await apiPost("/api/auth/login", { username, password });
 
-      // Backend returns { token: "..." } — handle both casings defensively
       const rawToken = data?.token ?? data?.Token;
       if (!rawToken) throw new Error("Invalid token received from server.");
 
@@ -155,14 +140,11 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // ── Register ──────────────────────────────────────────────────────────────
-  // Does not auto-login — user must sign in manually after.
   const register = async (username, email, password) => {
     await apiPost("/api/auth/register", { username, email, password });
     return { success: true };
   };
 
-  // ── Forgot password ───────────────────────────────────────────────────────
   const forgotPassword = async () => {
     await new Promise((resolve) => setTimeout(resolve, 800));
     return { success: true };
@@ -180,7 +162,7 @@ export function AuthProvider({ children }) {
     user,
     isAuthenticated,
     isLoading,
-    isAdmin: user?.role === "Admin", // matches backend UserRole.Admin.ToString()
+    isAdmin: user?.role === "Admin",
     login,
     register,
     forgotPassword,

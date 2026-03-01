@@ -4,57 +4,31 @@ import { useReviews } from "../contexts/ReviewContext";
 import StarRating from "../components/StarRating";
 import ReviewEditForm from "../components/reviews/ReviewEditForm";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/**
- * Build the detail-page path for a review.
- * Shows have type "show"; everything else falls back to the movie route.
- */
 const buildDetailPath = (movieId, type) =>
   type === "show" ? `/show/${movieId}` : `/movie/${movieId}`;
 const buildReviewKey = (movieId, type) => `${type || "movie"}:${movieId}`;
 
-/**
- * Format an ISO timestamp string into a localised date for display.
- * Falls back to an empty string when the value is absent or invalid.
- */
 const formatReviewDate = (isoString) => {
   if (!isoString) return "";
   const date = new Date(isoString);
   return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString();
 };
-
-// ── Page component ────────────────────────────────────────────────────────────
 function MyReviews() {
-  // ReviewContext already scopes reviews to the current user's localStorage key,
-  // so no further userId filtering is needed here.
-  // BUG FIX: was `removeReview` (undefined) — correct name is `deleteReview`.
   const { reviews, updateReview, deleteReview } = useReviews();
-
-  // Track which review card is currently open for editing.
-  // Uses movieId as the identifier because review objects have no `id` field.
   const [editingReviewKey, setEditingReviewKey] = useState(null);
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // ReviewContext stores `createdAt` (ISO string); sort newest-first.
-  // BUG FIX: was sorting by `review.timestamp` which is never stored in context.
   const sortedReviews = [...reviews].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
   );
 
-  // Pagination helpers
   const totalPages = Math.ceil(sortedReviews.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedReviews = sortedReviews.slice(startIndex, endIndex);
 
-  /**
-   * Apply edited fields to a review and close the edit form.
-   * ReviewContext.updateReview stamps an `updatedAt` timestamp automatically.
-   */
   const handleUpdate = async (movieId, type, updatedFields) => {
     await updateReview(movieId, updatedFields, type);
     setEditingReviewKey(null);
@@ -119,7 +93,6 @@ function MyReviews() {
         </p>
 
         {sortedReviews.length === 0 ? (
-          /* ── Empty state ── */
           <div className="text-center py-20 border border-dashed border-white/10 rounded-3xl bg-white/5">
             <div className="text-4xl mb-4 opacity-30">⭐</div>
             <h3 className="text-xl font-bold mb-2">No reviews yet</h3>
@@ -134,16 +107,13 @@ function MyReviews() {
             </Link>
           </div>
         ) : (
-          /* ── Review list ── */
           <>
             <div className="space-y-6">
               {paginatedReviews.map((review) => (
-                // BUG FIX: was `review.id` (undefined) — movieId is the unique key.
                 <div
                   key={buildReviewKey(review.movieId, review.type)}
                   className="flex flex-col md:flex-row md:items-start gap-6 p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur hover:bg-white/7 transition-colors"
                 >
-                  {/* Poster Thumbnail */}
                   <div className="flex-shrink-0 self-start w-24 md:w-32 aspect-[2/3] rounded-lg overflow-hidden border border-white/10 bg-zinc-900">
                     {review.movieImageUrl ? (
                       <img
@@ -158,14 +128,9 @@ function MyReviews() {
                     )}
                   </div>
 
-                  {/* Review content */}
                   <div className="flex-1">
                     <div className="flex flex-wrap justify-between items-start gap-4 mb-3">
                       <div>
-                        {/*
-                         * BUG FIX: was always `/movie/...`.
-                         * Now uses review.type to route shows to `/show/...`.
-                         */}
                         <Link
                           to={buildDetailPath(review.movieId, review.type)}
                           className="text-xl font-bold hover:text-blue-400 transition-colors"
@@ -173,7 +138,6 @@ function MyReviews() {
                           {review.movieTitle}
                         </Link>
                         <div className="text-xs text-white/40 mt-1">
-                          {/* BUG FIX: was `review.timestamp` — context stores `createdAt`. */}
                           Reviewed on {formatReviewDate(review.createdAt)}
                           {review.updatedAt && (
                             <span className="ml-2 text-white/25">
@@ -183,7 +147,6 @@ function MyReviews() {
                         </div>
                       </div>
 
-                      {/* Action buttons — hidden while the edit form is open */}
                       {editingReviewKey !==
                         buildReviewKey(review.movieId, review.type) && (
                         <div className="flex items-center gap-2">
@@ -197,7 +160,6 @@ function MyReviews() {
                           >
                             Edit
                           </button>
-                          {/* BUG FIX: was `removeReview` (not exported) — correct is `deleteReview`. */}
                           <button
                             onClick={() =>
                               deleteReview(
@@ -213,7 +175,6 @@ function MyReviews() {
                       )}
                     </div>
 
-                    {/* Inline edit form or read-only review display */}
                     {editingReviewKey ===
                     buildReviewKey(review.movieId, review.type) ? (
                       <ReviewEditForm

@@ -3,20 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
 
-/**
- * Compact TV-show card — mirrors MovieCard but routes to /show/:id and displays
- * show-specific metadata (season count, ongoing/ended status badge).
- */
 function ShowCard({ show }) {
   const navigate = useNavigate();
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
   const { isAuthenticated } = useAuth();
 
-  // Normalise either `genres` array or legacy `genre` string into one shape.
   const showGenres = show?.genres || (show?.genre ? [show.genre] : []);
   const inWatchlist = isInWatchlist(show.id);
   const [isHovering, setIsHovering] = useState(false);
-  // Used to colour the status indicator — green dot for ongoing, grey for ended.
   const isOngoing = show?.status === "Ongoing";
 
   const ratingText = useMemo(() => {
@@ -26,10 +20,7 @@ function ShowCard({ show }) {
 
   const openDetails = () => navigate(`/show/${show.id}`);
 
-  /**
-   * Toggle watchlist membership without navigating to the detail page.
-   * Unauthenticated users are redirected to /login rather than silently failing.
-   */
+  // Keep watchlist toggle from triggering card navigation.
   const toggleWatchlist = (e) => {
     e.stopPropagation();
     if (!isAuthenticated) {
@@ -56,7 +47,6 @@ function ShowCard({ show }) {
       aria-label={`Open details for ${show.title}`}
       className="cursor-pointer rounded-2xl overflow-hidden border border-white/10 bg-white/5 hover:bg-white/7 transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 flex flex-col"
     >
-      {/* Poster */}
       <div className="relative aspect-[2/3] bg-gradient-to-br from-zinc-800 via-zinc-900 to-black w-full">
         {show?.imageUrl ? (
           <img
@@ -83,8 +73,9 @@ function ShowCard({ show }) {
           </span>
         </div>
 
-        {/* Hover overlay — the visible watchlist / details buttons live here */}
-        <div className={`absolute inset-0 transition-opacity ${isHovering ? "opacity-100" : "opacity-0"}`}>
+        <div
+          className={`absolute inset-0 transition-opacity ${isHovering ? "opacity-100" : "opacity-0"}`}
+        >
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
             <button
@@ -108,7 +99,6 @@ function ShowCard({ show }) {
         </div>
       </div>
 
-      {/* Info Area - Fixed Height */}
       <div className="p-3 flex flex-col justify-between flex-1 min-h-[104px]">
         <div>
           <h3
@@ -141,7 +131,6 @@ function ShowCard({ show }) {
           )}
         </div>
 
-        {/* Genres container - line-clamp-1 prevents wrapping to new lines */}
         <div className="mt-2 flex gap-1.5 overflow-hidden w-full">
           {showGenres.length > 0 ? (
             showGenres.map((g) => (
@@ -153,7 +142,7 @@ function ShowCard({ show }) {
               </span>
             ))
           ) : (
-            <span className="h-[22px]" /> /* Empty spacer to maintain layout height */
+            <span className="h-[22px]" />
           )}
         </div>
       </div>

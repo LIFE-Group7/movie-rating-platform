@@ -7,12 +7,6 @@ import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
 import { buildPlaceholderPoster } from "../utils/media";
 
-/**
- * TV-show detail page — mirrors MovieDetails but uses the shows dataset and
- * displays show-specific fields (seasons, ongoing/ended status).
- * Passes `showData` as the `movie` prop to ReviewForm since ReviewForm is
- * content-type agnostic; the `type` field on the object disambiguates.
- */
 function ShowDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -67,7 +61,6 @@ function ShowDetails() {
     }
   }, [location, loading, showData]);
 
-  // Fetch all reviews for this show, pinning the current user's review first.
   useEffect(() => {
     if (!id) return;
     fetchShowReviews(id)
@@ -152,7 +145,6 @@ function ShowDetails() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-20">
-      {/* Hero Backdrop */}
       <div className="relative w-full h-[50vh] md:h-[65vh] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent z-10" />
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent z-10" />
@@ -165,7 +157,6 @@ function ShowDetails() {
 
       <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-20 -mt-32 md:-mt-48">
         <div className="flex flex-col md:flex-row gap-8 md:gap-12">
-          {/* Poster Card */}
           <div className="flex-shrink-0 mx-auto md:mx-0 w-56 md:w-80">
             <img
               src={posterImageUrl}
@@ -174,7 +165,6 @@ function ShowDetails() {
             />
           </div>
 
-          {/* Details */}
           <div className="flex-1 pt-2 md:pt-10 text-center md:text-left">
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-2 drop-shadow-lg">
               {showData.title}
@@ -277,7 +267,6 @@ function ShowDetails() {
           </div>
         </div>
 
-        {/* Reviews Section */}
         <div ref={reviewsRef} className="mt-20 max-w-3xl">
           <h2 className="text-2xl font-bold mb-6 border-l-4 border-blue-500 pl-4">
             Reviews & Ratings
@@ -287,7 +276,6 @@ function ShowDetails() {
             onSubmitSuccess={handleReviewSubmitted}
           />
 
-          {/* Reviews List */}
           {reviews.length > 0 && (
             <div className="mt-10 space-y-4">
               {pagedReviews.map((review, i) => {

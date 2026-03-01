@@ -5,24 +5,12 @@ import MovieCard from "../components/MovieCard";
 import ShowCard from "../components/ShowCard";
 import { GridIcon, ListIcon } from "../components/icons/ViewModeIcons";
 
-/**
- * Watchlist page — "My Library".
- * Shows the user's saved watchlist in either grid or list view.
- * Also surfaces a "Recently Viewed" section below the main watchlist.
- *
- * Both movies and shows share the same watchlist array; a show is distinguished
- * from a movie by the presence of a `seasons` field.  This duck-typing check
- * (`hasOwnProperty("seasons")`) is an intentional simplification until the
- * backend returns a proper `type` discriminant on every item.
- */
 function Watchlist() {
   const navigate = useNavigate();
   const { watchlist, recentlyViewed, removeFromWatchlist } = useWatchlist();
 
-  // "grid" renders MovieCard/ShowCard; "list" renders a compact row layout.
   const [viewMode, setViewMode] = useState("list");
 
-  // Pagination state
   const [watchlistPage, setWatchlistPage] = useState(1);
   const [recentlyViewedPage, setRecentlyViewedPage] = useState(1);
   const itemsPerPage = 10;
@@ -33,7 +21,6 @@ function Watchlist() {
     return Object.prototype.hasOwnProperty.call(item, "seasons");
   };
 
-  // Pagination helpers
   const getPaginatedItems = (items, page) => {
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -89,11 +76,6 @@ function Watchlist() {
     );
   };
 
-  /**
-   * Render the items array in the currently selected view mode.
-   * Extracted into its own function so it can be reused for both the watchlist
-   * section and the recently-viewed section without duplicating the JSX.
-   */
   const renderContent = (items) => {
     if (viewMode === "grid") {
       return (
@@ -110,7 +92,6 @@ function Watchlist() {
       );
     }
 
-    // List view
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map((item) => {
@@ -132,7 +113,6 @@ function Watchlist() {
               }}
               className="relative flex gap-4 p-4 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
             >
-              {/* Thumbnail */}
               <div className="w-20 md:w-28 flex-shrink-0 rounded-lg overflow-hidden bg-zinc-900">
                 {item.imageUrl ? (
                   <img
@@ -143,7 +123,6 @@ function Watchlist() {
                 ) : null}
               </div>
 
-              {/* Info */}
               <div className="flex flex-col justify-center py-2 flex-1">
                 <h3 className="text-lg font-bold text-white mb-1">
                   {item.title}
@@ -232,7 +211,6 @@ function Watchlist() {
             </p>
           </div>
 
-          {/* View Toggle */}
           <div className="flex bg-white/5 p-1 rounded-lg border border-white/10">
             <button
               onClick={() => setViewMode("grid")}
@@ -259,7 +237,6 @@ function Watchlist() {
           </div>
         </header>
 
-        {/* ── 1. Watchlist Section ── */}
         <section className="mb-16">
           <h2 className="text-2xl font-bold mb-6 border-l-4 border-blue-500 pl-4">
             Saved to Watchlist
@@ -289,7 +266,6 @@ function Watchlist() {
           )}
         </section>
 
-        {/* ── 2. Recently Viewed Section ── */}
         {recentlyViewed.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold mb-6 border-l-4 border-zinc-700 pl-4 text-white/80">

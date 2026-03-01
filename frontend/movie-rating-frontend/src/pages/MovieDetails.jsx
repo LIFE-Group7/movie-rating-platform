@@ -7,12 +7,6 @@ import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
 import { buildPlaceholderPoster } from "../utils/media";
 
-/**
- * Movie detail page.
- * Loads film data from the mock dataset by URL param `id`.
- * Adds the film to the WatchlistContext recently-viewed history on mount.
- * Hosts the ReviewForm and optimistically updates the displayed rating after submission.
- */
 function MovieDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -56,8 +50,6 @@ function MovieDetails() {
     };
   }, [id, addRecentlyViewed]);
 
-  // Scroll to the review form when navigated here with the scrollToReview flag
-  // (e.g. from a "write a review" deep-link elsewhere in the app).
   useEffect(() => {
     if (location.state?.scrollToReview && !loading && movieData) {
       setTimeout(() => {
@@ -69,7 +61,6 @@ function MovieDetails() {
     }
   }, [location, loading, movieData]);
 
-  // Fetch all reviews for this movie, pinning the current user's review first.
   useEffect(() => {
     if (!id) return;
     fetchMovieReviews(id)
@@ -95,7 +86,6 @@ function MovieDetails() {
     if (!movieData) return;
     const currentRating = movieData.rating || 0;
     const currentCount = movieData.reviewCount || 0;
-    // Check if user already has a review — if so it's an update (count stays same), otherwise increment
     const userAlreadyReviewed = false;
     const newCount = userAlreadyReviewed ? currentCount : currentCount + 1;
     const newRating = userAlreadyReviewed
@@ -154,7 +144,6 @@ function MovieDetails() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-20">
-      {/* Hero Backdrop */}
       <div className="relative w-full h-[50vh] md:h-[65vh] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent z-10" />
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent z-10" />
@@ -167,7 +156,6 @@ function MovieDetails() {
 
       <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-20 -mt-32 md:-mt-48">
         <div className="flex flex-col md:flex-row gap-8 md:gap-12">
-          {/* Poster Card */}
           <div className="flex-shrink-0 mx-auto md:mx-0 w-56 md:w-80">
             <img
               src={posterImageUrl}
@@ -176,7 +164,6 @@ function MovieDetails() {
             />
           </div>
 
-          {/* Details */}
           <div className="flex-1 pt-2 md:pt-10 text-center md:text-left">
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-2 drop-shadow-lg">
               {movieData.title}
@@ -289,7 +276,6 @@ function MovieDetails() {
           </div>
         </div>
 
-        {/* Reviews Section */}
         <div ref={reviewsRef} className="mt-20 max-w-3xl">
           <h2 className="text-2xl font-bold mb-6 border-l-4 border-blue-500 pl-4">
             Reviews & Ratings
@@ -299,7 +285,6 @@ function MovieDetails() {
             onSubmitSuccess={handleReviewSubmitted}
           />
 
-          {/* Reviews List */}
           {reviews.length > 0 && (
             <div className="mt-10 space-y-4">
               {pagedReviews.map((review, i) => {

@@ -3,12 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { getAuthInputClass, mapAuthSubmitError } from "../utils/authUi";
 
-/**
- * Registration page.
- * On success, navigates to /login after a short delay so the user can see the
- * confirmation message — intentionally does NOT auto-login to keep the auth
- * flow explicit (the user must verify credentials by logging in manually).
- */
 function Register() {
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -24,14 +18,12 @@ function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Clear per-field error as soon as the user starts correcting the value.
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Returns a map of field name → error message; empty object means all fields valid.
   const validateForm = () => {
     const newErrors = {};
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
