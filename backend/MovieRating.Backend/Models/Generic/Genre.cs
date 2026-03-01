@@ -12,6 +12,8 @@ public class Genre
     [MaxLength(50)]
     public required string Name { get; set; }
     
+    public required bool isActive { get; set; } = false;
+    
     public ICollection<MovieGenre> MovieGenres { get; set; } =  new List<MovieGenre>();
     public ICollection<ShowGenre> ShowGenres { get; set; } = new List<ShowGenre>();
 }

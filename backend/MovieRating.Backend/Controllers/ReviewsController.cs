@@ -7,8 +7,6 @@ using MovieRating.Backend.Services.Interfaces;
 
 namespace MovieRating.Backend.Controllers;
 
-[Authorize(Roles = "User, Admin")]
-
 public class ReviewsController : BaseApiController
 {
     private readonly IReviewService _service;
@@ -18,50 +16,7 @@ public class ReviewsController : BaseApiController
         this._service = service;
     }
     
-    [HttpPost("movies")]
-    public async Task<IActionResult> CreateMovieReview([FromBody] MovieReviewRequestDto request)
-    {
-        var userId = GetUserId();
-        if (userId == null) return Unauthorized();
-
-        var result = await _service.CreateMovieReviewAsync(userId.Value, request);
-        return result.IsSuccess ? Ok(result.Data) : HandleError(result);
-    }
-
-
-    [HttpPut("movies")]
-    public async Task<IActionResult> UpdateMovieReview([FromBody] MovieReviewRequestDto request)
-    {
-        var userId = GetUserId();
-        if (userId == null) return Unauthorized();
-
-        var result = await _service.UpdateMovieReviewAsync(userId.Value, request);
-        return result.IsSuccess ? Ok(result.Data) : HandleError(result);
-    }
-    
-
-    [HttpPost("shows")]
-    public async Task<IActionResult> CreateShowReview([FromBody] ShowReviewRequestDto request)
-    {
-        var userId = GetUserId();
-        if (userId == null) return Unauthorized();
-
-        var result = await _service.CreateShowReviewAsync(userId.Value, request);
-        return result.IsSuccess ? Ok(result.Data) : HandleError(result);
-    }
-    
-
-    [HttpPut("shows")]
-    public async Task<IActionResult> UpdateShowReview([FromBody] ShowReviewRequestDto request)
-    {
-        var userId = GetUserId();
-        if (userId == null) return Unauthorized();
-
-        var result = await _service.UpdateShowReviewAsync(userId.Value, request);
-        return result.IsSuccess ? Ok(result.Data) : HandleError(result);
-    }
-
-
+    [Authorize (Roles = "User, Admin")]
     [HttpGet("user")]
     public async Task<IActionResult> GetUserReviews()
     {
@@ -80,7 +35,66 @@ public class ReviewsController : BaseApiController
             ShowReviews = showReviewsResult.Data
         });
     }
+    
+    [HttpGet("movies/{movieId}")]
+    public async Task<IActionResult> GetMovieReviews(int movieId)
+    {
+        var result = await _service.GetMovieReviewsAsync(movieId);
+        return result.IsSuccess ? Ok(result.Data) : HandleError(result);
+    }
+    
+    [HttpGet("shows/{showId}")]
+    public async Task<IActionResult> GetShowReviews(int showId)
+    {
+        var result = await _service.GetShowReviewsAsync(showId);
+        return result.IsSuccess ? Ok(result.Data) : HandleError(result);
+    }
+    
+    [Authorize (Roles = "User, Admin")]
+    [HttpPost("movies")]
+    public async Task<IActionResult> CreateMovieReview([FromBody] MovieReviewRequestDto request)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
 
+        var result = await _service.CreateMovieReviewAsync(userId.Value, request);
+        return result.IsSuccess ? Ok(result.Data) : HandleError(result);
+    }
+    
+    [Authorize (Roles = "User, Admin")]
+    [HttpPost("shows")]
+    public async Task<IActionResult> CreateShowReview([FromBody] ShowReviewRequestDto request)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var result = await _service.CreateShowReviewAsync(userId.Value, request);
+        return result.IsSuccess ? Ok(result.Data) : HandleError(result);
+    }
+    
+    [Authorize (Roles = "User, Admin")]
+    [HttpPut("shows")]
+    public async Task<IActionResult> UpdateShowReview([FromBody] ShowReviewRequestDto request)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var result = await _service.UpdateShowReviewAsync(userId.Value, request);
+        return result.IsSuccess ? Ok(result.Data) : HandleError(result);
+    }
+    
+    [Authorize (Roles = "User, Admin")]
+    [HttpPut("movies")]
+    public async Task<IActionResult> UpdateMovieReview([FromBody] MovieReviewRequestDto request)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var result = await _service.UpdateMovieReviewAsync(userId.Value, request);
+        return result.IsSuccess ? Ok(result.Data) : HandleError(result);
+    }
+
+    [Authorize (Roles = "User, Admin")]
     [HttpDelete("movies/{movieId}")]
     public async Task<IActionResult> DeleteMovieReview(int movieId)
     {
@@ -91,7 +105,7 @@ public class ReviewsController : BaseApiController
         return result.IsSuccess ? NoContent() : HandleError(result);
     }
     
-
+    [Authorize (Roles = "User, Admin")]
     [HttpDelete("shows/{showId}")]
     public async Task<IActionResult> DeleteShowReview(int showId)
     {

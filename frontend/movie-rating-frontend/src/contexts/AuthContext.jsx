@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useState,
@@ -162,8 +163,7 @@ export function AuthProvider({ children }) {
   };
 
   // ── Forgot password ───────────────────────────────────────────────────────
-  // TODO: implement once backend adds POST /api/auth/forgot-password
-  const forgotPassword = async (_email) => {
+  const forgotPassword = async () => {
     await new Promise((resolve) => setTimeout(resolve, 800));
     return { success: true };
   };

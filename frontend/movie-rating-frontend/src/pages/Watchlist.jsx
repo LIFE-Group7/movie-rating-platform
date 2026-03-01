@@ -1,46 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useWatchlist } from "../contexts/WatchlistContext";
-import { useAuth } from "../contexts/AuthContext";
 import MovieCard from "../components/MovieCard";
 import ShowCard from "../components/ShowCard";
-
-// ── Inline SVG icons for the grid/list view toggle ────────────────────────────
-function GridIcon() {
-  return (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-      />
-    </svg>
-  );
-}
-
-function ListIcon() {
-  return (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M4 6h16M4 12h16M4 18h16"
-      />
-    </svg>
-  );
-}
+import { GridIcon, ListIcon } from "../components/icons/ViewModeIcons";
 
 /**
  * Watchlist page — "My Library".
@@ -53,12 +16,11 @@ function ListIcon() {
  * backend returns a proper `type` discriminant on every item.
  */
 function Watchlist() {
-  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { watchlist, recentlyViewed, removeFromWatchlist } = useWatchlist();
 
   // "grid" renders MovieCard/ShowCard; "list" renders a compact row layout.
-  const [viewMode, setViewMode] = useState("grid");
+  const [viewMode, setViewMode] = useState("list");
 
   // Pagination state
   const [watchlistPage, setWatchlistPage] = useState(1);
@@ -70,31 +32,6 @@ function Watchlist() {
     if (item?.type) return String(item.type).toLowerCase() === "show";
     return Object.prototype.hasOwnProperty.call(item, "seasons");
   };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-center p-6 text-white">
-        <h2 className="text-3xl font-bold mb-4">Your Watchlist</h2>
-        <p className="text-white/60 max-w-md mb-8">
-          Track what you want to watch and keep a history of what you’ve seen.
-        </p>
-        <div className="flex gap-4">
-          <Link
-            to="/login"
-            className="px-6 py-3 rounded-xl bg-blue-600 font-bold hover:bg-blue-500 transition-colors"
-          >
-            Sign In
-          </Link>
-          <Link
-            to="/register"
-            className="px-6 py-3 rounded-xl bg-white/10 font-bold hover:bg-white/15 transition-colors"
-          >
-            Register
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   // Pagination helpers
   const getPaginatedItems = (items, page) => {
@@ -219,7 +156,12 @@ function Watchlist() {
                     </span>
                   )}
                   <span className="text-yellow-400">
-                    ★ {item.rating?.toFixed(1) || "N/A"}
+                    {(() => {
+                      const rating = Number(item.rating);
+                      return Number.isFinite(rating) && rating > 0
+                        ? `★ ${rating.toFixed(1)}`
+                        : "NR";
+                    })()}
                   </span>
                   {isShow ? <span>{item.seasons || "N/A"} Seasons</span> : null}
                   {isShow && item.status ? (

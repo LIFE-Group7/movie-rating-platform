@@ -38,7 +38,7 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
     type: movieType,
   });
   const isAlreadyReviewed = Boolean(existingReview);
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -69,7 +69,6 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
         type: movieType,
       });
 
-
       if (!saved) {
         setError("You already reviewed this title.");
         return;
@@ -81,9 +80,13 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
         setRating(0);
         setReviewText("");
         setSuccess(false);
-        onSubmitSuccess({ rating, reviewText: reviewText.trim(), movieId: movie.id });
+        onSubmitSuccess({
+          rating,
+          reviewText: reviewText.trim(),
+          movieId: movie.id,
+        });
       }, 900);
-    } catch (err) {
+    } catch {
       setError("Failed to submit review. Please try again.");
     } finally {
       setIsSubmitting(false);

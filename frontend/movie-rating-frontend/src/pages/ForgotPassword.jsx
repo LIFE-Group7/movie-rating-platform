@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getAuthInputClass, mapAuthSubmitError } from "../utils/authUi";
 
 /**
  * Forgot-password page.
@@ -52,23 +53,15 @@ function ForgotPassword() {
       await Promise.resolve(forgotPassword(email));
       setSuccessMessage("If an account exists, a reset link has been sent.");
     } catch (error) {
-      const msg = String(error?.message || "");
-      if (msg.includes("Failed to fetch"))
-        setErrors({ submit: "Network error. Please try again." });
-      else
-        setErrors({ submit: "Unable to process request. Please try again." });
+      setErrors({
+        submit: mapAuthSubmitError(error, {
+          fallback: "Unable to process request. Please try again.",
+        }),
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Returns the full Tailwind class string for the email input based on error state.
-  const inputClass = (hasError) =>
-    `w-full rounded-2xl px-4 py-3 text-sm outline-none transition border bg-zinc-950/40 text-white placeholder:text-white/30 ${
-      hasError
-        ? "border-red-400/40 focus:border-red-400/70 focus:ring-2 focus:ring-red-500/15"
-        : "border-white/10 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/15"
-    }`;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -101,7 +94,7 @@ function ForgotPassword() {
                 name="email"
                 value={email}
                 onChange={handleInputChange}
-                className={inputClass(Boolean(errors.email))}
+                className={getAuthInputClass(Boolean(errors.email))}
                 placeholder="you@example.com"
                 type="email"
                 autoComplete="email"

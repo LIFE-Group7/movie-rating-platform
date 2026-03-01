@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getAuthInputClass, mapAuthSubmitError } from "../utils/authUi";
 
 /**
  * Registration page.
@@ -84,25 +85,21 @@ function Register() {
       setSuccessMessage("Account created! Redirecting to login...");
       setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
-      // Map known API error messages to user-friendly copy.
-      const msg = String(error?.message || "");
-      if (msg.includes("already exists"))
-        setErrors({ submit: "Username or email already taken." });
-      else if (msg.includes("Failed to fetch"))
-        setErrors({ submit: "Network error. Please try again." });
-      else setErrors({ submit: "Registration failed. Please try again." });
+      setErrors({
+        submit: mapAuthSubmitError(error, {
+          fallback: "Registration failed. Please try again.",
+          customMatchers: [
+            {
+              predicate: (msg) => msg.includes("already exists"),
+              message: "Username or email already taken.",
+            },
+          ],
+        }),
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Returns the full Tailwind class string for a text input based on error state.
-  const inputClass = (hasError) =>
-    `w-full rounded-2xl px-4 py-3 text-sm outline-none transition border bg-zinc-950/40 text-white placeholder:text-white/30 ${
-      hasError
-        ? "border-red-400/40 focus:border-red-400/70 focus:ring-2 focus:ring-red-500/15"
-        : "border-white/10 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/15"
-    }`;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -135,7 +132,7 @@ function Register() {
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                className={inputClass(Boolean(errors.username))}
+                className={getAuthInputClass(Boolean(errors.username))}
                 placeholder="MovieBuff99"
                 type="text"
                 autoComplete="username"
@@ -156,7 +153,7 @@ function Register() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={inputClass(Boolean(errors.email))}
+                className={getAuthInputClass(Boolean(errors.email))}
                 placeholder="you@example.com"
                 type="email"
                 autoComplete="email"
@@ -177,7 +174,7 @@ function Register() {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={inputClass(Boolean(errors.password))}
+                className={getAuthInputClass(Boolean(errors.password))}
                 placeholder="Min 6 chars, include a special character"
                 type="password"
                 autoComplete="new-password"
@@ -198,7 +195,7 @@ function Register() {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className={inputClass(Boolean(errors.confirmPassword))}
+                className={getAuthInputClass(Boolean(errors.confirmPassword))}
                 placeholder="Retype password"
                 type="password"
                 autoComplete="new-password"

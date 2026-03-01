@@ -6,11 +6,6 @@ import { useAuth } from "../contexts/AuthContext";
  *
  * Waits for the auth session check (isLoading) to finish before deciding so
  * users who refresh on a protected page don't get incorrectly bounced.
- *
- * NOTE: This component is defined but currently not wired into App.jsx — each
- * protected page (Watchlist, MyReviews) implements its own inline redirect.
- * TODO: Wrap protected <Route> elements in App.jsx with <PrivateRoute> and
- *       remove the duplicated auth redirects from individual page components.
  */
 function PrivateRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();

@@ -7,6 +7,20 @@ import { del, get, post, put } from "./apiClient";
 export const fetchUserReviews = () => get("/api/Reviews/user");
 
 /**
+ * GET /api/Reviews/movies/{movieId}
+ * Returns all reviews for a movie.
+ */
+export const fetchMovieReviews = (movieId) =>
+  get(`/api/Reviews/movies/${movieId}`);
+
+/**
+ * GET /api/Reviews/shows/{showId}
+ * Returns all reviews for a show.
+ */
+export const fetchShowReviews = (showId) =>
+  get(`/api/Reviews/shows/${showId}`);
+
+/**
  * POST /api/Reviews/movies
  */
 export const createMovieReview = (reviewData) =>

@@ -5,6 +5,7 @@ namespace MovieRating.Backend.Repositories.Interfaces;
 public interface IGenreRepository
 {
     Task<IEnumerable<Genre>> GetAllAsync();
+    Task<IEnumerable<Genre>> GetActiveAsync();
     Task<Genre?> GetByIdAsync(int id);
     Task<Genre> CreateAsync(Genre genre);
     Task<Genre> UpdateAsync(Genre genre);

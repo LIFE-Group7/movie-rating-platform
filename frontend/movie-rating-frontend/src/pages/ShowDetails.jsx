@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { fetchShowById } from "../api/contentApi";
+import { fetchShowReviews } from "../api/reviewApi";
 import ReviewForm from "../components/ReviewForm";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
+import { buildPlaceholderPoster } from "../utils/media";
 
 /**
  * TV-show detail page — mirrors MovieDetails but uses the shows dataset and
@@ -21,12 +23,14 @@ function ShowDetails() {
     isInWatchlist,
     addRecentlyViewed,
   } = useWatchlist();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const [showData, setShowData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [userReviewCount, setUserReviewCount] = useState(0);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsPage, setReviewsPage] = useState(1);
   const reviewsRef = useRef(null);
+  const REVIEWS_PER_PAGE = 10;
 
   useEffect(() => {
     let isMounted = true;
@@ -63,17 +67,57 @@ function ShowDetails() {
     }
   }, [location, loading, showData]);
 
+  // Fetch all reviews for this show, pinning the current user's review first.
+  useEffect(() => {
+    if (!id) return;
+    fetchShowReviews(id)
+      .then((data) => {
+        const otherUsersReviews = user
+          ? data.filter((review) => review.author?.username !== user.username)
+          : data;
+
+        const sorted = [...otherUsersReviews].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
+
+        setReviews(sorted);
+        setReviewsPage(1);
+      })
+      .catch(() => {
+        setReviews([]);
+        setReviewsPage(1);
+      });
+  }, [id, user]);
+
   const handleReviewSubmitted = (reviewData) => {
     if (!showData) return;
     const currentRating = showData.rating || 0;
-    const count = userReviewCount + 1;
-    // Treat the mock base rating as 1 existing data point and blend in every new
-    // user review using a running-average formula to keep the displayed rating fair.
-    // TODO: remove once ratings are fetched live from the backend.
-    const newRating = (currentRating * count + reviewData.rating) / (count + 1);
-    setUserReviewCount(count);
-    setShowData({ ...showData, rating: parseFloat(newRating.toFixed(1)) });
+    const currentCount = showData.reviewCount || 0;
+    const userAlreadyReviewed = false;
+    const newCount = userAlreadyReviewed ? currentCount : currentCount + 1;
+    const newRating = userAlreadyReviewed
+      ? (currentRating * currentCount -
+          (reviews.find((r) => r.author?.username === user?.username)?.rating ??
+            0) +
+          reviewData.rating) /
+        currentCount
+      : (currentRating * currentCount + reviewData.rating) / newCount;
+
+    setShowData({
+      ...showData,
+      rating: parseFloat(newRating.toFixed(1)),
+      reviewCount: newCount,
+    });
   };
+
+  const totalReviewPages = Math.max(
+    1,
+    Math.ceil(reviews.length / REVIEWS_PER_PAGE),
+  );
+  const pagedReviews = reviews.slice(
+    (reviewsPage - 1) * REVIEWS_PER_PAGE,
+    reviewsPage * REVIEWS_PER_PAGE,
+  );
 
   if (loading) {
     return (
@@ -104,8 +148,7 @@ function ShowDetails() {
   const isOngoing = showData.status === "Ongoing";
   const reviewShowData = { ...showData, type: showData.type || "show" };
   const posterImageUrl =
-    showData.imageUrl ||
-    `https://placehold.co/400x600?text=${encodeURIComponent(showData.title || "Show").replace(/%20/g, "+")}`;
+    showData.imageUrl || buildPlaceholderPoster(showData.title || "Show");
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-20">
@@ -143,6 +186,15 @@ function ShowDetails() {
                   ? `★ ${showData.rating.toFixed(1)}`
                   : "Not rated"}
               </span>
+              {showData.reviewCount > 0 && (
+                <>
+                  <span>•</span>
+                  <span>
+                    {showData.reviewCount}{" "}
+                    {showData.reviewCount === 1 ? "review" : "reviews"}
+                  </span>
+                </>
+              )}
               <span>•</span>
               <span>{showData.seasons} Seasons</span>
               <span>•</span>
@@ -234,6 +286,81 @@ function ShowDetails() {
             movie={reviewShowData}
             onSubmitSuccess={handleReviewSubmitted}
           />
+
+          {/* Reviews List */}
+          {reviews.length > 0 && (
+            <div className="mt-10 space-y-4">
+              {pagedReviews.map((review, i) => {
+                return (
+                  <div
+                    key={
+                      review.id ??
+                      review._id ??
+                      `${review.author?.username ?? "anon"}-${review.createdAt}-${reviewsPage}-${i}`
+                    }
+                    className="rounded-2xl p-5 border border-white/10 bg-white/5"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white">
+                          {review.author?.username ?? "Anonymous"}
+                        </span>
+                      </div>
+                      <span className="text-yellow-400 font-bold">
+                        ★ {review.rating}
+                      </span>
+                    </div>
+                    {review.comment && (
+                      <p className="text-white/70 text-sm leading-relaxed">
+                        {review.comment}
+                      </p>
+                    )}
+                    <p className="text-white/30 text-xs mt-2">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                );
+              })}
+
+              {totalReviewPages > 1 && (
+                <div className="mt-6 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                  <span className="text-xs text-white/55">
+                    Page {reviewsPage} of {totalReviewPages}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        setReviewsPage((prev) => Math.max(1, prev - 1))
+                      }
+                      disabled={reviewsPage === 1}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        reviewsPage === 1
+                          ? "bg-white/5 text-white/30 cursor-not-allowed"
+                          : "bg-white/10 text-white hover:bg-white/15"
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() =>
+                        setReviewsPage((prev) =>
+                          Math.min(totalReviewPages, prev + 1),
+                        )
+                      }
+                      disabled={reviewsPage === totalReviewPages}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        reviewsPage === totalReviewPages
+                          ? "bg-white/5 text-white/30 cursor-not-allowed"
+                          : "bg-white/10 text-white hover:bg-white/15"
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

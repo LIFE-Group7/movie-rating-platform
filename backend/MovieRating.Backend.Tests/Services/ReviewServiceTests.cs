@@ -393,7 +393,7 @@ public class ReviewServiceTests
         Assert.Single(items);
         Assert.Equal("Severance", items[0].ShowTitle);
         Assert.Equal(9, items[0].Rating);
-        Assert.Equal("severance.jpg", items[0].MovieCoverImageUrl);
+        Assert.Equal("severance.jpg", items[0].ShowCoverImageUrl);
     }
 
     [Fact]

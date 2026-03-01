@@ -89,7 +89,13 @@ public class MovieServiceTests
             Title = "New Movie",
             MovieGenres = new List<MovieGenre>
             {
-                new() { Genre = new Genre { Id = 1, Name = "Action" } }
+                new() { Genre = new Genre
+                    {
+                        Id = 1,
+                        Name = "Action",
+                        isActive = false
+                    }
+                }
             }
         };
 

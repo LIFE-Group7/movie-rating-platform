@@ -18,18 +18,19 @@ function Field({ value, onChange, placeholder, className = "" }) {
 // ── Categories tab ────────────────────────────────────────────────────────────
 
 function CategoriesTab() {
-  const { categories, addCategory, editCategory, deleteCategory } = useAdmin();
+  const { categories, addCategory, editCategory, updateCategoryActivation } =
+    useAdmin();
   const [newName, setNewName] = useState("");
   const [addError, setAddError] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editDraft, setEditDraft] = useState("");
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newName.trim()) {
       setAddError("Name is required.");
       return;
     }
-    const success = addCategory(newName);
+    const success = await Promise.resolve(addCategory(newName));
     if (!success) {
       setAddError("Category already exists.");
       return;
@@ -43,9 +44,16 @@ function CategoriesTab() {
     setEditDraft(category.name);
   };
 
-  const commitEdit = (id) => {
-    editCategory(id, editDraft);
+  const commitEdit = async (id, isActive) => {
+    const success = await Promise.resolve(
+      editCategory(id, editDraft, isActive),
+    );
+    if (!success) return;
     setEditingId(null);
+  };
+
+  const updateActivation = async (id, name, isActive) => {
+    await Promise.resolve(updateCategoryActivation(id, name, isActive));
   };
 
   return (
@@ -88,13 +96,14 @@ function CategoriesTab() {
                   value={editDraft}
                   onChange={(e) => setEditDraft(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") commitEdit(category.id);
+                    if (e.key === "Enter")
+                      commitEdit(category.id, category.isActive);
                     if (e.key === "Escape") setEditingId(null);
                   }}
                   className="flex-1 bg-zinc-900 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-blue-500/60"
                 />
                 <button
-                  onClick={() => commitEdit(category.id)}
+                  onClick={() => commitEdit(category.id, category.isActive)}
                   className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition-colors"
                 >
                   Save
@@ -118,10 +127,16 @@ function CategoriesTab() {
                   Edit
                 </button>
                 <button
-                  onClick={() => deleteCategory(category.id)}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 font-semibold transition-colors"
+                  onClick={() =>
+                    updateActivation(
+                      category.id,
+                      category.name,
+                      !category.isActive,
+                    )
+                  }
+                  className={`text-xs px-3 py-1.5 rounded-lg ${category.isActive ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400" : "bg-white/10 hover:bg-white/15 text-white"} font-semibold transition-colors`}
                 >
-                  Delete
+                  {category.isActive ? "Deactivate" : "Activate"}
                 </button>
               </>
             )}
@@ -149,12 +164,12 @@ function SectionsTab() {
 
   const isEditing = editingId !== null;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.title.trim()) {
       setAddError("Title is required.");
       return;
     }
-    const success = addSection(form);
+    const success = await Promise.resolve(addSection(form));
     if (!success) {
       setAddError("Failed to add section.");
       return;
@@ -172,8 +187,12 @@ function SectionsTab() {
     });
   };
 
-  const commitEdit = (id) => {
-    editSection(id, form);
+  const commitEdit = async (id) => {
+    const success = await Promise.resolve(editSection(id, form));
+    if (!success) {
+      setAddError("Failed to save section.");
+      return;
+    }
     setEditingId(null);
     setForm(EMPTY_SECTION);
   };
@@ -223,7 +242,9 @@ function SectionsTab() {
         )}
         <div className="flex gap-2">
           <button
-            onClick={() => (isEditing ? commitEdit(editingId) : handleAdd())}
+            onClick={() => {
+              void (isEditing ? commitEdit(editingId) : handleAdd());
+            }}
             className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-extrabold transition-colors"
           >
             {isEditing ? "Save Changes" : "+ Add Section"}
@@ -275,7 +296,9 @@ function SectionsTab() {
               Edit
             </button>
             <button
-              onClick={() => deleteSection(section.id)}
+              onClick={() => {
+                void Promise.resolve(deleteSection(section.id));
+              }}
               className="text-xs px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 font-semibold transition-colors"
             >
               Delete

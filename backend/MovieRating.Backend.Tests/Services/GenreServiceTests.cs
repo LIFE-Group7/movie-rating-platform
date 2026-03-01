@@ -26,8 +26,18 @@ public class GenreServiceTests
     {
         var genres = new List<Genre>
         {
-            new() { Id = 1, Name = "Action" },
-            new() { Id = 2, Name = "Drama" }
+            new()
+            {
+                Id = 1,
+                Name = "Action",
+                isActive = false
+            },
+            new()
+            {
+                Id = 2,
+                Name = "Drama",
+                isActive = false
+            }
         };
 
         _mockRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(genres);
@@ -59,7 +69,12 @@ public class GenreServiceTests
     [Fact]
     public async Task GetByIdAsync_WhenExists_ReturnsMappedGenre()
     {
-        var genre = new Genre { Id = 1, Name = "Action" };
+        var genre = new Genre
+        {
+            Id = 1,
+            Name = "Action",
+            isActive = false
+        };
         _mockRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(genre);
 
         var result = await _genreService.GetByIdAsync(1);
@@ -88,7 +103,12 @@ public class GenreServiceTests
     public async Task CreateAsync_WhenSuccessful_ReturnsCreatedGenre()
     {
         var dto = new CreateGenreDto { Name = "Thriller" };
-        var createdGenre = new Genre { Id = 5, Name = "Thriller" };
+        var createdGenre = new Genre
+        {
+            Id = 5,
+            Name = "Thriller",
+            isActive = false
+        };
 
         _mockRepo.Setup(r => r.ExistsByNameAsync("Thriller")).ReturnsAsync(false);
         _mockRepo.Setup(r => r.CreateAsync(It.IsAny<Genre>())).ReturnsAsync(createdGenre);
@@ -132,7 +152,12 @@ public class GenreServiceTests
     public async Task CreateAsync_TrimsWhitespaceFromName()
     {
         var dto = new CreateGenreDto { Name = "  Comedy  " };
-        var createdGenre = new Genre { Id = 6, Name = "Comedy" };
+        var createdGenre = new Genre
+        {
+            Id = 6,
+            Name = "Comedy",
+            isActive = false
+        };
 
         _mockRepo.Setup(r => r.ExistsByNameAsync("Comedy")).ReturnsAsync(false);
         _mockRepo.Setup(r => r.CreateAsync(It.Is<Genre>(g => g.Name == "Comedy"))).ReturnsAsync(createdGenre);
@@ -150,7 +175,12 @@ public class GenreServiceTests
     [Fact]
     public async Task UpdateAsync_WhenSuccessful_ReturnsUpdatedGenre()
     {
-        var existingGenre = new Genre { Id = 1, Name = "Action" };
+        var existingGenre = new Genre
+        {
+            Id = 1,
+            Name = "Action",
+            isActive = false
+        };
         var dto = new UpdateGenreDto { Name = "Action & Adventure" };
 
         _mockRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingGenre);
@@ -177,7 +207,12 @@ public class GenreServiceTests
     [Fact]
     public async Task UpdateAsync_WhenNewNameConflicts_ReturnsConflictFailure()
     {
-        var existingGenre = new Genre { Id = 1, Name = "Action" };
+        var existingGenre = new Genre
+        {
+            Id = 1,
+            Name = "Action",
+            isActive = false
+        };
         var dto = new UpdateGenreDto { Name = "Drama" };
 
         _mockRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingGenre);
@@ -194,7 +229,12 @@ public class GenreServiceTests
     [Fact]
     public async Task UpdateAsync_WhenNameUnchanged_UpdatesSuccessfully()
     {
-        var existingGenre = new Genre { Id = 1, Name = "Action" };
+        var existingGenre = new Genre
+        {
+            Id = 1,
+            Name = "Action",
+            isActive = false
+        };
         var dto = new UpdateGenreDto { Name = "Action" };
 
         _mockRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingGenre);
@@ -213,7 +253,12 @@ public class GenreServiceTests
     [Fact]
     public async Task DeleteAsync_WhenExists_ReturnsSuccess()
     {
-        var genre = new Genre { Id = 1, Name = "Action" };
+        var genre = new Genre
+        {
+            Id = 1,
+            Name = "Action",
+            isActive = false
+        };
         _mockRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(genre);
         _mockRepo.Setup(r => r.DeleteAsync(genre)).Returns(Task.CompletedTask);
 
