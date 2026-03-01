@@ -114,6 +114,9 @@ function MovieDetails() {
   const inWatchlist = isInWatchlist(movieData.id);
   const genres = movieData.genres || (movieData.genre ? [movieData.genre] : []);
   const reviewMovieData = { ...movieData, type: movieData.type || "movie" };
+  const posterImageUrl =
+    movieData.imageUrl ||
+    `https://placehold.co/400x600?text=${encodeURIComponent(movieData.title || "Movie").replace(/%20/g, "+")}`;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-20">
@@ -131,11 +134,11 @@ function MovieDetails() {
       <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-20 -mt-32 md:-mt-48">
         <div className="flex flex-col md:flex-row gap-8 md:gap-12">
           {/* Poster Card */}
-          <div className="flex-shrink-0 mx-auto md:mx-0 w-48 md:w-72 rounded-2xl overflow-hidden shadow-2xl border-4 border-zinc-950">
+          <div className="flex-shrink-0 mx-auto md:mx-0 w-56 md:w-80">
             <img
-              src={movieData.imageUrl}
+              src={posterImageUrl}
               alt={movieData.title}
-              className="w-full h-auto object-cover"
+              className="block w-full h-auto rounded-2xl shadow-2xl"
             />
           </div>
 
@@ -147,7 +150,9 @@ function MovieDetails() {
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-6 text-sm font-medium text-white/80">
               <span className="bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded border border-yellow-500/30">
-                {movieData.rating && movieData.rating > 0 ? `★ ${movieData.rating.toFixed(1)}` : "Not rated"}
+                {movieData.rating && movieData.rating > 0
+                  ? `★ ${movieData.rating.toFixed(1)}`
+                  : "Not rated"}
               </span>
               {movieData.year && (
                 <>

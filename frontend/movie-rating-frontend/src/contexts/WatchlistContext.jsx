@@ -7,16 +7,75 @@ import {
   useState,
 } from "react";
 import { useAuth } from "./AuthContext";
+import {
+  addWatchlistItem,
+  fetchWatchlist,
+  removeWatchlistItem,
+} from "../api/watchlistApi";
+import { fetchMovieById, fetchShowById } from "../api/contentApi";
 
 // ── localStorage key bases ────────────────────────────────────────────────────
 // Scoped per user (see getScopedKey) so separate accounts on the same browser
 // never share or overwrite each other's data.
-const WATCHLIST_KEY = "watchlistItems";
 const RECENTLY_VIEWED_KEY = "recentlyViewedItems";
 const USER_RATINGS_KEY = "userMovieRatings";
 
 // Cap recently-viewed history to prevent unbounded localStorage growth.
 const MAX_RECENTLY_VIEWED = 10;
+
+const normalizeMediaType = (value) => {
+  const lowerValue = String(value || "").toLowerCase();
+  return lowerValue === "show" ? "show" : "movie";
+};
+
+const inferMediaType = (item) => {
+  if (item?.mediaType) return normalizeMediaType(item.mediaType);
+  if (item?.type) return normalizeMediaType(item.type);
+  if (item?.seasons) return "show";
+  return "movie";
+};
+
+const mapWatchlistItemFromApi = (item) => {
+  const mediaType = normalizeMediaType(item.mediaType);
+
+  return {
+    id: item.mediaId,
+    watchlistId: item.watchlistId,
+    mediaType,
+    type: mediaType,
+    title: item.title,
+    imageUrl: item.coverImageUrl,
+    rating: item.averageRating,
+    addedAt: item.addedAt,
+    genres: [],
+  };
+};
+
+const enrichWatchlistItem = async (item) => {
+  const baseItem = mapWatchlistItemFromApi(item);
+
+  try {
+    if (baseItem.mediaType === "show") {
+      const show = await fetchShowById(baseItem.id);
+      return {
+        ...show,
+        watchlistId: baseItem.watchlistId,
+        mediaType: "show",
+        addedAt: baseItem.addedAt,
+      };
+    }
+
+    const movie = await fetchMovieById(baseItem.id);
+    return {
+      ...movie,
+      watchlistId: baseItem.watchlistId,
+      mediaType: "movie",
+      addedAt: baseItem.addedAt,
+    };
+  } catch {
+    return baseItem;
+  }
+};
 
 const WatchlistContext = createContext();
 
@@ -55,13 +114,14 @@ export function WatchlistProvider({ children }) {
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [userRatings, setUserRatings] = useState({});
 
-  // Clear in-memory state when the user logs out or auth is not yet resolved.
-  // All persistent data uses scoped keys (keyed by email), so nothing in
-  // localStorage needs to be removed here — the data is invisible to other
-  // accounts and will be reloaded on next login.
-  // BUG FIX: previously removed bare non-scoped keys (`WATCHLIST_KEY` etc.)
-  // which were never written to in this context; removing them was dead-code
-  // cleanup that could accidentally clobber unrelated storage consumers.
+  const syncWatchlist = useCallback(async () => {
+    const response = await fetchWatchlist();
+    const nextWatchlist = Array.isArray(response)
+      ? await Promise.all(response.map(enrichWatchlistItem))
+      : [];
+    setWatchlist(nextWatchlist);
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated || !user?.email) {
       setWatchlist([]);
@@ -70,58 +130,89 @@ export function WatchlistProvider({ children }) {
       return;
     }
 
-    setWatchlist(readFromStorage(getScopedKey(WATCHLIST_KEY, user.email), []));
+    let isMounted = true;
+
+    const loadWatchlist = async () => {
+      try {
+        await syncWatchlist();
+        if (!isMounted) return;
+      } catch {
+        if (!isMounted) return;
+        setWatchlist([]);
+      }
+    };
+
+    loadWatchlist();
+
     setRecentlyViewed(
       readFromStorage(getScopedKey(RECENTLY_VIEWED_KEY, user.email), []),
     );
     setUserRatings(
       readFromStorage(getScopedKey(USER_RATINGS_KEY, user.email), {}),
     );
-  }, [isAuthenticated, user?.email]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, user?.email, syncWatchlist]);
 
   const addToWatchlist = useCallback(
-    (movie) => {
+    async (movie) => {
       if (!isAuthenticated || !user?.email) return false;
 
-      // `added` is captured outside the setState callback so callers can know
-      // whether the item was actually inserted (vs. a silently ignored duplicate).
-      let added = false;
-      const watchlistStorageKey = getScopedKey(WATCHLIST_KEY, user.email);
+      const mediaType = inferMediaType(movie);
 
-      setWatchlist((previous) => {
-        const exists = previous.some((item) => item.id === movie.id);
-        if (exists) return previous; // one title per watchlist — enforce silently
+      try {
+        await addWatchlistItem(
+          movie.id,
+          mediaType === "show" ? "Show" : "Movie",
+        );
+        await syncWatchlist();
+      } catch {
+        return false;
+      }
 
-        added = true;
-        const now = new Date().toISOString();
-        const watchlistMovie = {
-          ...movie,
-          addedAt: now, // timestamp used for "oldest item" derivation in createdAt
-        };
-
-        const next = [watchlistMovie, ...previous];
-        localStorage.setItem(watchlistStorageKey, JSON.stringify(next));
-        return next;
-      });
-
-      return added;
+      return true;
     },
-    [isAuthenticated, user?.email],
+    [isAuthenticated, user?.email, syncWatchlist],
   );
 
   // Remove a title from the watchlist by its unique id.
   const removeFromWatchlist = useCallback(
-    (movieId) => {
+    async (movieId) => {
       if (!isAuthenticated || !user?.email) return;
 
-      const watchlistStorageKey = getScopedKey(WATCHLIST_KEY, user.email);
-      setWatchlist((previous) => {
-        const next = previous.filter((item) => item.id !== movieId);
-        localStorage.setItem(watchlistStorageKey, JSON.stringify(next));
-        return next;
-      });
+      const itemToRemove = watchlist.find((item) => item.id === movieId);
+      if (!itemToRemove) return;
+
+      let watchlistId = itemToRemove.watchlistId;
+
+      if (!watchlistId) {
+        try {
+          const response = await fetchWatchlist();
+          const nextWatchlist = Array.isArray(response)
+            ? await Promise.all(response.map(enrichWatchlistItem))
+            : [];
+          const resolvedItem = nextWatchlist.find(
+            (item) => item.id === movieId,
+          );
+          watchlistId = resolvedItem?.watchlistId;
+          setWatchlist(nextWatchlist);
+        } catch {
+          return;
+        }
+      }
+
+      if (!watchlistId) return;
+
+      try {
+        await removeWatchlistItem(watchlistId);
+        await syncWatchlist();
+      } catch {
+        return;
+      }
     },
-    [isAuthenticated, user?.email],
+    [isAuthenticated, user?.email, watchlist, syncWatchlist],
   );
 
   // Pure predicate — does not mutate state. Used by cards to set button label.
