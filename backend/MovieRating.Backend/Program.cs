@@ -120,13 +120,10 @@ builder.Services.AddScoped<ITmdbImportService, TmdbImportService>();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
-// app.UseHttpsRedirection();
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
 // DB connectivity test – runs SELECT 1 to verify the connection.
 app.MapGet("/health/db", async (MovieDbContext db) =>
