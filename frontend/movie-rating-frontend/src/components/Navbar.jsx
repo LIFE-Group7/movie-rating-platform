@@ -4,12 +4,6 @@ import { useAuth } from "../contexts/AuthContext";
 import SearchBar from "./SearchBar";
 import ClapperboardIcon from "./icons/ClapperboardIcon";
 
-/**
- * Sticky top navigation bar.
- * - Applies a frosted-glass blur effect after the user scrolls past 8 px.
- * - Closes the profile dropdown when the user clicks outside it or presses Escape.
- * - Shows Login/Register links for guests and a profile menu for logged-in users.
- */
 function Navbar() {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
@@ -18,15 +12,13 @@ function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
 
-  // Attach scroll listener once and clean it up on unmount.
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 8);
-    onScroll(); // initialise immediately so state matches the current scroll position
+    onScroll();
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close the profile dropdown on outside click or Escape key.
   useEffect(() => {
     const onDocClick = (e) => {
       if (!profileRef.current) return;
@@ -45,7 +37,6 @@ function Navbar() {
 
   const username = user?.username || "User";
 
-  // Derive up to two initials from the username for the avatar badge.
   const initials = useMemo(() => {
     const parts = String(username).trim().split(/\s+/).slice(0, 2);
     return parts.map((p) => p[0]?.toUpperCase()).join("") || "U";
@@ -76,7 +67,6 @@ function Navbar() {
     >
       <div className="max-w-screen-2xl mx-auto px-4 md:px-6 py-3">
         <div className="flex items-center gap-4">
-          {/* Logo with Icon */}
           <NavLink
             to="/"
             className="group flex items-center gap-2.5 no-underline focus:outline-none"
@@ -91,7 +81,6 @@ function Navbar() {
             </span>
           </NavLink>
 
-          {/* Center search */}
           <div className="flex-1 hidden md:block">
             <SearchBar
               placeholder="Search movies or shows..."
@@ -99,7 +88,6 @@ function Navbar() {
             />
           </div>
 
-          {/* Right actions */}
           <nav className="flex items-center gap-2">
             {!isAuthenticated ? (
               <>
@@ -178,7 +166,6 @@ function Navbar() {
           </nav>
         </div>
 
-        {/* Mobile search */}
         <div className="block md:hidden mt-3">
           <SearchBar
             placeholder="Search movies or shows..."

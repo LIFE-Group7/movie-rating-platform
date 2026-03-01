@@ -18,6 +18,15 @@ React + Vite client for browsing, searching, rating, and reviewing movies/shows.
 - API helpers live in `src/api`
 - Shared UI/utilities live in `src/components` and `src/utils`
 
+## Project Documentation
+
+- Docs index: `../../docs/README.md`
+- System architecture: `../../docs/system-architecture.md`
+- Data model: `../../docs/data-model.md`
+- API contract: `../../docs/api-contract.md`
+- Non-functional requirements: `../../docs/non-functional-requirements.md`
+- Frontend commenting standard: `../../docs/frontend-commenting-standard.md`
+
 ## Testing
 
 - Test setup file: `src/__tests__/setup.js`

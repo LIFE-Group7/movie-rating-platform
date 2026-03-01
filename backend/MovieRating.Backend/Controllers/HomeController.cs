@@ -4,6 +4,7 @@ using MovieRating.Backend.Services.Interfaces;
 
 namespace MovieRating.Backend.Controllers;
 
+// Security: Allows anyone to access these endpoints, even if they aren't logged in.
 [AllowAnonymous]
 public class HomeController : BaseApiController
 {
@@ -18,6 +19,8 @@ public class HomeController : BaseApiController
         _genreService = genreService;
     }
 
+    // Retrieves only the 'active' genres to display to the public, 
+    // hiding any genres an admin might have temporarily disabled.
     [HttpGet("genres")]
     public async Task<IActionResult> GetActiveGenres()
     {
@@ -26,6 +29,8 @@ public class HomeController : BaseApiController
         return Ok(result.Data);
     }
 
+    // Retrieves only the 'active' home sections (like "Trending Now" or "Top Rated") 
+    // to build the public landing page.
     [HttpGet("sections")]
     public async Task<IActionResult> GetActiveSections()
     {

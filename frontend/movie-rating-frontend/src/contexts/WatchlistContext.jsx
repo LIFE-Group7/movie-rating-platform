@@ -15,13 +15,9 @@ import {
 } from "../api/watchlistApi";
 import { fetchMovieById, fetchShowById } from "../api/contentApi";
 
-// ── localStorage key bases ────────────────────────────────────────────────────
-// Scoped per user (see getScopedKey) so separate accounts on the same browser
-// never share or overwrite each other's data.
 const RECENTLY_VIEWED_KEY = "recentlyViewedItems";
 const USER_RATINGS_KEY = "userMovieRatings";
 
-// Cap recently-viewed history to prevent unbounded localStorage growth.
 const MAX_RECENTLY_VIEWED = 10;
 
 const normalizeMediaType = (value) => {
@@ -80,11 +76,7 @@ const enrichWatchlistItem = async (item) => {
 
 const WatchlistContext = createContext();
 
-/**
- * Safely read and parse a JSON value from localStorage.
- * Returns the fallback value when the key is absent or the stored data is
- * malformed — avoids crashing the app on corrupt persisted state.
- */
+// Fallback protects against missing or malformed persisted JSON.
 const readFromStorage = (key, fallback) => {
   try {
     const value = localStorage.getItem(key);
@@ -94,11 +86,7 @@ const readFromStorage = (key, fallback) => {
   }
 };
 
-/**
- * Build a user-scoped localStorage key so each user's data is isolated.
- * Unauthenticated access uses "guest" as a sentinel — data written under
- * that key is discarded when the user logs in under a real email.
- */
+// Scope persisted data to the active user.
 const getScopedKey = (baseKey, email) => `${baseKey}:${email || "guest"}`;
 
 export const useWatchlist = () => {
@@ -187,7 +175,6 @@ export function WatchlistProvider({ children }) {
     [isAuthenticated, user?.email, syncWatchlist],
   );
 
-  // Remove a title from the watchlist by its unique id.
   const removeFromWatchlist = useCallback(
     async (movieId) => {
       if (!isAuthenticated || !user?.email) return;
@@ -225,17 +212,12 @@ export function WatchlistProvider({ children }) {
     [isAuthenticated, user?.email, watchlist, syncWatchlist],
   );
 
-  // Pure predicate — does not mutate state. Used by cards to set button label.
   const isInWatchlist = useCallback(
     (movieId) => visibleWatchlist.some((item) => item.id === movieId),
     [visibleWatchlist],
   );
 
-  /**
-   * Push a title onto the front of recently-viewed history.
-   * Deduplicates by id (re-visiting moves the entry to the top) and trims to
-   * MAX_RECENTLY_VIEWED so history never grows unboundedly.
-   */
+  // Keep recently viewed de-duplicated and capped.
   const addRecentlyViewed = useCallback(
     (movie) => {
       if (!isAuthenticated || !user?.email) return;
@@ -260,11 +242,7 @@ export function WatchlistProvider({ children }) {
     [isAuthenticated, user],
   );
 
-  /**
-   * Store a numeric rating (0–10) for a movie.
-   * Validates the value before writing — returns false and does nothing on
-   * out-of-range or non-finite input, preventing corrupted persisted state.
-   */
+  // Validate before persisting ratings to avoid corrupt local state.
   const setRatingForMovie = useCallback(
     (movieId, rating) => {
       if (!isAuthenticated || !user?.email) return false;
@@ -290,17 +268,11 @@ export function WatchlistProvider({ children }) {
     [isAuthenticated, user],
   );
 
-  // Return the user's stored rating for a movie, or null if none has been set.
   const getRatingForMovie = useCallback(
     (movieId) => visibleUserRatings[movieId] ?? null,
     [visibleUserRatings],
   );
 
-  /**
-   * ISO timestamp of the *oldest* item currently in the watchlist.
-   * Exposed so the UI can show "watching since…" style metadata.
-   * Returns null when the watchlist is empty.
-   */
   const createdAt = useMemo(() => {
     if (visibleWatchlist.length === 0) return null;
     const oldest = visibleWatchlist.reduce((currentOldest, movie) => {

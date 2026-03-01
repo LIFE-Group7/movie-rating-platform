@@ -67,9 +67,6 @@ export function AdminProvider({ children }) {
     };
   }, [isAdmin]);
 
-  // ── Category CRUD ──────────────────────────────────────────────────────────
-
-  /** Adds a new category. Returns false if name is blank or already exists. */
   const addCategory = useCallback(
     (name) => {
       if (!isAdmin) return false;
@@ -96,7 +93,6 @@ export function AdminProvider({ children }) {
     [categories, isAdmin],
   );
 
-  /** Renames a category by id. Returns false if the new name is blank. */
   const editCategory = useCallback(
     (id, newName, isActive) => {
       if (!isAdmin) return false;
@@ -144,7 +140,6 @@ export function AdminProvider({ children }) {
     [isAdmin],
   );
 
-  /** Removes a category by id. */
   const deleteCategory = useCallback(
     (id) => {
       if (!isAdmin) return;
@@ -155,9 +150,6 @@ export function AdminProvider({ children }) {
     [categories, isAdmin],
   );
 
-  // ── Section CRUD ──────────────────────────────────────────────────────────
-
-  /** Adds a homepage section. Returns false if title is blank. */
   const addSection = useCallback(
     ({ title, filterBy, visible = true }) => {
       if (!isAdmin) return false;
@@ -183,7 +175,6 @@ export function AdminProvider({ children }) {
     [isAdmin],
   );
 
-  /** Applies partial updates to an existing section by id. */
   const editSection = useCallback(
     (id, updatedFields) => {
       if (!isAdmin) return false;
@@ -210,7 +201,6 @@ export function AdminProvider({ children }) {
     [sections, isAdmin],
   );
 
-  /** Permanently removes a section by id. */
   const deleteSection = useCallback(
     (id) => {
       if (!isAdmin) return;

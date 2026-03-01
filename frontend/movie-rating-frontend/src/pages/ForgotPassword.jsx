@@ -3,13 +3,6 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { getAuthInputClass, mapAuthSubmitError } from "../utils/authUi";
 
-/**
- * Forgot-password page.
- * Submits the email to AuthContext.forgotPassword which currently simulates
- * the API call.  The success message is intentionally vague ("if an account
- * exists…") to avoid leaking whether a given email is registered — a standard
- * security practice.
- */
 function ForgotPassword() {
   const { forgotPassword } = useAuth();
   const [email, setEmail] = useState("");
@@ -17,13 +10,11 @@ function ForgotPassword() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Clear any existing errors as soon as the user edits the email field.
   const handleInputChange = (event) => {
     setEmail(event.target.value);
     if (errors.email || errors.submit) setErrors({});
   };
 
-  // Returns a map of field name → error message; empty object means valid.
   const validateForm = () => {
     const newErrors = {};
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -48,9 +39,8 @@ function ForgotPassword() {
     setErrors({});
 
     try {
-      // forgotPassword may be synchronous in the mock; wrap in Promise.resolve
-      // so the await is safe regardless of the actual return type.
       await Promise.resolve(forgotPassword(email));
+      // Keep response wording generic for security.
       setSuccessMessage("If an account exists, a reset link has been sent.");
     } catch (error) {
       setErrors({

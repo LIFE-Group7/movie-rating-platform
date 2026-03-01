@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useAdmin } from "../contexts/AdminContext";
 import { useAuth } from "../contexts/AuthContext";
 
-// ── Shared input field ────────────────────────────────────────────────────────
-
 function Field({ value, onChange, placeholder, className = "" }) {
   return (
     <input
@@ -14,8 +12,6 @@ function Field({ value, onChange, placeholder, className = "" }) {
     />
   );
 }
-
-// ── Categories tab ────────────────────────────────────────────────────────────
 
 function CategoriesTab() {
   const { categories, addCategory, editCategory, updateCategoryActivation } =
@@ -58,7 +54,6 @@ function CategoriesTab() {
 
   return (
     <div>
-      {/* Add strip */}
       <div className="flex flex-col gap-1 mb-6">
         <div className="flex gap-2">
           <Field
@@ -82,7 +77,6 @@ function CategoriesTab() {
         )}
       </div>
 
-      {/* Category list */}
       <div className="flex flex-col gap-2">
         {categories.map((category) => (
           <div
@@ -152,8 +146,6 @@ function CategoriesTab() {
   );
 }
 
-// ── Sections tab ──────────────────────────────────────────────────────────────
-
 const EMPTY_SECTION = { title: "", filterBy: "rating", visible: true };
 
 function SectionsTab() {
@@ -204,7 +196,6 @@ function SectionsTab() {
 
   return (
     <div>
-      {/* Add / Edit form panel */}
       <div className="flex flex-col gap-3 mb-6 p-4 rounded-2xl border border-white/10 bg-white/5">
         <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">
           {isEditing ? "Edit Section" : "New Section"}
@@ -260,7 +251,6 @@ function SectionsTab() {
         </div>
       </div>
 
-      {/* Section list */}
       <div className="flex flex-col gap-2">
         {sections.map((section) => (
           <div
@@ -315,8 +305,6 @@ function SectionsTab() {
   );
 }
 
-// ── Dashboard shell ───────────────────────────────────────────────────────────
-
 const TABS = ["Categories", "Sections"];
 
 function AdminDashboard() {
@@ -326,7 +314,6 @@ function AdminDashboard() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-screen-lg mx-auto px-4 md:px-6 py-10">
-        {/* Header */}
         <header className="mb-10">
           <div className="flex items-center gap-3 mb-2">
             <span className="px-2 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-blue-600/20 text-blue-400 border border-blue-600/30">
@@ -340,7 +327,6 @@ function AdminDashboard() {
           </p>
         </header>
 
-        {/* Tab switcher */}
         <div className="flex gap-1 p-1 rounded-xl border border-white/10 bg-white/5 w-fit mb-8">
           {TABS.map((tab) => (
             <button
@@ -357,7 +343,6 @@ function AdminDashboard() {
           ))}
         </div>
 
-        {/* Tab content */}
         {activeTab === "Categories" ? <CategoriesTab /> : <SectionsTab />}
       </div>
     </div>

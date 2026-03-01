@@ -4,12 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
 
-/**
- * Compact movie card used in grid and carousel layouts.
- * Clicking anywhere on the card navigates to the movie detail page.
- * The hover overlay exposes "Details" and "Save/Saved" quick-action buttons.
- * On hover, overflowing genre pills scroll horizontally (marquee effect).
- */
 function MovieCard({ movie }) {
   const navigate = useNavigate();
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
@@ -19,13 +13,11 @@ function MovieCard({ movie }) {
   const inWatchlist = isInWatchlist(movie.id);
   const [isHovering, setIsHovering] = useState(false);
 
-  // Refs to measure whether the genre pills actually overflow the container.
   const trackRef = useRef(null);
   const containerRef = useRef(null);
   const [shouldScroll, setShouldScroll] = useState(false);
   const [scrollAmount, setScrollAmount] = useState(0);
 
-  // Recalculate overflow whenever genres change or hover starts.
   useEffect(() => {
     if (!trackRef.current || !containerRef.current) return;
     const overflow =
@@ -73,7 +65,6 @@ function MovieCard({ movie }) {
       aria-label={`Open details for ${movie.title}`}
       className="cursor-pointer rounded-2xl overflow-hidden border border-white/10 bg-white/5 hover:bg-white/7 transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 flex flex-col"
     >
-      {/* Poster */}
       <div className="relative aspect-[2/3] bg-gradient-to-br from-zinc-800 via-zinc-900 to-black w-full">
         {movie?.imageUrl ? (
           <img
@@ -84,14 +75,12 @@ function MovieCard({ movie }) {
           />
         ) : null}
 
-        {/* Top badges */}
         <div className="absolute top-2 left-2 flex items-center gap-2">
           <span className="px-2 py-1 rounded-lg text-xs font-bold bg-black/60 backdrop-blur text-yellow-300 border border-white/10">
             ★ {ratingText}
           </span>
         </div>
 
-        {/* Hover overlay */}
         <div
           className={`absolute inset-0 transition-opacity ${isHovering ? "opacity-100" : "opacity-0"}`}
         >
@@ -118,7 +107,6 @@ function MovieCard({ movie }) {
         </div>
       </div>
 
-      {/* Info Area */}
       <div className="p-3 flex flex-col justify-between flex-1 min-h-[104px]">
         <div>
           <h3
@@ -145,12 +133,10 @@ function MovieCard({ movie }) {
           )}
         </div>
 
-        {/* Genres — scrolls left on hover if pills overflow the container */}
         <div
           ref={containerRef}
           className="mt-1.5 overflow-hidden w-full relative"
         >
-          {/* Left fade mask — only visible when scrolling */}
           {shouldScroll && isHovering && (
             <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-zinc-900 to-transparent z-10 pointer-events-none" />
           )}

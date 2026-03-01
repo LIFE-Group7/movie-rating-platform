@@ -56,7 +56,6 @@ const coerceHeroEntry = (item, idx) => {
   };
 };
 
-// ── Inline SVG icons — avoids external icon library dependency ───────────────
 function StarIcon() {
   return (
     <svg className="w-4 h-4 fill-yellow-400 flex-shrink-0" viewBox="0 0 20 20">
@@ -101,16 +100,9 @@ function ChevronRightIcon() {
   );
 }
 
-/**
- * Horizontally scrollable carousel with arrow buttons and fade-edge overlays.
- * `renderItem` is a render-prop so callers can inject any card type (MovieCard,
- * ShowCard, etc.) without coupling the carousel logic to a specific data shape.
- */
 function CarouselSection({ title, items, renderItem, onViewAll }) {
   const scrollRef = useRef(null);
 
-  // Scroll by a fixed pixel amount in the requested direction.
-  // 320 px ≈ the width of two card columns and feels natural on most viewports.
   const scroll = (direction) => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: direction * 320, behavior: "smooth" });
@@ -121,7 +113,6 @@ function CarouselSection({ title, items, renderItem, onViewAll }) {
 
   return (
     <section className="mb-12">
-      {/* Section header */}
       <div className="flex items-center justify-between mb-4 px-6">
         <h2 className="text-lg font-bold text-white tracking-wide">{title}</h2>
         {onViewAll && (
@@ -134,9 +125,7 @@ function CarouselSection({ title, items, renderItem, onViewAll }) {
         )}
       </div>
 
-      {/* Scrollable row with arrows */}
       <div className="relative group">
-        {/* Left arrow */}
         <button
           onClick={() => scroll(-1)}
           aria-label="Scroll left"
@@ -145,7 +134,6 @@ function CarouselSection({ title, items, renderItem, onViewAll }) {
           <ChevronLeftIcon />
         </button>
 
-        {/* Cards row */}
         <div
           ref={scrollRef}
           className="flex gap-4 overflow-x-auto px-6 pb-3 snap-x snap-mandatory"
@@ -154,7 +142,6 @@ function CarouselSection({ title, items, renderItem, onViewAll }) {
           {items.map((item) => renderItem(item))}
         </div>
 
-        {/* Right arrow */}
         <button
           onClick={() => scroll(1)}
           aria-label="Scroll right"
@@ -163,7 +150,6 @@ function CarouselSection({ title, items, renderItem, onViewAll }) {
           <ChevronRightIcon />
         </button>
 
-        {/* Fade edges */}
         <div className="absolute left-0 top-0 bottom-3 w-10 bg-gradient-to-r from-zinc-950 to-transparent pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-3 w-10 bg-gradient-to-l from-zinc-950 to-transparent pointer-events-none" />
       </div>
@@ -171,15 +157,12 @@ function CarouselSection({ title, items, renderItem, onViewAll }) {
   );
 }
 
-// ── Main Home component ───────────────────────────────────────────────────────
 function Home() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [sections, setSections] = useState([]);
   const [heroIndex, setHeroIndex] = useState(0);
-  // Used to trigger a fade-out/fade-in transition when the spotlight changes.
   const [isTransitioning, setIsTransitioning] = useState(false);
-  // Tracks the active genre pill — selecting one navigates to the search page.
   const [activeGenre, setActiveGenre] = useState(null);
   const genreScrollRef = useRef(null);
   const [hasGenreOverflow, setHasGenreOverflow] = useState(false);
@@ -203,7 +186,6 @@ function Home() {
     [categories],
   );
 
-  // ── Load all content from the real API ──────────────────────────────────
   useEffect(() => {
     let isMounted = true;
 
@@ -239,12 +221,6 @@ function Home() {
     };
   }, []);
 
-  /**
-   * Resolves a section's filterBy string into a list of content items.
-   * Defined inside the component so it reads from live `allContent` state,
-   * not a stale module-level snapshot.
-   * Supports: "rating", "year", "genre:<Name>"
-   */
   const resolveItems = (filterBy) => {
     if (filterBy.startsWith("genre:")) {
       const genre = filterBy.split(":")[1].toLowerCase();
@@ -279,10 +255,6 @@ function Home() {
     navigate(`/${entry.type === "show" ? "show" : "movie"}/${entry.id}`);
   };
 
-  // ── Hero auto-rotation ─────────────────────────────────────────────────────
-  // Advances the spotlight every 5.5 s with a 350 ms crossfade.
-  // The interval is cleared on unmount to prevent state updates on an
-  // unmounted component.
   useEffect(() => {
     if (!totalHeroes) return undefined;
 
@@ -296,11 +268,6 @@ function Home() {
     return () => clearInterval(interval);
   }, [totalHeroes]);
 
-  /**
-   * Jump to a specific spotlight entry.
-   * No-ops when the requested index is already active to avoid a flickering
-   * transition with no visible change.
-   */
   const changeHero = (newIndex) => {
     if (!totalHeroes || newIndex === heroIndex) return;
     setIsTransitioning(true);
@@ -310,7 +277,6 @@ function Home() {
     }, 350);
   };
 
-  // Navigate to the search page pre-filtered by the chosen genre.
   const handleGenreClick = (genre) => {
     navigate(`/search?genre=${encodeURIComponent(genre)}`);
   };
@@ -373,9 +339,6 @@ function Home() {
     }
   }, [activeGenre, activeCategories]);
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
-  // Show a loading screen while fetching content from the API.
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
@@ -386,7 +349,6 @@ function Home() {
     );
   }
 
-  // Guard: if API returned nothing, render an empty state instead of crashing.
   if (!currentHero) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
@@ -397,12 +359,10 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      {/* ── 1. Hero Carousel ─────────────────────────────────────────────── */}
       <section
         className={`relative w-full h-[78vh] min-h-[520px] overflow-hidden bg-gradient-to-br ${currentHero.bg} cursor-pointer group`}
         onClick={() => openHeroDetails(currentHero)}
       >
-        {/* Background image for the spotlight — rendered beneath the gradient overlays */}
         {currentHero.image && (
           <img
             src={currentHero.image}
@@ -410,11 +370,9 @@ function Home() {
             className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity duration-300"
           />
         )}
-        {/* Cinematic gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/85 via-zinc-950/20 to-transparent" />
 
-        {/* Hero content */}
         <div
           className={`absolute bottom-0 left-0 p-10 md:p-16 max-w-2xl transition-all duration-350 ease-in-out ${
             isTransitioning
@@ -422,7 +380,6 @@ function Home() {
               : "opacity-100 translate-y-0"
           }`}
         >
-          {/* Genre pills */}
           <div className="flex flex-wrap gap-2 mb-4">
             {currentHero.genres.map((g) => (
               <span
@@ -434,12 +391,10 @@ function Home() {
             ))}
           </div>
 
-          {/* Title */}
           <h1 className="text-4xl md:text-6xl font-extrabold mb-3 text-white leading-tight drop-shadow-2xl tracking-tight">
             {currentHero.title}
           </h1>
 
-          {/* Rating & Metadata */}
           <div className="flex items-center gap-2 mb-4">
             <div className="flex items-center gap-1.5">
               <StarIcon />
@@ -449,13 +404,10 @@ function Home() {
             </div>
             <span className="text-white/40 text-sm">/10 · IMDb</span>
 
-            {/* Dot separator */}
             <span className="text-white/30 text-xs px-1">•</span>
 
-            {/* Type & Year */}
             <span className="text-white/60 text-sm font-medium uppercase tracking-wider">
               {currentHero.type === "show" ? "Series" : "Movie"}
-              {/* Fallback to checking TMDB date formats if .year isn't explicitly set */}
               {currentHero.year ||
               currentHero.release_date?.substring(0, 4) ||
               currentHero.first_air_date?.substring(0, 4)
@@ -464,12 +416,10 @@ function Home() {
             </span>
           </div>
 
-          {/* Description */}
           <p className="text-white/65 text-base md:text-lg mb-7 leading-relaxed line-clamp-2 max-w-xl">
             {currentHero.description}
           </p>
 
-          {/* CTA */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -482,7 +432,6 @@ function Home() {
           </button>
         </div>
 
-        {/* Dot indicators */}
         <div className="absolute bottom-8 right-10 flex items-center gap-2">
           {heroSlides.map((_, i) => (
             <button
@@ -501,7 +450,6 @@ function Home() {
           ))}
         </div>
 
-        {/* Side arrows */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -524,7 +472,6 @@ function Home() {
         </button>
       </section>
 
-      {/* ── 2. Sticky Genre Filter Pills ─────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-zinc-950/90 backdrop-blur-md border-b border-white/5">
         <div className="relative max-w-screen-2xl mx-auto px-2 sm:px-3">
           {hasGenreOverflow && (
@@ -601,7 +548,6 @@ function Home() {
         </div>
       </div>
 
-      {/* ── 3. Dynamic Content Carousels ─────────────────────────────────── */}
       {sections
         .filter((section) => section.visible)
         .map((section) => (

@@ -3,11 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { getAuthInputClass, mapAuthSubmitError } from "../utils/authUi";
 
-/**
- * Login page.
- * Redirects to home immediately if the user is already authenticated
- * (e.g. navigating to /login while logged in via a bookmarked URL).
- */
 function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
@@ -17,15 +12,11 @@ function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Skip the login page when the user is already signed in.
   useEffect(() => {
     if (isAuthenticated) navigate("/");
   }, [isAuthenticated, navigate]);
 
-  /**
-   * Clear the field-level error as soon as the user starts correcting it —
-   * avoids stale error messages lingering while the user types a fix.
-   */
+  // Clear stale field/server errors as soon as the user edits input.
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFormData((p) => ({ ...p, [name]: value }));
@@ -34,7 +25,6 @@ function Login() {
     }
   };
 
-  // Returns a map of field name → error message; empty object means valid.
   const validateForm = () => {
     const next = {};
     if (!formData.username.trim()) next.username = "Username is required";
@@ -90,7 +80,6 @@ function Login() {
               </div>
             )}
 
-            {/* Username */}
             <div>
               <label className="block text-sm font-bold text-white/75 mb-2">
                 Username
@@ -112,7 +101,6 @@ function Login() {
               )}
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-bold text-white/75 mb-2">
                 Password

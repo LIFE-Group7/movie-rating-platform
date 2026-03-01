@@ -21,20 +21,6 @@ import AdminLayout from "./layouts/AdminLayout";
 import ScrollToTop from "./components/ScrollToTop";
 import "./App.css";
 
-/**
- * Root application component.
- *
- * Layout architecture:
- *   PublicLayout  → Navbar + Outlet + Footer   (all browsing pages)
- *   AuthLayout    → Outlet only                (Login, Register, ForgotPassword)
- *   AdminRoute    → role guard, no Footer      (/admin)
- *
- * Context nesting order:
- *   AuthProvider     → outermost; all other contexts consume useAuth internally.
- *   AdminProvider    → depends on auth; provides category/section state globally.
- *   WatchlistProvider → wraps ReviewsProvider so sibling pages can access both.
- *   ReviewsProvider  → innermost consumer of auth state.
- */
 function App() {
   return (
     <BrowserRouter>
@@ -44,7 +30,6 @@ function App() {
           <WatchlistProvider>
             <ReviewsProvider>
               <Routes>
-                {/* ── Public pages: Navbar + Footer ── */}
                 <Route element={<PublicLayout />}>
                   <Route path="/" element={<Home />} />
                   <Route path="/movie/:id" element={<MovieDetails />} />
@@ -68,14 +53,12 @@ function App() {
                   />
                 </Route>
 
-                {/* ── Auth pages: no Navbar, no Footer ── */}
                 <Route element={<AuthLayout />}>
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                 </Route>
 
-                {/* ── Admin: role-guarded, no Footer ── */}
                 <Route
                   element={
                     <AdminRoute>

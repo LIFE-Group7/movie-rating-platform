@@ -4,14 +4,6 @@ import { useAuth } from "../contexts/AuthContext";
 import { useReviews } from "../contexts/ReviewContext";
 import StarRating from "./StarRating";
 
-/**
- * Review submission form for a single movie or show.
- *
- * Renders a "please log in" prompt when the user is not authenticated so
- * the component can be placed on detail pages without an extra auth check.
- * After a successful submit `onSubmitSuccess` is called with the submitted data
- * so the parent can optimistically update its displayed rating.
- */
 function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -23,7 +15,6 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Named constant so the limit appears in one place and UI messages stay in sync.
   const MAX_CHARACTERS = 2000;
   const currentCharCount = reviewText.length;
   const isCharLimitExceeded = currentCharCount > MAX_CHARACTERS;
@@ -75,7 +66,6 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
       }
 
       setSuccess(true);
-      // Let the success UI show for a brief moment before clearing
       setTimeout(() => {
         setRating(0);
         setReviewText("");
@@ -93,7 +83,6 @@ function ReviewForm({ movie, onSubmitSuccess = () => {} }) {
     }
   };
 
-  // Show a login prompt instead of the form for unauthenticated visitors.
   if (!isAuthenticated) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-white">
