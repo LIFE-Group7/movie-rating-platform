@@ -8,7 +8,7 @@ public class UserShowResponseReviewDto
     
     public int Rating { get; set; }
     
-    public string? MovieCoverImageUrl { get; set; }
+    public string? ShowCoverImageUrl { get; set; }
     
     public string? Comment { get; set; }
     

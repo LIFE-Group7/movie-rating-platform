@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { fetchShowById } from "../api/contentApi";
+import { fetchShowReviews } from "../api/reviewApi";
 import ReviewForm from "../components/ReviewForm";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -21,11 +22,11 @@ function ShowDetails() {
     isInWatchlist,
     addRecentlyViewed,
   } = useWatchlist();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const [showData, setShowData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [userReviewCount, setUserReviewCount] = useState(0);
+  const [reviews, setReviews] = useState([]);
   const reviewsRef = useRef(null);
 
   useEffect(() => {
@@ -63,16 +64,50 @@ function ShowDetails() {
     }
   }, [location, loading, showData]);
 
+  // Fetch all reviews for this show, pinning the current user's review first.
+  useEffect(() => {
+    if (!id) return;
+    fetchShowReviews(id)
+      .then((data) => {
+        const sorted = [...data].sort((a, b) => {
+          if (user && a.author?.username === user.username) return -1;
+          if (user && b.author?.username === user.username) return 1;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        setReviews(sorted);
+      })
+      .catch(() => setReviews([]));
+  }, [id, user]);
+
   const handleReviewSubmitted = (reviewData) => {
     if (!showData) return;
     const currentRating = showData.rating || 0;
-    const count = userReviewCount + 1;
-    // Treat the mock base rating as 1 existing data point and blend in every new
-    // user review using a running-average formula to keep the displayed rating fair.
-    // TODO: remove once ratings are fetched live from the backend.
-    const newRating = (currentRating * count + reviewData.rating) / (count + 1);
-    setUserReviewCount(count);
-    setShowData({ ...showData, rating: parseFloat(newRating.toFixed(1)) });
+    const currentCount = showData.reviewCount || 0;
+    const userAlreadyReviewed = reviews.some(
+      (r) => r.author?.username === user?.username
+    );
+    const newCount = userAlreadyReviewed ? currentCount : currentCount + 1;
+    const newRating = userAlreadyReviewed
+      ? (currentRating * currentCount - (reviews.find((r) => r.author?.username === user?.username)?.rating ?? 0) + reviewData.rating) / currentCount
+      : (currentRating * currentCount + reviewData.rating) / newCount;
+
+    setShowData({
+      ...showData,
+      rating: parseFloat(newRating.toFixed(1)),
+      reviewCount: newCount,
+    });
+
+    // Optimistically prepend the new review, replacing any existing one by this user.
+    const newReview = {
+      author: { username: user?.username ?? "You" },
+      rating: reviewData.rating,
+      comment: reviewData.reviewText ?? reviewData.comment ?? "",
+      createdAt: new Date().toISOString(),
+    };
+    setReviews((prev) => [
+      newReview,
+      ...prev.filter((r) => r.author?.username !== newReview.author.username),
+    ]);
   };
 
   if (loading) {
@@ -143,6 +178,12 @@ function ShowDetails() {
                   ? `★ ${showData.rating.toFixed(1)}`
                   : "Not rated"}
               </span>
+              {showData.reviewCount > 0 && (
+                <>
+                  <span>•</span>
+                  <span>{showData.reviewCount} {showData.reviewCount === 1 ? "review" : "reviews"}</span>
+                </>
+              )}
               <span>•</span>
               <span>{showData.seasons} Seasons</span>
               <span>•</span>
@@ -234,6 +275,53 @@ function ShowDetails() {
             movie={reviewShowData}
             onSubmitSuccess={handleReviewSubmitted}
           />
+
+          {/* Reviews List */}
+          {reviews.length > 0 && (
+            <div className="mt-10 space-y-4">
+              {reviews.map((review, i) => {
+                const isOwn = user && review.author?.username === user.username;
+                return (
+                  <div
+                    key={
+                      review.id ??
+                      review._id ??
+                      `${review.author?.username ?? "anon"}-${review.createdAt}`
+                    }
+                    className={`rounded-2xl p-5 border ${
+                      isOwn
+                        ? "border-indigo-500/40 bg-indigo-500/10"
+                        : "border-white/10 bg-white/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white">
+                          {review.author?.username ?? "Anonymous"}
+                        </span>
+                        {isOwn && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-600 text-white font-semibold">
+                            You
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-yellow-400 font-bold">
+                        ★ {review.rating}
+                      </span>
+                    </div>
+                    {review.comment && (
+                      <p className="text-white/70 text-sm leading-relaxed">
+                        {review.comment}
+                      </p>
+                    )}
+                    <p className="text-white/30 text-xs mt-2">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
