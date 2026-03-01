@@ -47,7 +47,7 @@ function Register() {
       newErrors.email = "Please enter a valid email address";
     }
 
-    const strongPasswordPattern = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/;
+    const strongPasswordPattern = /[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/;
 
     if (!formData.password) {
       newErrors.password = "Password is required";
