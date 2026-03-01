@@ -12,8 +12,8 @@ using MovieRating.Backend.Data;
 namespace MovieRating.Backend.Migrations
 {
     [DbContext(typeof(MovieDbContext))]
-    [Migration("20260301010849_init3")]
-    partial class init3
+    [Migration("20260301191012_InitialSchema")]
+    partial class InitialSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
