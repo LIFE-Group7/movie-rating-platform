@@ -283,7 +283,11 @@ function ShowDetails() {
                 const isOwn = user && review.author?.username === user.username;
                 return (
                   <div
-                    key={i}
+                    key={
+                      review.id ??
+                      review._id ??
+                      `${review.author?.username ?? "anon"}-${review.createdAt}`
+                    }
                     className={`rounded-2xl p-5 border ${
                       isOwn
                         ? "border-indigo-500/40 bg-indigo-500/10"
