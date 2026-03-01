@@ -34,7 +34,12 @@ public class ShowServiceTests
                 FirstAirDate = DateOnly.FromDateTime(DateTime.UtcNow),
                 ShowGenres = new List<ShowGenre>
                 {
-                    new() { Genre = new Genre { Name = "Sci-Fi" } }
+                    new() { Genre = new Genre
+                        {
+                            Name = "Sci-Fi",
+                            isActive = false
+                        }
+                    }
                 }
             }
         };
@@ -62,7 +67,12 @@ public class ShowServiceTests
             FirstAirDate = DateOnly.FromDateTime(DateTime.UtcNow),
             ShowGenres = new List<ShowGenre>
             {
-                new() { Genre = new Genre { Name = "Drama" } }
+                new() { Genre = new Genre
+                    {
+                        Name = "Drama",
+                        isActive = false
+                    }
+                }
             }
         };
 
@@ -106,7 +116,12 @@ public class ShowServiceTests
             FirstAirDate = DateOnly.FromDateTime(DateTime.UtcNow),
             ShowGenres = new List<ShowGenre>
             {
-                new() { Genre = new Genre { Name = "Comedy" } }
+                new() { Genre = new Genre
+                    {
+                        Name = "Comedy",
+                        isActive = false
+                    }
+                }
             }
         };
 
@@ -133,7 +148,12 @@ public class ShowServiceTests
             FirstAirDate = DateOnly.FromDateTime(DateTime.UtcNow),
             ShowGenres = new List<ShowGenre>
             {
-                new() { Genre = new Genre { Name = "Sci-Fi" } }
+                new() { Genre = new Genre
+                    {
+                        Name = "Sci-Fi",
+                        isActive = false
+                    }
+                }
             }
         };
 
@@ -208,7 +228,12 @@ public class ShowServiceTests
             FirstAirDate = DateOnly.FromDateTime(DateTime.UtcNow),
             ShowGenres = new List<ShowGenre>
             {
-                new() { Genre = new Genre { Name = "Drama" } }
+                new() { Genre = new Genre
+                    {
+                        Name = "Drama",
+                        isActive = false
+                    }
+                }
             }
         };
 
