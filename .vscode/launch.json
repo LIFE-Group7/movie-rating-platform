@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Debug React App",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend/movie-rating-frontend",
+      "sourceMapPathOverrides": {
+        "/@fs/*": "/*",
+        "/src/*": "${workspaceFolder}/frontend/movie-rating-frontend/src/*"
+      }
+    }
+  ]
+}

@@ -2,27 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import SearchBar from "./SearchBar";
-
-// ── Inline SVG — avoids an external icon library dependency ──────────────────
-function ClapperboardIcon({ className }) {
-  return (
-    <svg
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
-      <path d="m6.2 5.3 3.1 3.9" />
-      <path d="m12.4 3.4 3.1 4" />
-      <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-    </svg>
-  );
-}
+import ClapperboardIcon from "./icons/ClapperboardIcon";
 
 /**
  * Sticky top navigation bar.
@@ -75,7 +55,6 @@ function Navbar() {
     logout();
     setProfileOpen(false);
     navigate("/");
-    setShowProfileMenu(false);
   };
 
   const linkBase =

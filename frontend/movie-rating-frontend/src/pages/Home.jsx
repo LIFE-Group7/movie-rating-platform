@@ -1,23 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import MovieCard from "../components/MovieCard";
 import ShowCard from "../components/ShowCard";
-import { useAdmin } from "../contexts/AdminContext";
-import {
-  fetchMovies,
-  fetchShows,
-  fetchTopRatedMovies,
-  fetchTopRatedShows,
-} from "../api/contentApi";
+import { fetchMovies, fetchShows, fetchTopRatedShows } from "../api/contentApi";
+import { fetchHomeGenres, fetchHomeSections } from "../api/homeApi";
+import { buildPlaceholderPoster } from "../utils/media";
 
 const heroPalettes = [
   { bg: "from-amber-950 via-stone-950 to-zinc-950", accent: "#d97706" },
   { bg: "from-orange-950 via-neutral-950 to-zinc-950", accent: "#ea580c" },
   { bg: "from-emerald-950 via-slate-950 to-zinc-950", accent: "#10b981" },
 ];
-
-const placeholderPoster = (title) =>
-  `https://placehold.co/400x600?text=${encodeURIComponent(title || "Title").replace(/%20/g, "+")}`;
 
 const coerceGenres = (input) => {
   if (Array.isArray(input)) return input;
@@ -32,7 +25,7 @@ const pickImage = (item, title) => {
     return `https://image.tmdb.org/t/p/w500${item.poster_path}`;
   if (item.backdrop_path)
     return `https://image.tmdb.org/t/p/w780${item.backdrop_path}`;
-  return placeholderPoster(title);
+  return buildPlaceholderPoster(title);
 };
 
 const coerceCardItem = (item, idx) => {
@@ -181,18 +174,34 @@ function CarouselSection({ title, items, renderItem, onViewAll }) {
 // ── Main Home component ───────────────────────────────────────────────────────
 function Home() {
   const navigate = useNavigate();
-  const { categories, sections } = useAdmin();
+  const [categories, setCategories] = useState([]);
+  const [sections, setSections] = useState([]);
   const [heroIndex, setHeroIndex] = useState(0);
   // Used to trigger a fade-out/fade-in transition when the spotlight changes.
   const [isTransitioning, setIsTransitioning] = useState(false);
   // Tracks the active genre pill — selecting one navigates to the search page.
   const [activeGenre, setActiveGenre] = useState(null);
+  const genreScrollRef = useRef(null);
+  const [hasGenreOverflow, setHasGenreOverflow] = useState(false);
+  const [canScrollGenresLeft, setCanScrollGenresLeft] = useState(false);
+  const [canScrollGenresRight, setCanScrollGenresRight] = useState(false);
 
   const [allContent, setAllContent] = useState([]);
   const [trendingMovies, setTrendingMovies] = useState([]);
-  const [topRatedMovies, setTopRatedMovies] = useState([]);
   const [popularShows, setPopularShows] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const activeCategories = useMemo(
+    () =>
+      [...categories]
+        .filter((category) => category.isActive)
+        .sort((a, b) =>
+          String(a.name).localeCompare(String(b.name), undefined, {
+            sensitivity: "base",
+          }),
+        ),
+    [categories],
+  );
 
   // ── Load all content from the real API ──────────────────────────────────
   useEffect(() => {
@@ -200,18 +209,21 @@ function Home() {
 
     const loadData = async () => {
       try {
-        const [moviesData, showsData, topMovies, topShows] = await Promise.all([
-          fetchMovies(),
-          fetchShows(),
-          fetchTopRatedMovies(),
-          fetchTopRatedShows(),
-        ]);
+        const [moviesData, showsData, topShows, homeGenres, homeSections] =
+          await Promise.all([
+            fetchMovies(),
+            fetchShows(),
+            fetchTopRatedShows(),
+            fetchHomeGenres(),
+            fetchHomeSections(),
+          ]);
 
         if (isMounted) {
           setAllContent([...moviesData, ...showsData]);
           setTrendingMovies(moviesData.slice(0, 12));
-          setTopRatedMovies(topMovies.slice(0, 12));
           setPopularShows(topShows.slice(0, 12));
+          setCategories(homeGenres);
+          setSections(homeSections);
         }
       } catch (err) {
         console.error("Failed to load Home data:", err);
@@ -303,6 +315,64 @@ function Home() {
     navigate(`/search?genre=${encodeURIComponent(genre)}`);
   };
 
+  const updateGenreScrollState = useCallback(() => {
+    const node = genreScrollRef.current;
+    if (!node) return;
+
+    const maxScrollLeft = node.scrollWidth - node.clientWidth;
+    const hasOverflow = maxScrollLeft > 2;
+    setHasGenreOverflow(hasOverflow);
+    setCanScrollGenresLeft(node.scrollLeft > 2);
+    setCanScrollGenresRight(hasOverflow && maxScrollLeft - node.scrollLeft > 2);
+  }, []);
+
+  const scrollGenres = (direction) => {
+    if (!genreScrollRef.current) return;
+    genreScrollRef.current.scrollBy({
+      left: direction * 240,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    const node = genreScrollRef.current;
+    if (!node) return undefined;
+
+    const rafId = requestAnimationFrame(updateGenreScrollState);
+    const timeoutId = window.setTimeout(updateGenreScrollState, 100);
+
+    let resizeObserver;
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        updateGenreScrollState();
+      });
+      resizeObserver.observe(node);
+    }
+
+    node.addEventListener("scroll", updateGenreScrollState, { passive: true });
+    window.addEventListener("resize", updateGenreScrollState);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.clearTimeout(timeoutId);
+      resizeObserver?.disconnect();
+      node.removeEventListener("scroll", updateGenreScrollState);
+      window.removeEventListener("resize", updateGenreScrollState);
+    };
+  }, [activeCategories, loading, updateGenreScrollState]);
+
+  useEffect(() => {
+    if (!activeGenre) return;
+
+    const isStillActive = activeCategories.some(
+      (category) => category.name === activeGenre,
+    );
+
+    if (!isStillActive) {
+      setActiveGenre(null);
+    }
+  }, [activeGenre, activeCategories]);
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   // Show a loading screen while fetching content from the API.
@@ -378,16 +448,18 @@ function Home() {
               </span>
             </div>
             <span className="text-white/40 text-sm">/10 · IMDb</span>
-            
+
             {/* Dot separator */}
             <span className="text-white/30 text-xs px-1">•</span>
-            
+
             {/* Type & Year */}
             <span className="text-white/60 text-sm font-medium uppercase tracking-wider">
-              {currentHero.type === "show" ? "Series" : "Movie"} 
+              {currentHero.type === "show" ? "Series" : "Movie"}
               {/* Fallback to checking TMDB date formats if .year isn't explicitly set */}
-              {(currentHero.year || currentHero.release_date?.substring(0,4) || currentHero.first_air_date?.substring(0,4)) 
-                ? ` · ${currentHero.year || currentHero.release_date?.substring(0,4) || currentHero.first_air_date?.substring(0,4)}` 
+              {currentHero.year ||
+              currentHero.release_date?.substring(0, 4) ||
+              currentHero.first_air_date?.substring(0, 4)
+                ? ` · ${currentHero.year || currentHero.release_date?.substring(0, 4) || currentHero.first_air_date?.substring(0, 4)}`
                 : ""}
             </span>
           </div>
@@ -454,36 +526,78 @@ function Home() {
 
       {/* ── 2. Sticky Genre Filter Pills ─────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-zinc-950/90 backdrop-blur-md border-b border-white/5">
-        <div
-          className="flex gap-2 overflow-x-auto px-6 py-3 max-w-screen-2xl mx-auto"
-          style={{ scrollbarWidth: "none" }}
-        >
-          <button
-            onClick={() => setActiveGenre(null)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border flex-shrink-0 ${
-              !activeGenre
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-transparent text-white/55 border-white/15 hover:border-white/35 hover:text-white/80"
-            }`}
-          >
-            All
-          </button>
-          {categories.map((category) => (
+        <div className="relative max-w-screen-2xl mx-auto px-2 sm:px-3">
+          {hasGenreOverflow && (
             <button
-              key={category.id}
-              onClick={() => {
-                setActiveGenre(category.name);
-                handleGenreClick(category.name);
-              }}
+              onClick={() => scrollGenres(-1)}
+              disabled={!canScrollGenresLeft}
+              aria-label="Scroll genres left"
+              className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 rounded-full p-2 border transition-all ${
+                canScrollGenresLeft
+                  ? "bg-zinc-900/85 text-white border-white/10 hover:bg-zinc-800"
+                  : "bg-zinc-900/40 text-white/25 border-white/5 cursor-not-allowed"
+              }`}
+            >
+              <ChevronLeftIcon />
+            </button>
+          )}
+
+          <div
+            ref={genreScrollRef}
+            className={`flex gap-2 overflow-x-auto py-3 ${
+              hasGenreOverflow ? "px-11" : "px-6"
+            }`}
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            <button
+              onClick={() => setActiveGenre(null)}
               className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border flex-shrink-0 ${
-                activeGenre === category.name
+                !activeGenre
                   ? "bg-blue-600 text-white border-blue-600"
                   : "bg-transparent text-white/55 border-white/15 hover:border-white/35 hover:text-white/80"
               }`}
             >
-              {category.name}
+              All
             </button>
-          ))}
+            {activeCategories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => {
+                  setActiveGenre(category.name);
+                  handleGenreClick(category.name);
+                }}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border flex-shrink-0 ${
+                  activeGenre === category.name
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-transparent text-white/55 border-white/15 hover:border-white/35 hover:text-white/80"
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+
+          {hasGenreOverflow && canScrollGenresLeft && (
+            <div className="absolute left-10 top-0 bottom-0 w-8 bg-gradient-to-r from-zinc-950/95 to-transparent pointer-events-none" />
+          )}
+          {hasGenreOverflow && canScrollGenresRight && (
+            <div className="absolute right-10 top-0 bottom-0 w-8 bg-gradient-to-l from-zinc-950/95 to-transparent pointer-events-none" />
+          )}
+
+          {hasGenreOverflow && (
+            <button
+              onClick={() => scrollGenres(1)}
+              disabled={!canScrollGenresRight}
+              aria-label="Scroll genres right"
+              className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 rounded-full p-2 border transition-all ${
+                canScrollGenresRight
+                  ? "bg-zinc-900/85 text-white border-white/10 hover:bg-zinc-800"
+                  : "bg-zinc-900/40 text-white/25 border-white/5 cursor-not-allowed"
+              }`}
+            >
+              <ChevronRightIcon />
+            </button>
+          )}
         </div>
       </div>
 
@@ -495,7 +609,11 @@ function Home() {
             key={section.id}
             title={section.title}
             items={resolveItems(section.filterBy)}
-            onViewAll={() => navigate(`/search?category=${encodeURIComponent(section.filterBy)}`)}
+            onViewAll={() =>
+              navigate(
+                `/search?category=${encodeURIComponent(section.filterBy)}`,
+              )
+            }
             renderItem={(item) => (
               <div
                 key={item.id}

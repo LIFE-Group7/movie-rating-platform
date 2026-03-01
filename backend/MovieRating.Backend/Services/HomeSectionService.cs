@@ -11,12 +11,12 @@ namespace MovieRating.Backend.Services;
 public class HomeSectionService : IHomeSectionService
 {
     private readonly IHomeSectionRepository _homeSectionRepository;
-    
+
     public HomeSectionService(IHomeSectionRepository homeSectionRepository)
     {
         _homeSectionRepository = homeSectionRepository;
     }
-    
+
     public async Task<Result<IEnumerable<HomeSectionDto>>> GetAllAsync()
     {
         var sections = await _homeSectionRepository.GetAllAsync();
@@ -37,7 +37,7 @@ public class HomeSectionService : IHomeSectionService
         if (section is null)
             return Result<HomeSectionDto>
                 .Failure("Section not found", ErrorType.NotFound);
-        
+
         return Result<HomeSectionDto>
             .Success(MapToDto(section));
     }
@@ -47,7 +47,11 @@ public class HomeSectionService : IHomeSectionService
         var section = new HomeSection()
         {
             Title = sectionDto.Title,
-            IsHidden = sectionDto.IsHidden
+            IsHidden = sectionDto.IsHidden,
+            IncludeMovies = sectionDto.IncludeMovies,
+            IncludeShows = sectionDto.IncludeShows,
+            MediaLimit = sectionDto.MediaLimit,
+            SortBy = sectionDto.SortBy
         };
 
         var created = await _homeSectionRepository.CreateAsync(section);
@@ -58,9 +62,9 @@ public class HomeSectionService : IHomeSectionService
     public async Task<Result<HomeSectionDto>> UpdateAsync(int id, UpdateHomeSectionDto sectionDto)
     {
         var section = await _homeSectionRepository.GetByIdAsync(id);
-        if(section is null)
+        if (section is null)
             return Result<HomeSectionDto>.Failure("Section not found", ErrorType.NotFound);
-        
+
         if (sectionDto.Title is not null)
             section.Title = sectionDto.Title;
 
@@ -78,7 +82,7 @@ public class HomeSectionService : IHomeSectionService
 
         if (sectionDto.SortBy.HasValue)
             section.SortBy = sectionDto.SortBy.Value;
-        
+
         await _homeSectionRepository.UpdateAsync(section);
         return Result<HomeSectionDto>.Success(MapToDto(section));
     }
@@ -86,14 +90,14 @@ public class HomeSectionService : IHomeSectionService
     public async Task<Result> DeleteAsync(int id)
     {
         var section = await _homeSectionRepository.GetByIdAsync(id);
-        
+
         if (section is null)
             return Result.Failure("Section not found", ErrorType.NotFound);
-        
+
         await _homeSectionRepository.DeleteAsync(section);
         return Result.Success();
     }
-    
+
     private static HomeSectionDto MapToDto(HomeSection section,
         bool includeMedia = false)
     {
@@ -102,6 +106,10 @@ public class HomeSectionService : IHomeSectionService
             Id = section.Id,
             Title = section.Title,
             IsHidden = section.IsHidden,
+            IncludeMovies = section.IncludeMovies,
+            IncludeShows = section.IncludeShows,
+            MediaLimit = section.MediaLimit,
+            SortBy = section.SortBy,
             CreatedAt = section.CreatedAt
         };
 
@@ -117,7 +125,7 @@ public class HomeSectionService : IHomeSectionService
             AverageRating = hsm.Movie.AverageRating,
             ReviewCount = hsm.Movie.ReviewCount
         }).ToList();
-        
+
         dto.Shows = section.Shows.Select(hss => new ShowCardDto
         {
             Id = hss.Show.Id,

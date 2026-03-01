@@ -20,7 +20,7 @@ const buildError = (message, status = 0) => {
  * Core fetch wrapper used by all public helpers.
  *
  * Responsibilities:
- *  - Prepends VITE_API_BASE_URL to every relative path.
+ *  - Prepends BASE_URL to every relative path.
  *  - Attaches Bearer token from localStorage when one exists.
  *  - Enforces a 10 s hard timeout via AbortController.
  *  - Normalises non-2xx responses and network errors into thrown Errors.

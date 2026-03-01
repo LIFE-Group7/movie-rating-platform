@@ -44,14 +44,6 @@ public class DashboardController : BaseApiController
         if (!result.IsSuccess) return HandleError(result);
         return Ok(result.Data);  
     }
-
-    [HttpDelete("genres/{id}")]
-    public async Task<IActionResult> DeleteGenre(int id)
-    {
-        var result = await _genreService.DeleteAsync(id);
-        if (!result.IsSuccess) return HandleError(result);
-        return NoContent();
-    }
     
     // SECTION ENDPOINTS
     [HttpGet("sections")]

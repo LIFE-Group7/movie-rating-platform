@@ -1,12 +1,23 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
-
-const STORAGE_KEY = "adminData";
+import { useAuth } from "./AuthContext";
+import {
+  createDashboardGenre,
+  createDashboardSection,
+  deleteDashboardSection,
+  fetchDashboardGenres,
+  fetchDashboardSections,
+  updateDashboardGenre,
+  updateDashboardSection,
+  updateDashboardGenreActivation,
+} from "../api/dashboardApi";
 
 const AdminContext = createContext();
 
@@ -17,53 +28,52 @@ export const useAdmin = () => {
   return context;
 };
 
-const readFromStorage = (key, fallback) => {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-};
-
-/** Seed genres pulled from the existing mock data genre set. */
-const SEED_CATEGORIES = [
-  { id: 1, name: "Action" },
-  { id: 2, name: "Comedy" },
-  { id: 3, name: "Drama" },
-  { id: 4, name: "Horror" },
-  { id: 5, name: "Sci-Fi" },
-  { id: 6, name: "Thriller" },
-];
-
-/** Seed homepage sections. filterBy maps to the content-fetch strategy. */
-const SEED_SECTIONS = [
-  { id: 1, title: "Top Rated", filterBy: "rating", visible: true },
-  { id: 2, title: "New Releases", filterBy: "year", visible: true },
-  { id: 3, title: "Action Hits", filterBy: "genre:Action", visible: false },
-];
-
 export function AdminProvider({ children }) {
-  const [categories, setCategories] = useState(() =>
-    readFromStorage(`${STORAGE_KEY}:categories`, SEED_CATEGORIES),
-  );
-  const [sections, setSections] = useState(() =>
-    readFromStorage(`${STORAGE_KEY}:sections`, SEED_SECTIONS),
-  );
+  const { isAdmin } = useAuth();
+  const [categories, setCategories] = useState([]);
+  const [sections, setSections] = useState([]);
 
-  const persistCategories = useCallback((updated) => {
-    localStorage.setItem(`${STORAGE_KEY}:categories`, JSON.stringify(updated));
-  }, []);
+  useEffect(() => {
+    let mounted = true;
 
-  const persistSections = useCallback((updated) => {
-    localStorage.setItem(`${STORAGE_KEY}:sections`, JSON.stringify(updated));
-  }, []);
+    const loadAdminData = async () => {
+      if (!isAdmin) {
+        setCategories([]);
+        setSections([]);
+        return;
+      }
+
+      try {
+        const [apiCategories, apiSections] = await Promise.all([
+          fetchDashboardGenres(),
+          fetchDashboardSections(),
+        ]);
+
+        if (!mounted) return;
+        setCategories(apiCategories);
+        setSections(apiSections);
+      } catch (error) {
+        console.error("Failed to load admin dashboard data from API", error);
+        if (!mounted) return;
+        setCategories([]);
+        setSections([]);
+      }
+    };
+
+    loadAdminData();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isAdmin]);
 
   // ── Category CRUD ──────────────────────────────────────────────────────────
 
   /** Adds a new category. Returns false if name is blank or already exists. */
   const addCategory = useCallback(
     (name) => {
+      if (!isAdmin) return false;
+
       const trimmed = name.trim();
       if (!trimmed) return false;
 
@@ -72,38 +82,77 @@ export function AdminProvider({ children }) {
       );
       if (isDuplicate) return false;
 
-      const updated = [...categories, { id: Date.now(), name: trimmed }];
-      setCategories(updated);
-      persistCategories(updated);
-      return true;
+      return (async () => {
+        try {
+          const created = await createDashboardGenre(trimmed);
+          setCategories((prev) => [...prev, created]);
+          return true;
+        } catch (error) {
+          console.error("Failed to create category", error);
+          return false;
+        }
+      })();
     },
-    [categories, persistCategories],
+    [categories, isAdmin],
   );
 
   /** Renames a category by id. Returns false if the new name is blank. */
   const editCategory = useCallback(
-    (id, newName) => {
+    (id, newName, isActive) => {
+      if (!isAdmin) return false;
+
       const trimmed = newName.trim();
       if (!trimmed) return false;
 
-      const updated = categories.map((c) =>
-        c.id === id ? { ...c, name: trimmed } : c,
-      );
-      setCategories(updated);
-      persistCategories(updated);
-      return true;
+      return (async () => {
+        try {
+          const updatedCategory = await updateDashboardGenre(
+            id,
+            trimmed,
+            isActive,
+          );
+          setCategories((prev) =>
+            prev.map((c) => (c.id === id ? updatedCategory : c)),
+          );
+          return true;
+        } catch (error) {
+          console.error("Failed to update category", error);
+          return false;
+        }
+      })();
     },
-    [categories, persistCategories],
+    [isAdmin],
   );
 
-  /** Permanently removes a category by id. */
+  const updateCategoryActivation = useCallback(
+    async (id, name, isActive) => {
+      if (!isAdmin) return;
+
+      try {
+        const updatedCategory = await updateDashboardGenreActivation(
+          id,
+          name,
+          isActive,
+        );
+        setCategories((prev) =>
+          prev.map((c) => (c.id === id ? updatedCategory : c)),
+        );
+      } catch (error) {
+        console.error("Failed to update category activation", error);
+      }
+    },
+    [isAdmin],
+  );
+
+  /** Removes a category by id. */
   const deleteCategory = useCallback(
     (id) => {
+      if (!isAdmin) return;
+
       const updated = categories.filter((c) => c.id !== id);
       setCategories(updated);
-      persistCategories(updated);
     },
-    [categories, persistCategories],
+    [categories, isAdmin],
   );
 
   // ── Section CRUD ──────────────────────────────────────────────────────────
@@ -111,40 +160,71 @@ export function AdminProvider({ children }) {
   /** Adds a homepage section. Returns false if title is blank. */
   const addSection = useCallback(
     ({ title, filterBy, visible = true }) => {
+      if (!isAdmin) return false;
+
       const trimmedTitle = title.trim();
       if (!trimmedTitle) return false;
 
-      const updated = [
-        ...sections,
-        { id: Date.now(), title: trimmedTitle, filterBy, visible },
-      ];
-      setSections(updated);
-      persistSections(updated);
-      return true;
+      return (async () => {
+        try {
+          const created = await createDashboardSection({
+            title: trimmedTitle,
+            filterBy,
+            visible,
+          });
+          setSections((prev) => [...prev, created]);
+          return true;
+        } catch (error) {
+          console.error("Failed to create section", error);
+          return false;
+        }
+      })();
     },
-    [sections, persistSections],
+    [isAdmin],
   );
 
   /** Applies partial updates to an existing section by id. */
   const editSection = useCallback(
     (id, updatedFields) => {
-      const updated = sections.map((s) =>
-        s.id === id ? { ...s, ...updatedFields } : s,
-      );
-      setSections(updated);
-      persistSections(updated);
+      if (!isAdmin) return false;
+
+      return (async () => {
+        const sectionToUpdate = sections.find((s) => s.id === id);
+        if (!sectionToUpdate) return false;
+
+        const payload = { ...sectionToUpdate, ...updatedFields };
+        if (!payload.title?.trim()) return false;
+
+        try {
+          const updatedSection = await updateDashboardSection(id, payload);
+          setSections((prev) =>
+            prev.map((s) => (s.id === id ? updatedSection : s)),
+          );
+          return true;
+        } catch (error) {
+          console.error("Failed to update section", error);
+          return false;
+        }
+      })();
     },
-    [sections, persistSections],
+    [sections, isAdmin],
   );
 
   /** Permanently removes a section by id. */
   const deleteSection = useCallback(
     (id) => {
-      const updated = sections.filter((s) => s.id !== id);
-      setSections(updated);
-      persistSections(updated);
+      if (!isAdmin) return;
+
+      return (async () => {
+        try {
+          await deleteDashboardSection(id);
+          setSections((prev) => prev.filter((s) => s.id !== id));
+        } catch (error) {
+          console.error("Failed to delete section", error);
+        }
+      })();
     },
-    [sections, persistSections],
+    [isAdmin],
   );
 
   const value = useMemo(
@@ -157,6 +237,7 @@ export function AdminProvider({ children }) {
       addSection,
       editSection,
       deleteSection,
+      updateCategoryActivation,
     }),
     [
       categories,
@@ -167,6 +248,7 @@ export function AdminProvider({ children }) {
       addSection,
       editSection,
       deleteSection,
+      updateCategoryActivation,
     ],
   );
 
