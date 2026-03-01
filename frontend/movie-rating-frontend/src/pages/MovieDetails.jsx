@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { fetchMovieById } from "../api/contentApi";
+import { fetchMovieReviews } from "../api/reviewApi";
 import ReviewForm from "../components/ReviewForm";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -21,13 +22,11 @@ function MovieDetails() {
     isInWatchlist,
     addRecentlyViewed,
   } = useWatchlist();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const [movieData, setMovieData] = useState(null);
   const [loading, setLoading] = useState(true);
-  // Track how many reviews were submitted this session so the displayed rating
-  // can be updated incrementally without a real API round-trip.
-  const [sessionReviewCount, setSessionReviewCount] = useState(0);
+  const [reviews, setReviews] = useState([]);
   const reviewsRef = useRef(null);
 
   useEffect(() => {
@@ -67,24 +66,51 @@ function MovieDetails() {
     }
   }, [location, loading, movieData]);
 
-  /**
-   * Optimistically update the displayed rating after a user submits a review.
-   * Uses a proper running-average formula — mirrors the ShowDetails logic.
-   * BUG FIX: previous code hardcoded 10 as the assumed existing review count,
-   * causing the average to drift toward the mock base rating over time.
-   * TODO: remove once ratings are fetched live from the backend.
-   */
+  // Fetch all reviews for this movie, pinning the current user's review first.
+  useEffect(() => {
+    if (!id) return;
+    fetchMovieReviews(id)
+      .then((data) => {
+        const sorted = [...data].sort((a, b) => {
+          if (user && a.author?.username === user.username) return -1;
+          if (user && b.author?.username === user.username) return 1;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        setReviews(sorted);
+      })
+      .catch(() => setReviews([]));
+  }, [id, user]);
+
   const handleReviewSubmitted = (reviewData) => {
     if (!movieData) return;
     const currentRating = movieData.rating || 0;
-    const nextCount = sessionReviewCount + 1;
-    const updatedRating =
-      (currentRating * nextCount + reviewData.rating) / (nextCount + 1);
-    setSessionReviewCount(nextCount);
+    const currentCount = movieData.reviewCount || 0;
+    // Check if user already has a review — if so it's an update (count stays same), otherwise increment
+    const userAlreadyReviewed = reviews.some(
+      (r) => r.author?.username === user?.username
+    );
+    const newCount = userAlreadyReviewed ? currentCount : currentCount + 1;
+    const newRating = userAlreadyReviewed
+      ? (currentRating * currentCount - (reviews.find((r) => r.author?.username === user?.username)?.rating ?? 0) + reviewData.rating) / currentCount
+      : (currentRating * currentCount + reviewData.rating) / newCount;
+
     setMovieData({
       ...movieData,
-      rating: parseFloat(updatedRating.toFixed(1)),
+      rating: parseFloat(newRating.toFixed(1)),
+      reviewCount: newCount,
     });
+
+    // Optimistically prepend the new review, replacing any existing one by this user.
+    const newReview = {
+      author: { username: user?.username ?? "You" },
+      rating: reviewData.rating,
+      comment: reviewData.comment ?? "",
+      createdAt: new Date().toISOString(),
+    };
+    setReviews((prev) => [
+      newReview,
+      ...prev.filter((r) => r.author?.username !== newReview.author.username),
+    ]);
   };
 
   if (loading) {
@@ -154,6 +180,12 @@ function MovieDetails() {
                   ? `★ ${movieData.rating.toFixed(1)}`
                   : "Not rated"}
               </span>
+              {movieData.reviewCount > 0 && (
+                <>
+                  <span>•</span>
+                  <span>{movieData.reviewCount} {movieData.reviewCount === 1 ? "review" : "reviews"}</span>
+                </>
+              )}
               {movieData.year && (
                 <>
                   <span>•</span>
@@ -255,6 +287,49 @@ function MovieDetails() {
             movie={reviewMovieData}
             onSubmitSuccess={handleReviewSubmitted}
           />
+
+          {/* Reviews List */}
+          {reviews.length > 0 && (
+            <div className="mt-10 space-y-4">
+              {reviews.map((review, i) => {
+                const isOwn = user && review.author?.username === user.username;
+                return (
+                  <div
+                    key={i}
+                    className={`rounded-2xl p-5 border ${
+                      isOwn
+                        ? "border-indigo-500/40 bg-indigo-500/10"
+                        : "border-white/10 bg-white/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white">
+                          {review.author?.username ?? "Anonymous"}
+                        </span>
+                        {isOwn && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-600 text-white font-semibold">
+                            You
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-yellow-400 font-bold">
+                        ★ {review.rating}
+                      </span>
+                    </div>
+                    {review.comment && (
+                      <p className="text-white/70 text-sm leading-relaxed">
+                        {review.comment}
+                      </p>
+                    )}
+                    <p className="text-white/30 text-xs mt-2">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MovieRating.Backend.Common;
 using MovieRating.Backend.Controllers;
+using MovieRating.Backend.DTOs.Generic;
 using MovieRating.Backend.DTOs.Movie;
 using MovieRating.Backend.DTOs.Show;
 using MovieRating.Backend.DTOs.User;
@@ -215,6 +216,18 @@ public class ReviewsControllerTests
         var objectResult = Assert.IsType<ObjectResult>(result);
         Assert.Equal(StatusCodes.Status404NotFound, objectResult.StatusCode);
     }
+    
+    [Fact]
+    public async Task UpdateShowReview_WhenUserNotAuthenticated_ReturnsUnauthorized()
+    {
+        SetUnauthenticatedUser();
+        var request = new ShowReviewRequestDto { ShowId = 2, Rating = 9 };
+
+        var result = await _controller.UpdateShowReview(request);
+
+        Assert.IsType<UnauthorizedResult>(result);
+        _mockService.Verify(s => s.UpdateShowReviewAsync(It.IsAny<int>(), It.IsAny<ShowReviewRequestDto>()), Times.Never);
+    }
 
     #endregion
 
@@ -285,6 +298,128 @@ public class ReviewsControllerTests
 
         Assert.IsType<UnauthorizedResult>(result);
         _mockService.Verify(s => s.GetMovieUserReviewsAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    #endregion
+
+    #region GetMovieReviews Tests
+
+    [Fact]
+    public async Task GetMovieReviews_WhenSuccessful_ReturnsOkWithReviews()
+    {
+        var reviews = new List<MovieReviewDto>
+        {
+            new()
+            {
+                MovieId = 1,
+                Author = new ReviewAuthorDto { UserId = 5, Username = "testuser" },
+                Rating = 8,
+                Comment = "Great movie!",
+                CreatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                MovieId = 1,
+                Author = new ReviewAuthorDto { UserId = 6, Username = "anotheruser" },
+                Rating = 7,
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+
+        _mockService.Setup(s => s.GetMovieReviewsAsync(1))
+                    .ReturnsAsync(Result<IEnumerable<MovieReviewDto>>.Success(reviews));
+
+        var result = await _controller.GetMovieReviews(1);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnedReviews = Assert.IsAssignableFrom<IEnumerable<MovieReviewDto>>(okResult.Value);
+        Assert.Equal(2, returnedReviews.Count());
+    }
+
+    [Fact]
+    public async Task GetMovieReviews_WhenEmpty_ReturnsOkWithEmptyList()
+    {
+        _mockService.Setup(s => s.GetMovieReviewsAsync(1))
+                    .ReturnsAsync(Result<IEnumerable<MovieReviewDto>>.Success(new List<MovieReviewDto>()));
+
+        var result = await _controller.GetMovieReviews(1);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnedReviews = Assert.IsAssignableFrom<IEnumerable<MovieReviewDto>>(okResult.Value);
+        Assert.Empty(returnedReviews);
+    }
+
+    [Fact]
+    public async Task GetMovieReviews_WhenServiceFails_ReturnsHandledError()
+    {
+        _mockService.Setup(s => s.GetMovieReviewsAsync(1))
+                    .ReturnsAsync(Result<IEnumerable<MovieReviewDto>>.Failure("An unexpected error occurred.", ErrorType.Failure));
+
+        var result = await _controller.GetMovieReviews(1);
+
+        var objectResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+    }
+
+    #endregion
+
+    #region GetShowReviews Tests
+
+    [Fact]
+    public async Task GetShowReviews_WhenSuccessful_ReturnsOkWithReviews()
+    {
+        var reviews = new List<ShowReviewDto>
+        {
+            new()
+            {
+                ShowId = 2,
+                Author = new ReviewAuthorDto { UserId = 5, Username = "testuser" },
+                Rating = 10,
+                Comment = "Incredible!",
+                CreatedAt = DateTime.UtcNow
+            },
+            new()
+            {
+                ShowId = 2,
+                Author = new ReviewAuthorDto { UserId = 6, Username = "anotheruser" },
+                Rating = 9,
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+
+        _mockService.Setup(s => s.GetShowReviewsAsync(2))
+                    .ReturnsAsync(Result<IEnumerable<ShowReviewDto>>.Success(reviews));
+
+        var result = await _controller.GetShowReviews(2);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnedReviews = Assert.IsAssignableFrom<IEnumerable<ShowReviewDto>>(okResult.Value);
+        Assert.Equal(2, returnedReviews.Count());
+    }
+
+    [Fact]
+    public async Task GetShowReviews_WhenEmpty_ReturnsOkWithEmptyList()
+    {
+        _mockService.Setup(s => s.GetShowReviewsAsync(2))
+                    .ReturnsAsync(Result<IEnumerable<ShowReviewDto>>.Success(new List<ShowReviewDto>()));
+
+        var result = await _controller.GetShowReviews(2);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnedReviews = Assert.IsAssignableFrom<IEnumerable<ShowReviewDto>>(okResult.Value);
+        Assert.Empty(returnedReviews);
+    }
+
+    [Fact]
+    public async Task GetShowReviews_WhenServiceFails_ReturnsHandledError()
+    {
+        _mockService.Setup(s => s.GetShowReviewsAsync(2))
+                    .ReturnsAsync(Result<IEnumerable<ShowReviewDto>>.Failure("An unexpected error occurred.", ErrorType.Failure));
+
+        var result = await _controller.GetShowReviews(2);
+
+        var objectResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
     }
 
     #endregion
