@@ -103,6 +103,9 @@ function ShowDetails() {
   const genres = showData.genres || (showData.genre ? [showData.genre] : []);
   const isOngoing = showData.status === "Ongoing";
   const reviewShowData = { ...showData, type: showData.type || "show" };
+  const posterImageUrl =
+    showData.imageUrl ||
+    `https://placehold.co/400x600?text=${encodeURIComponent(showData.title || "Show").replace(/%20/g, "+")}`;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-20">
@@ -120,15 +123,12 @@ function ShowDetails() {
       <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-20 -mt-32 md:-mt-48">
         <div className="flex flex-col md:flex-row gap-8 md:gap-12">
           {/* Poster Card */}
-          <div className="flex-shrink-0 mx-auto md:mx-0 w-48 md:w-72 rounded-2xl overflow-hidden shadow-2xl border-4 border-zinc-950 relative">
+          <div className="flex-shrink-0 mx-auto md:mx-0 w-56 md:w-80">
             <img
-              src={showData.imageUrl}
+              src={posterImageUrl}
               alt={showData.title}
-              className="w-full h-auto object-cover"
+              className="block w-full h-auto rounded-2xl shadow-2xl"
             />
-            <div className="absolute top-3 right-3 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg uppercase tracking-wide">
-              Series
-            </div>
           </div>
 
           {/* Details */}
@@ -139,7 +139,9 @@ function ShowDetails() {
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-6 text-sm font-medium text-white/80">
               <span className="bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded border border-yellow-500/30">
-                {showData.rating && showData.rating > 0 ? `★ ${showData.rating.toFixed(1)}` : "Not rated"}
+                {showData.rating && showData.rating > 0
+                  ? `★ ${showData.rating.toFixed(1)}`
+                  : "Not rated"}
               </span>
               <span>•</span>
               <span>{showData.seasons} Seasons</span>
