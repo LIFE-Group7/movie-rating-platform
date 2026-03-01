@@ -6,9 +6,10 @@ using MovieRating.Backend.DTOs.User;
 
 namespace MovieRating.Backend.Controllers;
 
-[Authorize] 
+[Authorize]
 public class WatchlistController(IWatchlistService watchlistService) : BaseApiController
 {
+    // Fetches all the movies and shows the currently logged-in user has saved.
     [HttpGet]
     public async Task<IActionResult> GetWatchlist()
     {
@@ -23,6 +24,7 @@ public class WatchlistController(IWatchlistService watchlistService) : BaseApiCo
         return HandleError(result);
     }
 
+    // Adds a new movie or show to the user's watchlist.
     [HttpPost]
     public async Task<IActionResult> AddToWatchlist([FromBody] AddToWatchlistDto request)
     {
@@ -37,6 +39,7 @@ public class WatchlistController(IWatchlistService watchlistService) : BaseApiCo
         return HandleError(result);
     }
 
+    // Removes an item from the watchlist using its unique ID.
     [HttpDelete("{id}")]
     public async Task<IActionResult> RemoveFromWatchlist(int id)
     {
@@ -65,9 +68,12 @@ public class WatchlistController(IWatchlistService watchlistService) : BaseApiCo
         return HandleError(result);
     }
 
+    // Helper method to extract the User ID from their security token.
     private int GetUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        // The '!' is the null-forgiving operator. Because the whole controller has [Authorize], this won't be null. 
         return int.Parse(userIdClaim!);
     }
 }
