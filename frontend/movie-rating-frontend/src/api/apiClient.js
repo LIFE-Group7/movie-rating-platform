@@ -1,4 +1,4 @@
-const BASE_URL = "http://68.210.96.73";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5243";
 const REQUEST_TIMEOUT_MS = 10_000;
 
 // Registered once by AuthContext; called on every 401 response.
