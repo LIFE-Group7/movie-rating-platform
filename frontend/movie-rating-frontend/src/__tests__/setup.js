@@ -1,6 +1,4 @@
 import "@testing-library/jest-dom";
-import "@testing-library/jest-dom";
-import { vi } from "vitest";
 
 // Vitest runs in Node which has no localStorage — provide a minimal in-memory mock.
 const localStorageMock = (() => {

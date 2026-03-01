@@ -1,4 +1,5 @@
 import { get } from "./apiClient";
+import { buildPlaceholderPoster } from "../utils/media";
 
 // Handles both array responses and paginated wrappers { data: [], items: [], results: [] }
 const extractList = (payload) => {
@@ -10,9 +11,6 @@ const extractList = (payload) => {
   return [];
 };
 
-const placeholder = (title) =>
-  `https://placehold.co/400x600?text=${encodeURIComponent(title || "Title").replace(/%20/g, "+")}`;
-
 const coerceGenres = (input) => {
   if (Array.isArray(input)) return input;
   if (typeof input === "string" && input.trim()) return [input];
@@ -22,7 +20,7 @@ const coerceGenres = (input) => {
 // Extract year from date string (YYYY-MM-DD or DateOnly)
 const extractYear = (dateString) => {
   if (!dateString) return null;
-  const year = String(dateString).split('-')[0];
+  const year = String(dateString).split("-")[0];
   return year && !isNaN(year) ? parseInt(year, 10) : null;
 };
 
@@ -50,7 +48,7 @@ const normalizeMovie = (item, idx = 0) => {
     item.posterUrl ??
     (item.poster_path
       ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-      : placeholder(title));
+      : buildPlaceholderPoster(title));
   return {
     ...item,
     id: item.id ?? item.movieId ?? `${title}-${idx}`,
@@ -64,9 +62,13 @@ const normalizeMovie = (item, idx = 0) => {
     backdropUrl,
     imageUrl,
     description: item.description ?? item.overview ?? "",
-    year: extractYear(item.releaseDate ?? item.ReleaseDate ?? item.release_date),
+    year: extractYear(
+      item.releaseDate ?? item.ReleaseDate ?? item.release_date,
+    ),
     director: item.director ?? item.Director ?? null,
-    duration: formatDuration(item.durationMinutes ?? item.DurationMinutes ?? item.runtime),
+    duration: formatDuration(
+      item.durationMinutes ?? item.DurationMinutes ?? item.runtime,
+    ),
   };
 };
 
@@ -86,7 +88,7 @@ const normalizeShow = (item, idx = 0) => {
     item.coverImageUrl ??
     item.CoverImageUrl ??
     item.posterUrl ??
-    placeholder(title);
+    buildPlaceholderPoster(title);
   return {
     ...item,
     id: item.id ?? item.showId ?? `${title}-${idx}`,
@@ -100,7 +102,9 @@ const normalizeShow = (item, idx = 0) => {
     backdropUrl,
     imageUrl,
     description: item.description ?? item.overview ?? "",
-    year: extractYear(item.firstAirDate ?? item.FirstAirDate ?? item.first_air_date),
+    year: extractYear(
+      item.firstAirDate ?? item.FirstAirDate ?? item.first_air_date,
+    ),
     director: item.director ?? item.Director ?? item.creator ?? null,
   };
 };

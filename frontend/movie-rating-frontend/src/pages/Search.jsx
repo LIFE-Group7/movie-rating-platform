@@ -116,15 +116,6 @@ function Search() {
     setSearchParams(next);
   };
 
-  // Called by the SearchBar — updates the `q` param in-place.
-  const handleSearch = (q) => {
-    const next = new URLSearchParams(searchParams);
-    const cleaned = (q || "").trim();
-    if (!cleaned) next.delete("q");
-    else next.set("q", cleaned);
-    setSearchParams(next);
-  };
-
   // Remove the genre filter without clearing other params.
   const clearGenre = () => {
     const next = new URLSearchParams(searchParams);

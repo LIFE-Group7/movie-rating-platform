@@ -39,17 +39,12 @@ function FooterLinkGroup({ heading, links }) {
 const BROWSE_LINKS = [
   { label: "Movies", to: "/search?type=movie" },
   { label: "TV Shows", to: "/search?type=show" },
-  { label: "Trending", to: "/search?sort=trending" },
+  { label: "Top Rated", to: "/search?category=rating" },
 ];
 
 const ACCOUNT_LINKS = [
   { label: "Watchlist", to: "/watchlist" },
   { label: "My Reviews", to: "/my-reviews" },
-];
-
-const LEGAL_LINKS = [
-  { label: "Terms of Use", to: "#" },
-  { label: "Privacy Policy", to: "#" },
 ];
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -82,7 +77,6 @@ function Footer() {
 
           <FooterLinkGroup heading="Browse" links={BROWSE_LINKS} />
           <FooterLinkGroup heading="Account" links={ACCOUNT_LINKS} />
-          <FooterLinkGroup heading="Legal" links={LEGAL_LINKS} />
         </div>
 
         {/* ── Bottom bar ── */}

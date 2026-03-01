@@ -12,8 +12,8 @@ using MovieRating.Backend.Data;
 namespace MovieRating.Backend.Migrations
 {
     [DbContext(typeof(MovieDbContext))]
-    [Migration("20260227194932_UpdateAdminDashboard")]
-    partial class UpdateAdminDashboard
+    [Migration("20260301010849_init3")]
+    partial class init3
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -105,6 +105,9 @@ namespace MovieRating.Backend.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("isActive")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 

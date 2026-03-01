@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState, useEffect } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -36,12 +37,13 @@ function MovieCard({ movie }) {
       setShouldScroll(false);
       setScrollAmount(0);
     }
-  }, [movieGenres, isHovering]);
+  }, [movie?.genres, movie?.genre, isHovering]);
 
-  const ratingText = useMemo(() => {
-    const r = Number(movie?.rating);
-    return Number.isFinite(r) && r > 0 ? r.toFixed(1) : "NR";
-  }, [movie?.rating]);
+  const ratingNumber = Number(movie?.rating);
+  const ratingText =
+    Number.isFinite(ratingNumber) && ratingNumber > 0
+      ? ratingNumber.toFixed(1)
+      : "NR";
 
   const openDetails = () => navigate(`/movie/${movie.id}`);
 

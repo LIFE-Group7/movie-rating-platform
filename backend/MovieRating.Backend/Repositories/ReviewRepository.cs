@@ -3,7 +3,6 @@ using MovieRating.Backend.Common;
 using MovieRating.Backend.Data;
 using MovieRating.Backend.Models.Movie;
 using MovieRating.Backend.Models.Show;
-using MovieRating.Backend.Models.User;
 using MovieRating.Backend.Repositories.Interfaces;
 
 namespace MovieRating.Backend.Repositories;
@@ -18,7 +17,7 @@ public class ReviewRepository(MovieDbContext context) : IReviewRepository
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
     }
-    
+
     public async Task<IEnumerable<ReviewMovie>> GetMovieReviewsAsync(int movieId)
     {
         return await context.ReviewMovies
@@ -27,10 +26,11 @@ public class ReviewRepository(MovieDbContext context) : IReviewRepository
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
     }
-    
+
     public async Task<Result<ReviewMovie>> AddMovieReviewAsync(ReviewMovie movieReview)
     {
-        if (await context.Movies.FindAsync(movieReview.MovieId) == null){
+        if (await context.Movies.FindAsync(movieReview.MovieId) == null)
+        {
             return Result<ReviewMovie>
                 .Failure("Movie not found.", ErrorType.NotFound);
         }
@@ -66,7 +66,7 @@ public class ReviewRepository(MovieDbContext context) : IReviewRepository
 
         return Result<ReviewMovie>.Success(existing);
     }
-    
+
     public async Task<Result<bool>> DeleteMovieReviewAsync(int userId, int movieId)
     {
         var existingReview = await context.ReviewMovies
@@ -87,12 +87,12 @@ public class ReviewRepository(MovieDbContext context) : IReviewRepository
     public async Task<IEnumerable<ReviewShow>> GetShowReviewsByUserIdAsync(int userId)
     {
         return await context.ReviewShows
-            .Include(r => r.Show).
-            Where(r => r.UserId == userId)
-            .OrderByDescending(r => r.CreatedAt).
-            ToListAsync();
+            .Include(r => r.Show)
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
     }
-    
+
     public async Task<IEnumerable<ReviewShow>> GetShowReviewsAsync(int showId)
     {
         return await context.ReviewShows
@@ -101,10 +101,11 @@ public class ReviewRepository(MovieDbContext context) : IReviewRepository
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
     }
-    
+
     public async Task<Result<ReviewShow>> AddShowReviewAsync(ReviewShow showReview)
     {
-        if (await context.Shows.FindAsync(showReview.ShowId) == null){
+        if (await context.Shows.FindAsync(showReview.ShowId) == null)
+        {
             return Result<ReviewShow>.Failure("Show not found.", ErrorType.NotFound);
         }
 
@@ -163,7 +164,7 @@ public class ReviewRepository(MovieDbContext context) : IReviewRepository
             .GroupBy(r => r.MovieId)
             .Select(g => new { Average = g.Average(r => (double)r.Rating), Count = g.Count() })
             .FirstOrDefaultAsync();
-     
+
         var movie = await context.Movies.FindAsync(movieId);
         if (movie != null)
         {
@@ -171,7 +172,7 @@ public class ReviewRepository(MovieDbContext context) : IReviewRepository
             await context.SaveChangesAsync();
         }
     }
-    
+
     private async Task UpdateShowReviewStatsAsync(int showId)
     {
         var stats = await context.ReviewShows
@@ -179,7 +180,7 @@ public class ReviewRepository(MovieDbContext context) : IReviewRepository
             .GroupBy(r => r.ShowId)
             .Select(g => new { Average = g.Average(r => (double)r.Rating), Count = g.Count() })
             .FirstOrDefaultAsync();
-     
+
         var show = await context.Shows.FindAsync(showId);
         if (show != null)
         {

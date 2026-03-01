@@ -6,6 +6,7 @@ import { ReviewsProvider } from "./contexts/ReviewContext";
 import PublicLayout from "./layouts/PublicLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import AdminRoute from "./components/AdminRoute";
+import PrivateRoute from "./components/PrivateRoute";
 import Home from "./pages/Home";
 import MovieDetails from "./pages/MovieDetails";
 import ShowDetails from "./pages/ShowDetails";
@@ -49,8 +50,22 @@ function App() {
                   <Route path="/movie/:id" element={<MovieDetails />} />
                   <Route path="/show/:id" element={<ShowDetails />} />
                   <Route path="/search" element={<Search />} />
-                  <Route path="/watchlist" element={<Watchlist />} />
-                  <Route path="/my-reviews" element={<MyReviews />} />
+                  <Route
+                    path="/watchlist"
+                    element={
+                      <PrivateRoute>
+                        <Watchlist />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/my-reviews"
+                    element={
+                      <PrivateRoute>
+                        <MyReviews />
+                      </PrivateRoute>
+                    }
+                  />
                 </Route>
 
                 {/* ── Auth pages: no Navbar, no Footer ── */}

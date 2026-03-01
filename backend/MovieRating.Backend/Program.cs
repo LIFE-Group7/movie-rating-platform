@@ -43,18 +43,18 @@ builder.Services.AddControllers();
 
 // CORS – allow the Vite dev server and any deployed frontend origin.
 builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-                      ?? ["http://localhost:5173"];
-
-        policy.WithOrigins(origins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
+   {
+       options.AddPolicy("AllowFrontend", policy =>
+       {
+           var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                         ?? ["http://localhost:5173"];
+   
+           policy.WithOrigins(origins)
+                 .AllowAnyHeader()
+                 .AllowAnyMethod()
+                 .AllowCredentials();
+       });
+   });
 
 // 3. Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
@@ -120,12 +120,13 @@ builder.Services.AddScoped<ITmdbImportService, TmdbImportService>();
 
 var app = builder.Build();
 
-// Swagger is available in all environments so the deployed API can be tested.
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
-// Health-check endpoint for Kubernetes liveness / readiness probes.
-app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+// app.UseHttpsRedirection();
 
 // DB connectivity test – runs SELECT 1 to verify the connection.
 app.MapGet("/health/db", async (MovieDbContext db) =>
@@ -142,7 +143,6 @@ app.MapGet("/health/db", async (MovieDbContext db) =>
 });
 
 app.UseCors("AllowFrontend");
-
 app.UseAuthentication();
 app.UseAuthorization();
 

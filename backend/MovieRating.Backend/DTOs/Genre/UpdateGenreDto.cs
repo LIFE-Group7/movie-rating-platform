@@ -4,7 +4,7 @@ namespace MovieRating.Backend.DTOs.Genre;
 
 public class UpdateGenreDto
 {
-    [Required]
     [MaxLength(50)]
-    public required string Name { get; set; }
+    public string Name { get; set; }
+    public bool isActive { get; set; }
 }

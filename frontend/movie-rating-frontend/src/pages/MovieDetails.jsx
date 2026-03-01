@@ -5,6 +5,7 @@ import { fetchMovieReviews } from "../api/reviewApi";
 import ReviewForm from "../components/ReviewForm";
 import { useWatchlist } from "../contexts/WatchlistContext";
 import { useAuth } from "../contexts/AuthContext";
+import { buildPlaceholderPoster } from "../utils/media";
 
 /**
  * Movie detail page.
@@ -27,7 +28,9 @@ function MovieDetails() {
   const [movieData, setMovieData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
+  const [reviewsPage, setReviewsPage] = useState(1);
   const reviewsRef = useRef(null);
+  const REVIEWS_PER_PAGE = 10;
 
   useEffect(() => {
     let isMounted = true;
@@ -71,14 +74,21 @@ function MovieDetails() {
     if (!id) return;
     fetchMovieReviews(id)
       .then((data) => {
-        const sorted = [...data].sort((a, b) => {
-          if (user && a.author?.username === user.username) return -1;
-          if (user && b.author?.username === user.username) return 1;
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        });
+        const otherUsersReviews = user
+          ? data.filter((review) => review.author?.username !== user.username)
+          : data;
+
+        const sorted = [...otherUsersReviews].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
+
         setReviews(sorted);
+        setReviewsPage(1);
       })
-      .catch(() => setReviews([]));
+      .catch(() => {
+        setReviews([]);
+        setReviewsPage(1);
+      });
   }, [id, user]);
 
   const handleReviewSubmitted = (reviewData) => {
@@ -86,12 +96,14 @@ function MovieDetails() {
     const currentRating = movieData.rating || 0;
     const currentCount = movieData.reviewCount || 0;
     // Check if user already has a review — if so it's an update (count stays same), otherwise increment
-    const userAlreadyReviewed = reviews.some(
-      (r) => r.author?.username === user?.username
-    );
+    const userAlreadyReviewed = false;
     const newCount = userAlreadyReviewed ? currentCount : currentCount + 1;
     const newRating = userAlreadyReviewed
-      ? (currentRating * currentCount - (reviews.find((r) => r.author?.username === user?.username)?.rating ?? 0) + reviewData.rating) / currentCount
+      ? (currentRating * currentCount -
+          (reviews.find((r) => r.author?.username === user?.username)?.rating ??
+            0) +
+          reviewData.rating) /
+        currentCount
       : (currentRating * currentCount + reviewData.rating) / newCount;
 
     setMovieData({
@@ -99,19 +111,16 @@ function MovieDetails() {
       rating: parseFloat(newRating.toFixed(1)),
       reviewCount: newCount,
     });
-
-    // Optimistically prepend the new review, replacing any existing one by this user.
-    const newReview = {
-      author: { username: user?.username ?? "You" },
-      rating: reviewData.rating,
-      comment: reviewData.reviewText ?? reviewData.comment ?? "",
-      createdAt: new Date().toISOString(),
-    };
-    setReviews((prev) => [
-      newReview,
-      ...prev.filter((r) => r.author?.username !== newReview.author.username),
-    ]);
   };
+
+  const totalReviewPages = Math.max(
+    1,
+    Math.ceil(reviews.length / REVIEWS_PER_PAGE),
+  );
+  const pagedReviews = reviews.slice(
+    (reviewsPage - 1) * REVIEWS_PER_PAGE,
+    reviewsPage * REVIEWS_PER_PAGE,
+  );
 
   if (loading) {
     return (
@@ -141,8 +150,7 @@ function MovieDetails() {
   const genres = movieData.genres || (movieData.genre ? [movieData.genre] : []);
   const reviewMovieData = { ...movieData, type: movieData.type || "movie" };
   const posterImageUrl =
-    movieData.imageUrl ||
-    `https://placehold.co/400x600?text=${encodeURIComponent(movieData.title || "Movie").replace(/%20/g, "+")}`;
+    movieData.imageUrl || buildPlaceholderPoster(movieData.title || "Movie");
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-20">
@@ -183,7 +191,10 @@ function MovieDetails() {
               {movieData.reviewCount > 0 && (
                 <>
                   <span>•</span>
-                  <span>{movieData.reviewCount} {movieData.reviewCount === 1 ? "review" : "reviews"}</span>
+                  <span>
+                    {movieData.reviewCount}{" "}
+                    {movieData.reviewCount === 1 ? "review" : "reviews"}
+                  </span>
                 </>
               )}
               {movieData.year && (
@@ -291,27 +302,21 @@ function MovieDetails() {
           {/* Reviews List */}
           {reviews.length > 0 && (
             <div className="mt-10 space-y-4">
-              {reviews.map((review, i) => {
-                const isOwn = user && review.author?.username === user.username;
+              {pagedReviews.map((review, i) => {
                 return (
                   <div
-                    key={`${review.author?.username ?? "anonymous"}-${review.createdAt}`}
-                    className={`rounded-2xl p-5 border ${
-                      isOwn
-                        ? "border-indigo-500/40 bg-indigo-500/10"
-                        : "border-white/10 bg-white/5"
-                    }`}
+                    key={
+                      review.id ??
+                      review._id ??
+                      `${review.author?.username ?? "anonymous"}-${review.createdAt}-${reviewsPage}-${i}`
+                    }
+                    className="rounded-2xl p-5 border border-white/10 bg-white/5"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-white">
                           {review.author?.username ?? "Anonymous"}
                         </span>
-                        {isOwn && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-600 text-white font-semibold">
-                            You
-                          </span>
-                        )}
                       </div>
                       <span className="text-yellow-400 font-bold">
                         ★ {review.rating}
@@ -328,6 +333,44 @@ function MovieDetails() {
                   </div>
                 );
               })}
+
+              {totalReviewPages > 1 && (
+                <div className="mt-6 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                  <span className="text-xs text-white/55">
+                    Page {reviewsPage} of {totalReviewPages}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        setReviewsPage((prev) => Math.max(1, prev - 1))
+                      }
+                      disabled={reviewsPage === 1}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        reviewsPage === 1
+                          ? "bg-white/5 text-white/30 cursor-not-allowed"
+                          : "bg-white/10 text-white hover:bg-white/15"
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() =>
+                        setReviewsPage((prev) =>
+                          Math.min(totalReviewPages, prev + 1),
+                        )
+                      }
+                      disabled={reviewsPage === totalReviewPages}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        reviewsPage === totalReviewPages
+                          ? "bg-white/5 text-white/30 cursor-not-allowed"
+                          : "bg-white/10 text-white hover:bg-white/15"
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

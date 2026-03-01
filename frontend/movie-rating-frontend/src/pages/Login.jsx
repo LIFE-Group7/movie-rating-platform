@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getAuthInputClass, mapAuthSubmitError } from "../utils/authUi";
 
 /**
  * Login page.
@@ -54,29 +55,22 @@ function Login() {
       await login(formData.username, formData.password);
       navigate("/");
     } catch (error) {
-      // Map specific error messages to user-friendly copy.
-      const msg = String(error?.message || "");
-      if (msg.includes("Too many login attempts")) setErrors({ submit: msg });
-      else if (msg.includes("Failed to fetch"))
-        setErrors({ submit: "Network error. Check connection and try again." });
-      else if (msg === "timeout")
-        setErrors({ submit: "Request took too long. Please try again." });
-      else
-        setErrors({
-          submit: "Invalid username or password. Please try again.",
-        });
+      setErrors({
+        submit: mapAuthSubmitError(error, {
+          fallback: "Invalid username or password. Please try again.",
+          networkMessage: "Network error. Check connection and try again.",
+          customMatchers: [
+            {
+              predicate: (msg) => msg.includes("Too many login attempts"),
+              message: (msg) => msg,
+            },
+          ],
+        }),
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Returns the full Tailwind class string for a text input based on error state.
-  const inputClass = (hasError) =>
-    `w-full rounded-2xl px-4 py-3 text-sm outline-none transition border bg-zinc-950/40 text-white placeholder:text-white/30 ${
-      hasError
-        ? "border-red-400/40 focus:border-red-400/70 focus:ring-2 focus:ring-red-500/15"
-        : "border-white/10 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/15"
-    }`;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -105,7 +99,7 @@ function Login() {
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                className={inputClass(Boolean(errors.username))}
+                className={getAuthInputClass(Boolean(errors.username))}
                 placeholder="your_username"
                 type="text"
                 autoComplete="username"
@@ -128,7 +122,7 @@ function Login() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={inputClass(Boolean(errors.password))}
+                  className={getAuthInputClass(Boolean(errors.password))}
                   placeholder="••••••••"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"

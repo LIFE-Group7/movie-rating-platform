@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useCallback,
@@ -113,6 +114,7 @@ export function WatchlistProvider({ children }) {
   const [watchlist, setWatchlist] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [userRatings, setUserRatings] = useState({});
+  const hasAuthSession = isAuthenticated && Boolean(user?.email);
 
   const syncWatchlist = useCallback(async () => {
     const response = await fetchWatchlist();
@@ -123,12 +125,7 @@ export function WatchlistProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated || !user?.email) {
-      setWatchlist([]);
-      setRecentlyViewed([]);
-      setUserRatings({});
-      return;
-    }
+    if (!hasAuthSession) return;
 
     let isMounted = true;
 
@@ -136,6 +133,13 @@ export function WatchlistProvider({ children }) {
       try {
         await syncWatchlist();
         if (!isMounted) return;
+
+        setRecentlyViewed(
+          readFromStorage(getScopedKey(RECENTLY_VIEWED_KEY, user.email), []),
+        );
+        setUserRatings(
+          readFromStorage(getScopedKey(USER_RATINGS_KEY, user.email), {}),
+        );
       } catch {
         if (!isMounted) return;
         setWatchlist([]);
@@ -144,17 +148,23 @@ export function WatchlistProvider({ children }) {
 
     loadWatchlist();
 
-    setRecentlyViewed(
-      readFromStorage(getScopedKey(RECENTLY_VIEWED_KEY, user.email), []),
-    );
-    setUserRatings(
-      readFromStorage(getScopedKey(USER_RATINGS_KEY, user.email), {}),
-    );
-
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, user?.email, syncWatchlist]);
+  }, [hasAuthSession, user?.email, syncWatchlist]);
+
+  const visibleWatchlist = useMemo(
+    () => (hasAuthSession ? watchlist : []),
+    [hasAuthSession, watchlist],
+  );
+  const visibleRecentlyViewed = useMemo(
+    () => (hasAuthSession ? recentlyViewed : []),
+    [hasAuthSession, recentlyViewed],
+  );
+  const visibleUserRatings = useMemo(
+    () => (hasAuthSession ? userRatings : {}),
+    [hasAuthSession, userRatings],
+  );
 
   const addToWatchlist = useCallback(
     async (movie) => {
@@ -217,8 +227,8 @@ export function WatchlistProvider({ children }) {
 
   // Pure predicate — does not mutate state. Used by cards to set button label.
   const isInWatchlist = useCallback(
-    (movieId) => watchlist.some((item) => item.id === movieId),
-    [watchlist],
+    (movieId) => visibleWatchlist.some((item) => item.id === movieId),
+    [visibleWatchlist],
   );
 
   /**
@@ -247,7 +257,7 @@ export function WatchlistProvider({ children }) {
         return next;
       });
     },
-    [isAuthenticated, user?.email],
+    [isAuthenticated, user],
   );
 
   /**
@@ -277,13 +287,13 @@ export function WatchlistProvider({ children }) {
 
       return true;
     },
-    [isAuthenticated, user?.email],
+    [isAuthenticated, user],
   );
 
   // Return the user's stored rating for a movie, or null if none has been set.
   const getRatingForMovie = useCallback(
-    (movieId) => userRatings[movieId] ?? null,
-    [userRatings],
+    (movieId) => visibleUserRatings[movieId] ?? null,
+    [visibleUserRatings],
   );
 
   /**
@@ -292,21 +302,21 @@ export function WatchlistProvider({ children }) {
    * Returns null when the watchlist is empty.
    */
   const createdAt = useMemo(() => {
-    if (watchlist.length === 0) return null;
-    const oldest = watchlist.reduce((currentOldest, movie) => {
+    if (visibleWatchlist.length === 0) return null;
+    const oldest = visibleWatchlist.reduce((currentOldest, movie) => {
       if (!currentOldest) return movie.addedAt;
       return new Date(movie.addedAt) < new Date(currentOldest)
         ? movie.addedAt
         : currentOldest;
     }, null);
     return oldest;
-  }, [watchlist]);
+  }, [visibleWatchlist]);
 
   const value = useMemo(
     () => ({
-      watchlist,
-      recentlyViewed,
-      userRatings,
+      watchlist: visibleWatchlist,
+      recentlyViewed: visibleRecentlyViewed,
+      userRatings: visibleUserRatings,
       addToWatchlist,
       removeFromWatchlist,
       isInWatchlist,
@@ -316,9 +326,9 @@ export function WatchlistProvider({ children }) {
       createdAt,
     }),
     [
-      watchlist,
-      recentlyViewed,
-      userRatings,
+      visibleWatchlist,
+      visibleRecentlyViewed,
+      visibleUserRatings,
       addToWatchlist,
       removeFromWatchlist,
       isInWatchlist,

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using MovieRating.Backend.Common;
 using MovieRating.Backend.Data;
 using MovieRating.Backend.DTOs.Import;
 using MovieRating.Backend.Models.Generic;
@@ -32,7 +33,7 @@ public class TmdbImportService : ITmdbImportService
         _baseUrl = (config["Tmdb:BaseUrl"] ?? "https://api.themoviedb.org/3").TrimEnd('/');
     }
     
-    public async Task<TmdbImportResult> ImportAllAsync(int moviePages = 3, int showPages = 2)
+    public async Task<Result<TmdbImportResult>> ImportAllAsync(int moviePages = 3, int showPages = 2)
     {
         // ── 1. Sync genres from TMDB ─────────────────────────────────────────
         var genresCreated = await SyncGenresAsync();
@@ -135,7 +136,7 @@ public class TmdbImportService : ITmdbImportService
             }
         }
 
-        return new TmdbImportResult(moviesImported, showsImported, genresCreated);
+        return Result<TmdbImportResult>.Success(new TmdbImportResult(moviesImported, showsImported, genresCreated));
     }
     
     private async Task<int> SyncGenresAsync()
@@ -154,7 +155,7 @@ public class TmdbImportService : ITmdbImportService
             var localName = NormaliseName(g.Name);
             if (!await _db.Genres.AnyAsync(x => x.Name == localName))
             {
-                _db.Genres.Add(new Genre { Name = localName });
+                _db.Genres.Add(new Genre { Name = localName , isActive = false});
                 created++;
             }
         }

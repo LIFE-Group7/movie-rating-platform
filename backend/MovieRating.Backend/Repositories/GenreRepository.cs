@@ -8,15 +8,23 @@ namespace MovieRating.Backend.Repositories;
 public class GenreRepository : IGenreRepository
 {
     private readonly MovieDbContext _context;
-    
+
     public GenreRepository(MovieDbContext context)
     {
         _context = context;
     }
-    
+
     public async Task<IEnumerable<Genre>> GetAllAsync()
     {
         return await _context.Genres
+            .OrderBy(g => g.Name)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Genre>> GetActiveAsync()
+    {
+        return await _context.Genres
+            .Where(g => g.isActive)
             .OrderBy(g => g.Name)
             .ToListAsync();
     }
