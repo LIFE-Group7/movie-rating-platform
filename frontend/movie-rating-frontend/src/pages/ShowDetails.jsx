@@ -101,7 +101,7 @@ function ShowDetails() {
     const newReview = {
       author: { username: user?.username ?? "You" },
       rating: reviewData.rating,
-      comment: reviewData.comment ?? "",
+      comment: reviewData.reviewText ?? reviewData.comment ?? "",
       createdAt: new Date().toISOString(),
     };
     setReviews((prev) => [
