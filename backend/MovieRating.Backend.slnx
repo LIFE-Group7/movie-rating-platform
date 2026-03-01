@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="MovieRating.Backend.Tests/MovieRating.Backend.Tests.csproj" />
+  <Project Path="MovieRating.Backend/MovieRating.Backend.csproj" />
+</Solution>

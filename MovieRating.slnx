@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/backend/MovieRating.Backend/">
+    <Project Path="backend/MovieRating.Backend/MovieRating.Backend.csproj" />
+  </Folder>
+  <Folder Name="/backend/MovieRating.Backend.Tests/">
+    <Project Path="backend/MovieRating.Backend.Tests/MovieRating.Backend.Tests.csproj" />
+  </Folder>
+</Solution>
