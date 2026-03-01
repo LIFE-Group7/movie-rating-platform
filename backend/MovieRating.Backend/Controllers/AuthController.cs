@@ -11,13 +11,16 @@ public class AuthController(IAuthService authService) : BaseApiController
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto request)
     {
+        // Pass the request to the service layer to handle the actual database and business logic
         var result = await authService.RegisterAsync(request);
 
         if (result.IsSuccess)
         {
+            // Return a 201 Created status and point the client to the Login endpoint
             return CreatedAtAction(nameof(Login), new { username = result.Data!.Username }, "User registered successfully.");
         }
 
+        // If something fails (e.g., email already exists), the base class handles the error formatting
         return HandleError(result);
     }
 
@@ -28,13 +31,14 @@ public class AuthController(IAuthService authService) : BaseApiController
 
         if (result.IsSuccess)
         {
+            // On success, package and return the authentication token
             return Ok(new { Token = result.Data });
         }
 
         return HandleError(result);
     }
-    
-    // DEVELOPMENT ONLY - Create an admin user (not exposed in production)
+
+    // Development only: Shortcut to create an admin user for testing (not exposed in production)
     [HttpPost("create-admin")]
     public async Task<IActionResult> CreateAdmin(RegisterDto request)
     {
