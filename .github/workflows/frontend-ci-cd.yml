@@ -1,0 +1,99 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - "devops/k8s/frontend-*"
+      - ".github/workflows/frontend-ci-cd.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "frontend/**"
+  workflow_dispatch: # allow manual trigger
+
+env:
+  ACR_NAME: movieratingacr
+  IMAGE_NAME: frontend
+  RESOURCE_GROUP: Movie-Rating
+  CLUSTER_NAME: aks-movie-rating
+  FRONTEND_DIR: frontend/movie-rating-frontend
+
+jobs:
+  # ── CI: Install, Lint, Build ──────────────────────────────────
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ${{ env.FRONTEND_DIR }}
+
+      - name: Lint
+        run: npm run lint
+        working-directory: ${{ env.FRONTEND_DIR }}
+
+      - name: Build
+        run: npm run build
+        working-directory: ${{ env.FRONTEND_DIR }}
+        env:
+          VITE_API_BASE_URL: http://68.210.96.73
+
+  # ── CD: Deploy (only on push to main, not PRs) ────────────
+  cd:
+    runs-on: ubuntu-latest
+    needs: ci
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push image
+        run: |
+          IMAGE_TAG=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          IMAGE_LATEST=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+          docker build \
+            --build-arg VITE_API_BASE_URL=http://68.210.96.73 \
+            -t $IMAGE_TAG \
+            -t $IMAGE_LATEST \
+            -f ${{ env.FRONTEND_DIR }}/Dockerfile \
+            ${{ env.FRONTEND_DIR }}/
+          docker push $IMAGE_TAG
+          docker push $IMAGE_LATEST
+
+      - name: Set AKS context
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+
+      - name: Deploy manifests
+        run: |
+          kubectl apply -f devops/k8s/frontend-deployment.yaml
+          kubectl apply -f devops/k8s/frontend-service.yaml
+
+      - name: Update image to new tag
+        run: |
+          kubectl set image deployment/frontend-deployment \
+            frontend=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/frontend-deployment --timeout=180s
