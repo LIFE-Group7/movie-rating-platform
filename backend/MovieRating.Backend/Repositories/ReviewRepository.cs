@@ -22,7 +22,6 @@ public class ReviewRepository(MovieDbContext context) : IReviewRepository
     public async Task<IEnumerable<ReviewMovie>> GetMovieReviewsAsync(int movieId)
     {
         return await context.ReviewMovies
-            .Include(r => r.Movie)
             .Include(r => r.User)
             .Where(r => r.MovieId == movieId)
             .OrderByDescending(r => r.CreatedAt)
